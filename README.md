@@ -23,7 +23,7 @@ Welcome to At_RTOS. Version 0.0.1 is under developing.
 None.
 
 ## About Me
-**Vision for the future:** The At_RTOS can be a community-based embedded controller's real-time operating system.
+**Vision for the future:** The At_RTOS could be a popular community-based embedded controller's real-time operating system in the future.
 
 ### License
 At_RTOS is [MIT licensed](./LICENSE).
