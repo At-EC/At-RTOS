@@ -12,13 +12,13 @@
 extern "C" {
 #endif
 
-#include "basic.h"
+#include "include/basic.h"
 #include "os_config.h"
 
 #define ATOS_STACK_DEFINE(name, size)           static u32_t name[((u32_t)(size) / sizeof(u32_t))] = {0x0u};                                          \
 												S_ASSERT(((size) >= STACK_SIZE_MINIMUM) , "The stack size must be higher than STACK_SIZE_MINIMUM")
 
-#include "thread.h"
+#include "include/thread.h"
 static inline os_thread_id_t thread_init(pThread_entryFunc_t pEntryFun, u32_t *pStackAddr, u32_t stackSize, u8_t priority, const char_t *pName)
 {
     os_thread_id_t id = {0u};
@@ -55,7 +55,7 @@ static inline u32p_t thread_delete(os_thread_id_t id)
     return (u32p_t)_impl_thread_delete(id.val);
 }
 
-#include "timer.h"
+#include "include/timer.h"
 static inline os_timer_id_t timer_init(pTimer_callbackFunc_t pEntryFun, b_t isCycle, u32_t timeout_ms, const char_t *pName)
 {
     os_timer_id_t id = {0u};
@@ -92,7 +92,7 @@ static inline u64_t timer_system_total_ms(void)
     return (u64_t)timer_system_total_us() / 1000u;
 }
 
-#include "semaphore.h"
+#include "include/semaphore.h"
 static inline os_semaphore_id_t semaphore_init(u8_t availableCount, u8_t limitationCount, const char_t *pName)
 {
     os_semaphore_id_t id = {0u};
@@ -119,7 +119,7 @@ static inline u32p_t semaphore_flush(os_semaphore_id_t id)
     return (u32p_t)_impl_semaphore_flush(id.val);
 }
 
-#include "mutex.h"
+#include "include/mutex.h"
 static inline os_mutex_id_t mutex_init(const char_t *pName)
 {
     os_mutex_id_t id = {0u};
@@ -141,7 +141,7 @@ static inline u32p_t mutex_unlock(os_mutex_id_t id)
     return (u32p_t)_impl_mutex_unlock(id.val);
 }
 
-#include "event.h"
+#include "include/event.h"
 static inline os_event_id_t event_init(u32_t edge, pEvent_callbackFunc_t pCallFun, const char_t *pName)
 {
     os_queue_id_t id = {0u};
@@ -163,7 +163,7 @@ static inline u32p_t event_wait(os_event_id_t id, u32_t *pEvent, u32_t trigger, 
     return (u32p_t)_impl_event_wait(id.val, pEvent, trigger, listen, timeout_ms);
 }
 
-#include "queue.h"
+#include "include/queue.h"
 static inline os_queue_id_t queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
 {
     os_queue_id_t id = {0u};

@@ -6,8 +6,8 @@
  */
 
 #include "kernal.h"
-#include "os_config.h"
 #include "clock_systick.h"
+#include "os_config.h"
 
 #ifdef __cplusplus
 extern "C" {
