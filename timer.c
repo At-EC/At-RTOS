@@ -14,25 +14,43 @@
 extern "C" {
 #endif
 
+/**
+ * Local unique postcode.
+ */
 #define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_TIMER)
 
-static u64_t _s_system_time_us = 0u;
-static u32_t _s_remaining_elapsed_us = 0u;
+/**
+ * Data structure for location timer
+ */
+typedef struct
+{
+    /* The last load count value */
+    u64_t system_us;
 
+    /* The clock time total count value */
+    u32_t remaining_us;
+}_timer_resource_t;
+
+/**
+ * Local timer resource
+ */
+_timer_resource_t g_timer_resource = {0u};
+
+/**
+ * The local function lists for current file internal use.
+ */
 static u32_t _timer_init_privilege_routine(arguments_t *pArgs);
 static u32_t _timer_start_privilege_routine(arguments_t *pArgs);
 static u32_t _timer_stop_privilege_routine(arguments_t *pArgs);
-static u64_t _impl_timer_total_system_get_privilege_routine(arguments_t *pArgs);
-static u32_t _impl_kernal_timer_schedule_request_privilege_routine(arguments_t *pArgs);
+static u32_t _timer_total_system_get_privilege_routine(arguments_t *pArgs);
+static u32_t _kernal_timer_schedule_request_privilege_routine(arguments_t *pArgs);
 
 /**
  * @brief Get the timer context based on provided unique id.
  *
- * Get the timer context based on provided unique id, and then return the timer context pointer.
+ * @param id The timer unique id.
  *
- * @param id Timer unique id.
- *
- * @retval VALUE The timer context.
+ * @return The pointer of the current unique id timer context.
  */
 static timer_context_t* _timer_object_contextGet(os_id_t id)
 {
@@ -40,13 +58,9 @@ static timer_context_t* _timer_object_contextGet(os_id_t id)
 }
 
 /**
- * @brief Get the stoping timer list address.
+ * @brief Get the stoping timer list head.
  *
- * Get the stoping timer list address.
- *
- * @param NONE.
- *
- * @retval VALUE The stoping list head.
+ * @return The value of the stoping list head.
  */
 static list_t* _timer_list_stopingHeadGet(void)
 {
@@ -54,13 +68,9 @@ static list_t* _timer_list_stopingHeadGet(void)
 }
 
 /**
- * @brief Get the waiting timer list address.
+ * @brief Get the waiting timer list head.
  *
- * Get the waiting timer list address.
- *
- * @param NONE.
- *
- * @retval VALUE The waiting list head.
+ * @return The value of the waiting list head.
  */
 static list_t* _timer_list_waitingHeadGet(void)
 {
@@ -68,13 +78,9 @@ static list_t* _timer_list_waitingHeadGet(void)
 }
 
 /**
- * @brief Get the ending timer list address.
+ * @brief Get the ending timer list head.
  *
- * Get the ending timer list address.
- *
- * @param NONE.
- *
- * @retval VALUE The ending list head.
+ * @return The value of the ending list head.
  */
 static list_t* _timer_list_endingHeadGet(void)
 {
@@ -82,13 +88,9 @@ static list_t* _timer_list_endingHeadGet(void)
 }
 
 /**
- * @brief Get the pending timer list address.
+ * @brief Get the pending timer list head.
  *
- * Get the pending timer list address.
- *
- * @param NONE.
- *
- * @retval VALUE The pending list head.
+ * @return The value of the pending list head.
  */
 static list_t* _timer_list_pendingHeadGet(void)
 {
@@ -96,19 +98,20 @@ static list_t* _timer_list_pendingHeadGet(void)
 }
 
 /**
- * @brief Get the running timer list address.
+ * @brief Get the running timer list head.
  *
- * Get the running timer list address.
- *
- * @param NONE.
- *
- * @retval VALUE The running list head.
+ * @return The value of the running list head.
  */
 static list_t* _timer_list_runningHeadGet(void)
 {
     return (list_t*)kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_RUN);
 }
 
+/**
+ * @brief Remove a list node from the waiting list and push the duration time into the next node.
+ *
+ * @param The node linker head pointer.
+ */
 static void _timer_list_remove_fromWaitList(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
@@ -149,11 +152,7 @@ static void _timer_list_transfer_toUninitialized(linker_head_t *pCurHead)
 /**
  * @brief Push one timer context into stoping list.
  *
- * Push one thread context into stoping list.
- *
  * @param pCurHead The pointer of the timer linker head.
- *
- * @retval NONE .
  */
 static void _timer_list_transfer_toStopList(linker_head_t *pCurHead)
 {
@@ -168,11 +167,7 @@ static void _timer_list_transfer_toStopList(linker_head_t *pCurHead)
 /**
  * @brief Push one timer context into ending list.
  *
- * Push one thread context into ending list.
- *
  * @param pCurHead The pointer of the timer linker head.
- *
- * @retval NONE .
  */
 static void _timer_list_transfer_toEndList(linker_head_t *pCurHead)
 {
@@ -187,11 +182,7 @@ static void _timer_list_transfer_toEndList(linker_head_t *pCurHead)
 /**
  * @brief Push one timer context into pending list.
  *
- * Push one thread context into pending list.
- *
  * @param pCurHead The pointer of the timer linker head.
- *
- * @retval NONE .
  */
 static void _timer_list_transfer_toPendList(linker_head_t *pCurHead)
 {
@@ -204,15 +195,13 @@ static void _timer_list_transfer_toPendList(linker_head_t *pCurHead)
 }
 
 /**
- * @brief Compare the priority between the current and extract thread.
- *
- * Compare the priority between the current and extract thread.
+ * @brief Compare the customization value between the current and extract thread.
  *
  * @param pCurNode The pointer of the current thread node.
  * @param pExtractNode The pointer of the extract thread node.
  *
- * @retval TRUE Not a correct position.
- * @retval FALSE find a right position and it can kill the loop routine.
+ * @return The false value indicates it is right position and it can kiil the loop routine,
+ *         otherwise is not a correct position.
  */
 static b_t _timer_node_Order_compare_condition(list_node_t *pCurNode, list_node_t *pExtractNode)
 {
@@ -238,13 +227,10 @@ static b_t _timer_node_Order_compare_condition(list_node_t *pCurNode, list_node_
 }
 
 /**
- * @brief Push one timer context into waiting list.
- *
- * Push one thread context into waiting list.
+ * @brief Push one timer context into waiting list,
+ *        but it has to compared the existed duration time, and calculate the divided time.
  *
  * @param pCurHead The pointer of the timer linker head.
- *
- * @retval NONE .
  */
 static void _timer_list_transfer_toWaitList(linker_head_t *pCurHead)
 {
@@ -259,11 +245,7 @@ static void _timer_list_transfer_toWaitList(linker_head_t *pCurHead)
 /**
  * @brief Pick up a shortest remaining time from the waiting list.
  *
- * Pick up a shortest remaining time from the waiting list.
- *
- * @param NONE
- *
- * @retval VALUE The shortest time head.
+ * @return The value of waiting linker head pointer.
  */
 static linker_head_t* _timer_linker_head_fromWaiting(void)
 {
@@ -277,12 +259,9 @@ static linker_head_t* _timer_linker_head_fromWaiting(void)
 /**
  * @brief Check if the timer unique id if is's invalid.
  *
- * Check if the timer unique id if is's invalid.
- *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is invalid
- *         FALSE The id is valid
+ * @return The true is invalid, otherwise is valid.
  */
 static b_t _timer_id_isInvalid(i32_t id)
 {
@@ -293,45 +272,35 @@ static b_t _timer_id_isInvalid(i32_t id)
 /**
  * @brief Check if the timer object if is's initialized.
  *
- * Check if the timer unique id if is's initialization.
- *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is initialized.
- *         FALSE The id isn't initialized.
+ * @return The true is initialized, otherwise is uninitialized.
  */
 static b_t _timer_object_isInit(i32_t id)
 {
     timer_context_t *pCurTimer = (timer_context_t *)_timer_object_contextGet(id);
 
-    if (pCurTimer)
-    {
-        return ((pCurTimer->head.linker.pList) ? (TRUE) : (FALSE));
-    }
-    else
-    {
-        return FALSE;
-    }
+    return ((pCurTimer) ? (((pCurTimer->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
 }
 
 /**
  * @brief Convert the internal os id to kernal member number.
  *
- * Convert the internal os id to kernal member number.
- *
  * @param id The provided unique id.
  *
- * @retval VALUE Member number.
+ * @retval The value of member number.
  */
 u32_t _impl_timer_os_id_to_number(os_id_t id)
 {
     if (!kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id))
     {
-        return (u32_t)((id - kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) / sizeof(timer_context_t));
+        return (u32_t)((id - kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) /
+                        sizeof(timer_context_t));
     }
     else if (!kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id))
     {
-        return (u32_t)((id - kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER)) / sizeof(timer_context_t));
+        return (u32_t)((id - kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER)) /
+                        sizeof(timer_context_t));
     }
     else
     {
@@ -342,13 +311,12 @@ u32_t _impl_timer_os_id_to_number(os_id_t id)
 /**
  * @brief Initialize a new timer.
  *
- * Initialize a new timer.
- *
  * @param pCallFun The thread entry function pointer.
- * @param timeout The expired time.
- * @param pName The timer's name.
+ * @param isCycle It indicates the timer if it's cycle repeat.
+ * @param timeout_ms The expired time.
+ * @param pName The timer's name, it supported NULL pointer.
  *
- * @retval VALUE The timer unique id.
+ * @return The value of the timer unique id.
  */
 os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t timeout_ms, const char_t *pName)
 {
@@ -364,19 +332,15 @@ os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t time
 }
 
 /**
- * @brief Init a timer for thread object to use.
- *
- * Init a timer for thread object to use.
+ * @brief Initialize a timer for internal thread context use.
  *
  * @param id The thread unique id is same as timer.
- *
- * @retval NONE .
  */
 void _impl_thread_timer_init(os_id_t id)
 {
     ENTER_CRITICAL_SECTION();
 
-    timer_context_t* pCurTimer = _timer_object_contextGet(id); // Only for internal thread use
+    timer_context_t* pCurTimer = _timer_object_contextGet(id);
 
     _memset((char_t*)pCurTimer, 0x0u, sizeof(timer_context_t));
 
@@ -394,24 +358,19 @@ void _impl_thread_timer_init(os_id_t id)
 }
 
 /**
- * @brief Start a thread timer.
- *
- * Start a thread timer.
+ * @brief Timer start for internal thread context use.
  *
  * @param id The thread unique id is same as timer.
- * @param start_us The thread timer start time.
- * @param timeout_ms he thread timer timeout time.
+ * @param timeout_ms The thread timer timeout time.
  * @param pCallback The thread timeout callback function.
- *
- * @retval NONE.
  */
 void _impl_thread_timer_start(os_id_t id, u32_t timeout_ms, void (*pCallback)(os_id_t))
 {
     ENTER_CRITICAL_SECTION();
 
     timer_context_t* pCurTimer = _timer_object_contextGet(id); // Only for internal thread use
-    pCurTimer->call.pThread = pCallback;
 
+    pCurTimer->call.pThread = pCallback;
     pCurTimer->timeout_ms = WAIT_FOREVER;
     pCurTimer->isCycle = FALSE;
 
@@ -434,14 +393,14 @@ void _impl_thread_timer_start(os_id_t id, u32_t timeout_ms, void (*pCallback)(os
 }
 
 /**
- * @brief Start a timer, Be careful if the timer's last ticket isn't expired, the new ticket will override it.
- *
- * Start a timer, Be careful if the timer's last ticket isn't expired, the new ticket will override it.
+ * @brief Timer starts operation, be careful if the timer's last time isn't expired or be handled,
+ *        the newer start will override it.
  *
  * @param id The timer unique id.
+ * @param isCycle It indicates the timer if it's cycle repeat.
  * @param timeout_ms The timer expired time.
  *
- * @retval VALUE The result of timer start.
+ * @return The result of timer start operation.
  */
 u32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
 {
@@ -471,13 +430,11 @@ u32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
 }
 
 /**
- * @brief Stop a schduled timer.
- *
- * Stop a schduled timer.
+ * @brief timer stops operation.
  *
  * @param id The timer unique id.
  *
- * @retval VALUE The result of timer stop.
+ * @return The result of timer stop operation.
  */
 u32p_t _impl_timer_stop(os_id_t id)
 {
@@ -502,11 +459,9 @@ u32p_t _impl_timer_stop(os_id_t id)
 /**
  * @brief Check the timer to confirm if it's already scheduled in the waiting list.
  *
- * Check the timer to confirm if it's already scheduled in the waiting list.
- *
  * @param id The timer unique id.
  *
- * @retval VALUE The result of timer status.
+ * @return The true result indicates time busy, otherwise is free status.
  */
 b_t _impl_timer_status_isBusy(os_id_t id)
 {
@@ -532,16 +487,31 @@ b_t _impl_timer_status_isBusy(os_id_t id)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief Get the kernal RTOS system time (ms).
  *
- * The privilege routine running at handle mode.
+ * @return The value of the total system time (ms).
+ */
+u32_t _impl_timer_total_system_get(void)
+{
+    return kernal_privilege_invoke(_timer_total_system_get_privilege_routine, NULL);
+}
+
+/**
+ * @brief Kernal RTOS request to update new schedule.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
+ * @return The result of timer schedule request.
+ */
+u32p_t _impl_kernal_timer_schedule_request(void)
+{
+    return kernal_privilege_invoke(_kernal_timer_schedule_request_privilege_routine, NULL);
+}
+
+/**
+ * @brief It's sub-routine running at privilege mode.
  *
- * @retval VALUE The result of privilege routine.
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
  */
 static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
 {
@@ -584,16 +554,11 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
 {
@@ -630,16 +595,11 @@ static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
 {
@@ -662,12 +622,38 @@ static u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
     return PC_SC_SUCCESS;
 }
 
-u32p_t _impl_kernal_timer_schedule_request(void)
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static u32_t _timer_total_system_get_privilege_routine(arguments_t *pArgs)
 {
-    return kernal_privilege_invoke(_impl_kernal_timer_schedule_request_privilege_routine, NULL);
+    ENTER_CRITICAL_SECTION();
+
+    UNUSED_MSG(pArgs);
+
+    u64_t us = (!g_timer_resource.remaining_us) ? (_impl_clock_time_elapsed_get()) : (0u);
+
+    us += g_timer_resource.system_us;
+	
+	u32_t ms = ((us/1000u) & 0xFFFFFFFFu);
+
+    EXIT_CRITICAL_SECTION();
+
+    return ms;
 }
 
-static u32_t _impl_kernal_timer_schedule_request_privilege_routine(arguments_t *pArgs)
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static u32_t _kernal_timer_schedule_request_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -678,7 +664,7 @@ static u32_t _impl_kernal_timer_schedule_request_privilege_routine(arguments_t *
     }
     else
     {
-        _impl_clock_time_interval_set(0xFFFFFFFEu);
+        _impl_clock_time_interval_set(WAIT_FOREVER);
     }
 
     EXIT_CRITICAL_SECTION();
@@ -686,6 +672,9 @@ static u32_t _impl_kernal_timer_schedule_request_privilege_routine(arguments_t *
     return PC_SC_SUCCESS;
 }
 
+/**
+ * @brief Timer callback function handle in the kernal thread.
+ */
 void _impl_timer_reamining_elapsed_handler(void)
 {
     list_t *pListRunning = (list_t *)_timer_list_runningHeadGet();
@@ -707,42 +696,28 @@ void _impl_timer_reamining_elapsed_handler(void)
     }
 }
 
-u64_t _impl_timer_total_system_get(void)
-{
-    return kernal_privilege_invoke(_impl_timer_total_system_get_privilege_routine, NULL);
-}
 
-static u64_t _impl_timer_total_system_get_privilege_routine(arguments_t *pArgs)
-{
-    ENTER_CRITICAL_SECTION();
-
-    UNUSED_MSG(pArgs);
-
-    u64_t us = (!_s_remaining_elapsed_us) ? (_impl_clock_time_elapsed_get()) : (0u);
-
-    us += _s_system_time_us;
-
-    EXIT_CRITICAL_SECTION();
-
-    return us;
-}
-
+/**
+ * @brief Kernal RTOS handle the clock time.
+ *
+ * @param elapsed_us Clock time reported elapsed time.
+ */
 void _impl_timer_elapsed_handler(u32_t elapsed_us)
 {
     ENTER_CRITICAL_SECTION();
 
     timer_context_t *pCurTimer = NULL;
-    _s_remaining_elapsed_us = elapsed_us;
+    g_timer_resource.remaining_us = elapsed_us;
 
     list_iterator_t it = {0u};
     list_t *pListWaiting = (list_t *)_timer_list_waitingHeadGet();
     list_iterator_init(&it, pListWaiting);
     while (list_iterator_next_condition(&it, (void *)&pCurTimer))
     {
-        if (_s_remaining_elapsed_us >= pCurTimer->duration_us)
+        if (g_timer_resource.remaining_us >= pCurTimer->duration_us)
         {
-            _s_remaining_elapsed_us -= pCurTimer->duration_us;
-            _s_system_time_us += pCurTimer->duration_us;
+            g_timer_resource.remaining_us -= pCurTimer->duration_us;
+            g_timer_resource.system_us += pCurTimer->duration_us;
             pCurTimer->duration_us = 0u;
 
             if (kernal_member_unified_id_toId(pCurTimer->head.id) == KERNAL_MEMBER_TIMER_INTERNAL)
@@ -757,19 +732,19 @@ void _impl_timer_elapsed_handler(u32_t elapsed_us)
             }
             else
             {
-                pCurTimer->duration_us = _s_system_time_us;
+                pCurTimer->duration_us = g_timer_resource.system_us;
                 _timer_list_transfer_toPendList((linker_head_t *)&pCurTimer->head);
             }
         }
         else
         {
-            pCurTimer->duration_us -= _s_remaining_elapsed_us;
+            pCurTimer->duration_us -= g_timer_resource.remaining_us;
             break;
         }
     }
 
-    _s_system_time_us += _s_remaining_elapsed_us;
-    _s_remaining_elapsed_us = 0u;
+    g_timer_resource.system_us += g_timer_resource.remaining_us;
+    g_timer_resource.remaining_us = 0u;
 
     list_t *pListPending = (list_t *)_timer_list_pendingHeadGet();
     list_iterator_init(&it, pListPending);
@@ -778,7 +753,7 @@ void _impl_timer_elapsed_handler(u32_t elapsed_us)
         if (pCurTimer->isCycle)
         {
             u64_t timeout_us = pCurTimer->timeout_ms * 1000u;
-            u64_t elapsed_us = _s_system_time_us - pCurTimer->duration_us;
+            u64_t elapsed_us = g_timer_resource.system_us - pCurTimer->duration_us;
 
             while (elapsed_us >= timeout_us)
             {

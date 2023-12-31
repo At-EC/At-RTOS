@@ -82,14 +82,9 @@ static inline u32p_t timer_isBusy(os_timer_id_t id)
     return (u32p_t)_impl_timer_status_isBusy(id.val);
 }
 
-static inline u64_t timer_system_total_us(void)
+static inline u32_t timer_system_total_ms(void)
 {
-    return (u64_t)_impl_timer_total_system_get();
-}
-
-static inline u64_t timer_system_total_ms(void)
-{
-    return (u64_t)timer_system_total_us() / 1000u;
+    return (u32_t)_impl_timer_total_system_get();
 }
 
 #include "include/semaphore.h"
@@ -203,8 +198,7 @@ typedef struct
     u32p_t         (*timer_start)(os_timer_id_t, b_t, u32_t);
     u32p_t         (*timer_stop)(os_timer_id_t);
     u32p_t         (*timer_isBusy)(os_timer_id_t);
-    u64_t          (*timer_system_total_us)(void);
-    u64_t          (*timer_system_total_ms)(void);
+    u32_t          (*timer_system_total_ms)(void);
 
     os_semaphore_id_t (*semaphore_init)(u8_t, u8_t, const char_t *);
     u32p_t            (*semaphore_take)(os_semaphore_id_t, u32_t);

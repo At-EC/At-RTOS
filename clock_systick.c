@@ -14,10 +14,10 @@ extern "C" {
 #endif
 
 /* Convert the microsecond to clock count */
-#define _CONVERT_MICROSENCOND_TO_COUNT(us) 		      (((u64_t)(us) * (PORTAL_SYSTEM_CORE_CLOCK_HZ / 1000000u)) - 1u)
+#define _CONVERT_MICROSENCOND_TO_COUNT(us)      (((u64_t)(us) * (PORTAL_SYSTEM_CORE_CLOCK_HZ / 1000000u)) - 1u)
 
 /* Convert the clock count to microsecond */
-#define _CONVERT_COUNT_TO_MICROSENCOND(count) 	      (((u64_t)(count) + 1u) / (PORTAL_SYSTEM_CORE_CLOCK_HZ / 1000000u))
+#define _CONVERT_COUNT_TO_MICROSENCOND(count)   (((u64_t)(count) + 1u) / (PORTAL_SYSTEM_CORE_CLOCK_HZ / 1000000u))
 
 enum
 {
@@ -47,12 +47,12 @@ typedef struct
 
     /* The flag indicates the clock ctrl register enabled status */
     b_t ctrl_enabled;
-}s_clock_count_t;
+}_clock_resource_t;
 
 /**
- * Local clock time data
+ * Local clock systick resource
  */
-static s_clock_count_t g_clock_count = {0u};
+static _clock_resource_t g_clock_resource = {0u};
 
 /**
  * @brief Detecting the wrap flag has to add the last load count into the clock total counter.
@@ -63,7 +63,7 @@ static b_t _clock_isWrap(void)
 {
     if (SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk)
     {
-        g_clock_count.total += g_clock_count.last_load;
+        g_clock_resource.total += g_clock_resource.last_load;
         return TRUE;
     }
     return FALSE;
@@ -79,13 +79,13 @@ static u32_t _clock_elapsed(void)
     u32_t expired = 0u;
 
     /**
-     * The elasped time has to Calculate when no wrap occur.
+     * The elasped time has to calculate when no wrap occur.
      */
     b_t previous, next = _clock_isWrap();
     do
     {
         previous = next;
-        expired = g_clock_count.last_load - SysTick->VAL;
+        expired = g_clock_resource.last_load - SysTick->VAL;
         next = _clock_isWrap();
     } while (previous || next);
 
@@ -99,9 +99,9 @@ static u32_t _clock_elapsed(void)
  */
 static void _clock_time_elapsed_report(u32_t us)
 {
-    if (g_clock_count.pCallFunc)
+    if (g_clock_resource.pCallFunc)
     {
-        g_clock_count.pCallFunc(us);
+        g_clock_resource.pCallFunc(us);
     }
 }
 
@@ -114,13 +114,13 @@ void _impl_clock_isr(void)
      * For maintain purpose.
      */
     u32_t total_count = _clock_elapsed();
-    total_count += g_clock_count.total;
+    total_count += g_clock_resource.total;
 
     /**
      * Avoid the count lost.
      */
-    u32_t elapsed_interval_us = _CONVERT_COUNT_TO_MICROSENCOND(total_count - g_clock_count.reported);
-    g_clock_count.reported += _CONVERT_MICROSENCOND_TO_COUNT(elapsed_interval_us);
+    u32_t elapsed_interval_us = _CONVERT_COUNT_TO_MICROSENCOND(total_count - g_clock_resource.reported);
+    g_clock_resource.reported += _CONVERT_MICROSENCOND_TO_COUNT(elapsed_interval_us);
 
     _clock_time_elapsed_report(elapsed_interval_us);
 }
@@ -132,13 +132,13 @@ void _impl_clock_isr(void)
  */
 void _impl_clock_time_interval_set(u32_t interval_us)
 {
-    if (interval_us == 0xFFFFFFFFu)
+    if (interval_us == WAIT_FOREVER)
     {
         SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
-         g_clock_count.ctrl_enabled = FALSE;
+         g_clock_resource.ctrl_enabled = FALSE;
         return;
     }
-    else if (!g_clock_count.ctrl_enabled)
+    else if (!g_clock_resource.ctrl_enabled)
     {
         SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
     }
@@ -153,7 +153,7 @@ void _impl_clock_time_interval_set(u32_t interval_us)
 
     u32_t elapsed = _clock_elapsed();
 
-    g_clock_count.total += elapsed;
+    g_clock_resource.total += elapsed;
 
     /**
      * The redundance elasped times occur.
@@ -163,11 +163,11 @@ void _impl_clock_time_interval_set(u32_t interval_us)
      */
     u32_t before = SysTick->VAL;
 
-    u32_t unreported = g_clock_count.total - g_clock_count.reported;
+    u32_t unreported = g_clock_resource.total - g_clock_resource.reported;
 
     if ((i32_t)unreported < 0)
     {
-        g_clock_count.last_load = _CONVERT_MICROSENCOND_TO_COUNT(100u);
+        g_clock_resource.last_load = _CONVERT_MICROSENCOND_TO_COUNT(100u);
     }
     else
     {
@@ -190,22 +190,22 @@ void _impl_clock_time_interval_set(u32_t interval_us)
             interval_us = _CONVERT_COUNT_TO_MICROSENCOND(set_count);
         }
 
-        g_clock_count.last_load = _CONVERT_MICROSENCOND_TO_COUNT(interval_us);
+        g_clock_resource.last_load = _CONVERT_MICROSENCOND_TO_COUNT(interval_us);
     }
 
     u32_t after = SysTick->VAL;
 
-	SysTick->LOAD = g_clock_count.last_load;
+	SysTick->LOAD = g_clock_resource.last_load;
 	SysTick->VAL = 0;
 
 	if (before < after)
 	{
 	    (void)SysTick->CTRL;
-        g_clock_count.total += (before + (g_clock_count.last_load - after));
+        g_clock_resource.total += (before + (g_clock_resource.last_load - after));
 	}
 	else
 	{
-        g_clock_count.total += (before - after);
+        g_clock_resource.total += (before - after);
 	}
 
     EXIT_CRITICAL_SECTION();
@@ -220,7 +220,7 @@ u32_t _impl_clock_time_elapsed_get(void)
 {
     ENTER_CRITICAL_SECTION();
 
-    u32_t us = _CONVERT_COUNT_TO_MICROSENCOND(_clock_elapsed() + g_clock_count.total - g_clock_count.reported);
+    u32_t us = _CONVERT_COUNT_TO_MICROSENCOND(_clock_elapsed() + g_clock_resource.total - g_clock_resource.reported);
 
     EXIT_CRITICAL_SECTION();
 
@@ -236,7 +236,7 @@ u32_t _impl_clock_time_get(void)
 {
     ENTER_CRITICAL_SECTION();
 
-    u32_t us = _CONVERT_COUNT_TO_MICROSENCOND(g_clock_count.total + _clock_elapsed());
+    u32_t us = _CONVERT_COUNT_TO_MICROSENCOND(g_clock_resource.total + _clock_elapsed());
 
     EXIT_CRITICAL_SECTION();
 
@@ -245,20 +245,18 @@ u32_t _impl_clock_time_get(void)
 
 /**
  * @brief Enable the time clock.
- *
  */
 void _impl_clock_time_enable(void)
 {
-    if (!g_clock_count.ctrl_enabled)
+    if (!g_clock_resource.ctrl_enabled)
     {
-        g_clock_count.ctrl_enabled = TRUE;
+        g_clock_resource.ctrl_enabled = TRUE;
         SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
     }
 }
 
 /**
  * @brief Disable the time clock.
- *
  */
 void _impl_clock_time_disable(void)
 {
@@ -267,18 +265,17 @@ void _impl_clock_time_disable(void)
 
 /**
  * @brief Init the time clock.
- *
  */
 void _impl_clock_time_init(time_report_handler_t pTime_function)
 {
-    g_clock_count.pCallFunc = pTime_function;
+    g_clock_resource.pCallFunc = pTime_function;
 
     NVIC_SetPriority(SysTick_IRQn, 0xFFu);
-    g_clock_count.last_load = SysTick_LOAD_RELOAD_Msk;
-    g_clock_count.ctrl_enabled = TRUE;
+    g_clock_resource.last_load = SysTick_LOAD_RELOAD_Msk;
+    g_clock_resource.ctrl_enabled = TRUE;
 
     SysTick->CTRL = 0x0u;
-    SysTick->LOAD = g_clock_count.last_load;
+    SysTick->LOAD = g_clock_resource.last_load;
     SysTick->VAL  = 0x0u;
     SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk |
                     SysTick_CTRL_TICKINT_Msk   |

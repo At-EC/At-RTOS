@@ -27,7 +27,6 @@ const static at_rtos_api_t at_rtos_init =
     .timer_start = timer_start,
     .timer_stop = timer_stop,
     .timer_isBusy = timer_isBusy,
-    .timer_system_total_us = timer_system_total_us,
     .timer_system_total_ms = timer_system_total_ms,
 
     .semaphore_init = semaphore_init,
