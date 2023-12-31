@@ -638,7 +638,7 @@ static u32_t _timer_total_system_get_privilege_routine(arguments_t *pArgs)
     u64_t us = (!g_timer_resource.remaining_us) ? (_impl_clock_time_elapsed_get()) : (0u);
 
     us += g_timer_resource.system_us;
-	
+
 	u32_t ms = ((us/1000u) & 0xFFFFFFFFu);
 
     EXIT_CRITICAL_SECTION();
