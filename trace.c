@@ -14,11 +14,14 @@ extern "C" {
 
 static vu32_t g_postcode_cmpt_failed_container[POSTCODE_COMPONENT_NUMBER] = {0u};
 
-u32p_t _impl_postcode_trace_cmpt_last_failed(u32_t cmpt_instance, u32p_t postcode)
+u32p_t _impl_postcode_trace_cmpt_last_failed(u32p_t postcode)
 {
+    u32_t cmpt_instance = PC_TO_CMPT_ID(postcode);
+
     if ((cmpt_instance < POSTCODE_COMPONENT_NUMBER) && (FLAG(postcode & PC_FAILED_CODE_MASK)))
     {
-        g_postcode_cmpt_failed_container[cmpt_instance] = postcode;
+        g_postcode_cmpt_failed_container[cmpt_instance] = (postcode & PC_LINE_NUMBER_MASK);
+        while(1){};
     }
     return postcode;
 }

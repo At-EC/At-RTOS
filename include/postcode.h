@@ -26,10 +26,11 @@ extern "C" {
 
 
 #define COMPLIER_LINE_NUMBER                __LINE__
+#define PC_LINE_NUMBER_MASK                 (0x3FFFu)
 
 #define PC_SUCCESS(OK_INFO)                 (((OK_INFO) & 0x0Fu) << 28u)
 
-#define PC_FAILED_IO(COMPONENT, ERR_INFO)   (((((COMPONENT) & 0x3FFFu) << 14u)) | ((ERR_INFO) & 0x3FFFu))
+#define PC_FAILED_IO(COMPONENT, ERR_INFO)   (((((COMPONENT) & 0x3FFFu) << 14u)) | ((ERR_INFO) & PC_LINE_NUMBER_MASK))
 
 #define PC_FAILED(COMPONENT)                PC_FAILED_IO(COMPONENT, COMPLIER_LINE_NUMBER)
 
