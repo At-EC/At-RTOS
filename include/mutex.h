@@ -8,11 +8,11 @@
 #ifndef _MUXTEX_H_
 #define _MUXTEX_H_
 
+#include "member_struct.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "member_struct.h"
 
 #define MUTEX_USER_DEFINE_INSTANCE_NUMBER_MAX          (10u)
 #define MUTEX_INSTANCE_NUMBER_MAX                      (MUTEX_USER_DEFINE_INSTANCE_NUMBER_MAX)

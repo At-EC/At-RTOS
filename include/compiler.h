@@ -8,11 +8,13 @@
 #ifndef _COMPILER_H_
 #define _COMPILER_H_
 
+#include "arch/cmsis/Include/cmsis_compiler.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "arch/cmsis/Include/cmsis_compiler.h"
+/* TODO */
 
 #ifdef __cplusplus
 }

@@ -200,7 +200,7 @@ static linker_head_t* _thread_linker_head_fromPending(void)
  */
 static linker_head_t* _thread_linker_Head_next_fromPending(void)
 {
-	linker_head_t* pHead = _thread_linker_head_fromPending();
+    linker_head_t* pHead = _thread_linker_head_fromPending();
 
     return (linker_head_t*)((pHead) ? (pHead->linker.node.pNext) : (NULL));
 }

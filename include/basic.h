@@ -8,15 +8,17 @@
 #ifndef _BASIC_H_
 #define _BASIC_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "type.h"
 #include "linker.h"
 #include "trace.h"
 #include "list.h"
 #include "postcode.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* TODO */
 
 #ifdef __cplusplus
 }

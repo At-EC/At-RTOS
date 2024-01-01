@@ -23,9 +23,9 @@
 
 #define AT_RTOS_USE_INTERNAL_IRQ_ENUM             (AT_RTOS_FEATURE_DISABLE)
 
-#define STACK_ALIGN                     		  (8u)
-#define STACK_SIZE_MINIMUM              		  (128u)
-#define STACK_SIZE_MAXIMUM              		  (0xFFFFFFu)
+#define STACK_ALIGN                               (8u)
+#define STACK_SIZE_MINIMUM                        (128u)
+#define STACK_SIZE_MAXIMUM                        (0xFFFFFFu)
 
 #define THREAD_PSP_WITH_PRIVILEGED                (0u)
 

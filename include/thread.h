@@ -8,11 +8,11 @@
 #ifndef _THREAD_H_
 #define _THREAD_H_
 
+#include "member_struct.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "member_struct.h"
 
 #define THREAD_USER_DEFINE_INSTANCE_NUMBER_MAX          (15u)
 #define THREAD_IDLE_ID                                  (0u)

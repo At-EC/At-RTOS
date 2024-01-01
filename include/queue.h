@@ -8,11 +8,11 @@
 #ifndef _QUEUE_H_
 #define _QUEUE_H_
 
+#include "member_struct.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "member_struct.h"
 
 #define QUEUE_USER_DEFINE_INSTANCE_NUMBER_MAX          (10u)
 

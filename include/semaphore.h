@@ -8,11 +8,11 @@
 #ifndef _SEMAPHORE_H_
 #define _SEMAPHORE_H_
 
+#include "member_struct.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "member_struct.h"
 
 #define SEMAPHORE_LIMITATION_BINARY_COUNT                  (1u)
 #define SEMAPHORE_WAIT_FOREVER                             (WAIT_FOREVER)

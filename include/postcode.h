@@ -8,11 +8,11 @@
 #ifndef _POSTCODE_H_
 #define _POSTCODE_H_
 
+#include "type.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "type.h"
                                               /* To generating a unique token */
 #define _STATIC_MAGIC_3(pre, post)          MAGIC(pre, post)
 #define _STATIC_MAGIC_2(pre, post)          _STATIC_MAGIC_3(pre, post)

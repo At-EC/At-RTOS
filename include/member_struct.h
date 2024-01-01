@@ -8,13 +8,13 @@
 #ifndef _MEMBER_STRUCT_H_
 #define _MEMBER_STRUCT_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "type.h"
 #include "linker.h"
 #include "os_config.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef u32_t os_id_t;
 
@@ -229,7 +229,7 @@ typedef struct
 
 typedef struct
 {
-	os_id_t hold;
+    os_id_t hold;
     union
     {
         thread_exit_t exit;
@@ -326,7 +326,7 @@ typedef struct
     /* The current running thread */
     os_id_t current;
 
-	list_t list;
+    list_t list;
 
     kernal_member_t member;
 

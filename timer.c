@@ -389,7 +389,7 @@ void _impl_thread_timer_start(os_id_t id, u32_t timeout_ms, void (*pCallback)(os
         _timer_list_transfer_toWaitList((linker_head_t*)&pCurTimer->head);
     }
 
-	EXIT_CRITICAL_SECTION();
+    EXIT_CRITICAL_SECTION();
 }
 
 /**

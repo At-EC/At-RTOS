@@ -825,7 +825,7 @@ void _impl_kernal_privilege_call_inSVC_c(u32_t *svc_args)
     {
         pPrivilege_callFunc_t pCall = (pPrivilege_callFunc_t)svc_args[0];
 
-		svc_args[0] = (u32_t)pCall((arguments_t*)svc_args[1]);
+        svc_args[0] = (u32_t)pCall((arguments_t*)svc_args[1]);
     }
 }
 

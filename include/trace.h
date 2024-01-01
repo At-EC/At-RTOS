@@ -8,11 +8,13 @@
 #ifndef _TRACE_H_
 #define _TRACE_H_
 
+#include "type.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "type.h"
+/* TODO*/
 
 #ifdef __cplusplus
 }
