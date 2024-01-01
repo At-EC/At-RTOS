@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
- 
+
 #include "basic.h"
 #include "kernal.h"
 #include "timer.h"
@@ -14,7 +14,8 @@
 extern "C" {
 #endif
 
-#define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_SEMAPHORE)
+#define _PC_CMPT_FAILED                             PC_FAILED(PC_CMPT_SEMAPHORE)
+#define _SEMAPHORE_AVAILABLE_COUNT_MAXIMUM          (0xFFu)
 
 static void  _semaphore_callback_fromTimeOut(os_id_t id);
 static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs);
@@ -476,6 +477,11 @@ static u32_t _semaphore_give_privilege_routine(arguments_t *pArgs)
     thread_context_t *pSemaphoreHighestBlockingThread = (thread_context_t *)_semaphore_linker_head_fromBlocking(id);
 
     pCurSemaphore->availableCount++;
+
+    if (pCurSemaphore->availableCount >= _SEMAPHORE_AVAILABLE_COUNT_MAXIMUM)
+    {
+        postcode = _PC_CMPT_FAILED;
+    }
 
     if (pSemaphoreHighestBlockingThread)
     {

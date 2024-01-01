@@ -639,7 +639,7 @@ static u32_t _timer_total_system_get_privilege_routine(arguments_t *pArgs)
 
     us += g_timer_resource.system_us;
 
-	u32_t ms = ((us/1000u) & 0xFFFFFFFFu);
+    u32_t ms = ((us/1000u) & 0xFFFFFFFFu);
 
     EXIT_CRITICAL_SECTION();
 
@@ -697,6 +697,8 @@ void _impl_timer_reamining_elapsed_handler(void)
 }
 
 
+static vu32_t give = 0u;
+
 /**
  * @brief Kernal RTOS handle the clock time.
  *
@@ -746,6 +748,7 @@ void _impl_timer_elapsed_handler(u32_t elapsed_us)
     g_timer_resource.system_us += g_timer_resource.remaining_us;
     g_timer_resource.remaining_us = 0u;
 
+    b_t request = FALSE;
     list_t *pListPending = (list_t *)_timer_list_pendingHeadGet();
     list_iterator_init(&it, pListPending);
     while (list_iterator_next_condition(&it, (void *)&pCurTimer))
@@ -771,8 +774,13 @@ void _impl_timer_elapsed_handler(u32_t elapsed_us)
         if (!list_node_isExisted(pListRunning, &pCurTimer->call.node))
         {
             list_node_push(_timer_list_runningHeadGet(), &pCurTimer->call.node, LIST_HEAD);
-            kernal_message_notification();
         }
+        request = TRUE;
+    }
+
+    if (request)
+    {
+        kernal_message_notification();
     }
     _impl_kernal_timer_schedule_request();
 
