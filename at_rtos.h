@@ -15,8 +15,8 @@ extern "C" {
 #include "include/basic.h"
 #include "os_config.h"
 
-#define ATOS_STACK_DEFINE(name, size)           static u32_t name[((u32_t)(size) / sizeof(u32_t))] = {0x0u};                                          \
-												S_ASSERT(((size) >= STACK_SIZE_MINIMUM) , "The stack size must be higher than STACK_SIZE_MINIMUM")
+#define ATOS_STACK_DEFINE(name, size)           static u32_t name[((u32_t)(size) / sizeof(u32_t))] = {0x0u}; \
+S_ASSERT(((size) >= STACK_SIZE_MINIMUM) , "The stack size must be higher than STACK_SIZE_MINIMUM")
 
 #include "include/thread.h"
 static inline os_thread_id_t thread_init(pThread_entryFunc_t pEntryFun, u32_t *pStackAddr, u32_t stackSize, u8_t priority, const char_t *pName)
@@ -218,10 +218,10 @@ typedef struct
     u32p_t        (*queue_receive)(os_queue_id_t, const u8_t *, u16_t, u32_t);
 
     b_t           (*os_id_is_invalid)(struct os_id);
-    u32p_t        (*kernal_run)(void);
+    u32p_t        (*kernal_atos_run)(void);
 }at_rtos_api_t;
 
-extern at_rtos_api_t *atos;
+extern const at_rtos_api_t AtOS;
 
 #ifdef __cplusplus
 }

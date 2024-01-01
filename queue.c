@@ -36,7 +36,7 @@ static void _queue_schedule(os_id_t id);
  */
 static queue_context_t* _queue_object_contextGet(os_id_t id)
 {
-    return (queue_context_t*)(kernal_member_unified_id_toContainerAddress(id));
+    return (queue_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
 }
 
 /**
@@ -50,7 +50,7 @@ static queue_context_t* _queue_object_contextGet(os_id_t id)
  */
 static list_t* _queue_list_initHeadGet(void)
 {
-    return (list_t*)kernal_member_list_get(KERNAL_MEMBER_QUEUE, KERNAL_MEMBER_LIST_QUEUE_INIT);
+    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_QUEUE, KERNAL_MEMBER_LIST_QUEUE_INIT);
 }
 
 /**
@@ -114,7 +114,7 @@ static void _queue_list_transferToInit(linker_head_t *pCurHead)
  */
 static b_t _queue_id_isInvalid(i32_t id)
 {
-    return kernal_member_unified_id_isInvalid(KERNAL_MEMBER_QUEUE, id);
+    return _impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_QUEUE, id);
 }
 
 /**
@@ -152,8 +152,8 @@ static b_t _queue_object_isInit(i32_t id)
  */
 static void _queue_callback_fromTimeOut(os_id_t id)
 {
-    timer_context_t *pCurTimer = (timer_context_t *)kernal_member_unified_id_toContainerAddress(id);
-    kernal_thread_entry_trigger(kernal_member_unified_id_timerToThread(id), id, PC_SC_TIMEOUT, _queue_schedule);
+    timer_context_t *pCurTimer = (timer_context_t *)_impl_kernal_member_unified_id_toContainerAddress(id);
+    _impl_kernal_thread_entry_trigger(_impl_kernal_member_unified_id_timerToThread(id), id, PC_SC_TIMEOUT, _queue_schedule);
 }
 
 /**
@@ -167,7 +167,7 @@ static void _queue_callback_fromTimeOut(os_id_t id)
  */
 u32_t _impl_queue_os_id_to_number(os_id_t id)
 {
-    return (u32_t)(_queue_id_isInvalid(id) ? (0u) : (id - kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_QUEUE)) / sizeof(queue_context_t));
+    return (u32_t)(_queue_id_isInvalid(id) ? (0u) : (id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_QUEUE)) / sizeof(queue_context_t));
 }
 
 /**
@@ -207,7 +207,7 @@ os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t e
         [3] = {(u32_t)pName},
     };
 
-    return kernal_privilege_invoke(_queue_init_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke(_queue_init_privilege_routine, arguments);
 }
 
 /**
@@ -282,7 +282,7 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u
         return _PC_CMPT_FAILED;
     }
 
-    if (!kernal_isInThreadMode())
+    if (!_impl_kernal_isInThreadMode())
     {
         if (timeout_ms != QUEUE_IMMEDIATELY)
         {
@@ -298,12 +298,12 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u
         [3] = {(u32_t)timeout_ms},
     };
 
-    u32p_t postcode = kernal_privilege_invoke(_queue_send_privilege_routine, arguments);
+    u32p_t postcode = _impl_kernal_privilege_invoke(_queue_send_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
     if (postcode == PC_SC_UNAVAILABLE)
     {
-        thread_context_t *pCurThread = (thread_context_t *)kernal_thread_runContextGet();
+        thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
 
         postcode = (u32p_t)pCurThread->schedule.entry.result;
         pCurThread->schedule.entry.result = 0u;
@@ -333,7 +333,7 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u
 u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u32_t timeout_ms)
 {
     queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(id);
-    thread_context_t *pCurThread = (thread_context_t *)kernal_thread_runContextGet();
+    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
 
     if (_queue_id_isInvalid(id))
     {
@@ -345,7 +345,7 @@ u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
         return _PC_CMPT_FAILED;
     }
 
-    if (!kernal_isInThreadMode())
+    if (!_impl_kernal_isInThreadMode())
     {
         if (timeout_ms != QUEUE_IMMEDIATELY)
         {
@@ -361,13 +361,13 @@ u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
         [3] = {(u32_t)timeout_ms},
     };
 
-    u32p_t postcode = kernal_privilege_invoke(_queue_receive_privilege_routine, arguments);
+    u32p_t postcode = _impl_kernal_privilege_invoke(_queue_receive_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
 
     if (postcode == PC_SC_UNAVAILABLE)
     {
-        thread_context_t *pCurThread = (thread_context_t *)kernal_thread_runContextGet();
+        thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
 
         postcode = (u32p_t)pCurThread->schedule.entry.result;
         pCurThread->schedule.entry.result = 0u;
@@ -403,8 +403,8 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
     u16_t elementNum = (u16_t)(pArgs[2].u32_val);
     const char_t *pName = (const char_t *)(pArgs[3].u32_val);
 
-    queue_context_t *pCurQueue = (queue_context_t *)kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_QUEUE);
-    os_id_t id = kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_QUEUE);
+    queue_context_t *pCurQueue = (queue_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_QUEUE);
+    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_QUEUE);
 
     do {
         if (!_queue_object_isInit(id))
@@ -427,8 +427,8 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
         }
 
         pCurQueue++;
-        id = kernal_member_containerAddress_toUnifiedid((u32_t)pCurQueue);
-    } while ((u32_t)pCurQueue < (u32_t)kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_QUEUE));
+        id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurQueue);
+    } while ((u32_t)pCurQueue < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_QUEUE));
 
     id = ((!_queue_id_isInvalid(id)) ? (id) : (OS_INVALID_ID));
 
@@ -460,7 +460,7 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
 
     u32p_t postcode = PC_SC_SUCCESS;
     queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(id);
-    thread_context_t *pCurThread = (thread_context_t *)kernal_thread_runContextGet();
+    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
 
     if (bufferSize > pCurQueue->elementLength)
     {
@@ -480,7 +480,7 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
             pCurThread->queue.pUserBufferAddress = pUserBuffer;
             pCurThread->queue.userBufferSize = bufferSize;
 
-            postcode = kernal_thread_exit_trigger(pCurThread->head.id, id, _queue_list_inBlockingHeadGet(id), timeout_ms, _queue_callback_fromTimeOut);
+            postcode = _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _queue_list_inBlockingHeadGet(id), timeout_ms, _queue_callback_fromTimeOut);
 
             if(PC_IOK(postcode))
             {
@@ -498,7 +498,7 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
         pCurThread = (thread_context_t *)list_iterator_next(&it);
         if (pCurThread)
         {
-            postcode = kernal_thread_entry_trigger(pCurThread->head.id, id, _QUEUE_WAKEUP_RECEIVER, _queue_schedule);
+            postcode = _impl_kernal_thread_entry_trigger(pCurThread->head.id, id, _QUEUE_WAKEUP_RECEIVER, _queue_schedule);
         }
     }
 
@@ -530,7 +530,7 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
 
     u32p_t postcode = PC_SC_SUCCESS;
     queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(id);
-    thread_context_t *pCurThread = (thread_context_t *)kernal_thread_runContextGet();
+    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
 
     if (bufferSize > pCurQueue->elementLength)
     {
@@ -550,7 +550,7 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
             pCurThread->queue.pUserBufferAddress = pUserBuffer;
             pCurThread->queue.userBufferSize = bufferSize;
 
-            postcode = kernal_thread_exit_trigger(pCurThread->head.id, id, _queue_list_OutBlockingHeadGet(id), timeout_ms, _queue_callback_fromTimeOut);
+            postcode = _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _queue_list_OutBlockingHeadGet(id), timeout_ms, _queue_callback_fromTimeOut);
 
             if(PC_IOK(postcode))
             {
@@ -568,7 +568,7 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
         pCurThread = (thread_context_t *)list_iterator_next(&it);
         if (pCurThread)
         {
-            postcode = kernal_thread_entry_trigger(pCurThread->head.id, id, _QUEUE_WAKEUP_SENDER, _queue_schedule);
+            postcode = _impl_kernal_thread_entry_trigger(pCurThread->head.id, id, _QUEUE_WAKEUP_SENDER, _queue_schedule);
         }
     }
 
@@ -589,9 +589,9 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
  */
 static void _queue_schedule(os_id_t id)
 {
-    thread_context_t *pEntryThread = (thread_context_t*)(kernal_member_unified_id_toContainerAddress(id));
+    thread_context_t *pEntryThread = (thread_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
 
-    if (kernal_member_unified_id_toId(pEntryThread->schedule.hold) == KERNAL_MEMBER_QUEUE)
+    if (_impl_kernal_member_unified_id_toId(pEntryThread->schedule.hold) == KERNAL_MEMBER_QUEUE)
     {
         queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(pEntryThread->schedule.hold);
         thread_entry_t *pEntry = &pEntryThread->schedule.entry;
@@ -606,9 +606,9 @@ static void _queue_schedule(os_id_t id)
         else if (pEntry->result == _QUEUE_WAKEUP_RECEIVER)
         {
             // Release function doesn't kill the timer node from waiting list
-            if (!_impl_timer_status_isBusy(kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
+            if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
             {
-                if (kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
+                if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
                 {
                     pEntry->result = PC_SC_TIMEOUT;
                 }
@@ -617,9 +617,9 @@ static void _queue_schedule(os_id_t id)
                     isRxAvail = true;
                 }
             }
-            else if (kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_QUEUE)
+            else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_QUEUE)
             {
-                _impl_timer_stop(kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
+                _impl_timer_stop(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
                 isRxAvail = true;
             }
             else
@@ -630,9 +630,9 @@ static void _queue_schedule(os_id_t id)
         else if (pEntry->result == _QUEUE_WAKEUP_SENDER)
         {
             // Release function doesn't kill the timer node from waiting list
-            if (!_impl_timer_status_isBusy(kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
+            if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
             {
-                if (kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
+                if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
                 {
                     pEntry->result = PC_SC_TIMEOUT;
                 }
@@ -641,9 +641,9 @@ static void _queue_schedule(os_id_t id)
                     isTxAvail = true;
                 }
             }
-            else if (kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_QUEUE)
+            else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_QUEUE)
             {
-                _impl_timer_stop(kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
+                _impl_timer_stop(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
                 isTxAvail = true;
             }
             else

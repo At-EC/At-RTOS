@@ -14,7 +14,60 @@
 extern "C" {
 #endif
 
-const static at_rtos_api_t at_rtos_init =
+/* Local defined the kernal thread stack */
+ATOS_STACK_DEFINE(g_kernal_stack, KERNAL_THREAD_STACK_SIZE);
+
+#define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_KERNAL)
+
+/**
+ * Local kernal member setting container.
+ */
+static kernal_member_setting_t g_kernal_member_setting[KERNAL_MEMBER_NUMBER] =
+{
+    [KERNAL_MEMBER_THREAD]         = {KERNAL_MEMBER_MAP_1, (SET_BITS(KERNAL_MEMBER_LIST_THREAD_WAIT, KERNAL_MEMBER_LIST_THREAD_EXIT))},
+    [KERNAL_MEMBER_TIMER_INTERNAL] = {KERNAL_MEMBER_MAP_2, (SET_BITS(KERNAL_MEMBER_LIST_TIMER_STOP, KERNAL_MEMBER_LIST_TIMER_RUN))},
+    [KERNAL_MEMBER_TIMER]          = {KERNAL_MEMBER_MAP_3, (SET_BITS(KERNAL_MEMBER_LIST_TIMER_STOP, KERNAL_MEMBER_LIST_TIMER_RUN))},
+    [KERNAL_MEMBER_SEMAPHORE]      = {KERNAL_MEMBER_MAP_4, (SET_BITS(KERNAL_MEMBER_LIST_SEMAPHORE_LOCK, KERNAL_MEMBER_LIST_SEMAPHORE_UNLOCK))},
+    [KERNAL_MEMBER_MUTEX]          = {KERNAL_MEMBER_MAP_5, (SET_BITS(KERNAL_MEMBER_LIST_MUTEX_LOCK, KERNAL_MEMBER_LIST_MUTEX_UNLOCK))},
+    [KERNAL_MEMBER_EVENT]          = {KERNAL_MEMBER_MAP_6, (SET_BITS(KERNAL_MEMBER_LIST_EVENT_INACTIVE, KERNAL_MEMBER_LIST_EVENT_ACTIVE))},
+    [KERNAL_MEMBER_QUEUE]          = {KERNAL_MEMBER_MAP_7, (SET_BIT(KERNAL_MEMBER_LIST_QUEUE_INIT))},
+};
+
+/**
+ * Local kernal member container.
+ */
+static u8_t g_kernal_member_container[KERNAL_MEMBER_MAP_NUMBER] = {0u};
+
+/**
+ * Local kernal supported member list container.
+ */
+static list_t g_kernal_member_list[KERNAL_MEMBER_LIST_NUMBER] = {LIST_NULL};
+
+/**
+ * Local kernal resource
+ */
+static kernal_context_t g_kernal_resource =
+{
+    .current = 0u,
+    .list = LIST_NULL,
+    .run = FALSE,
+    .thread =
+    {
+        .thId.val = OS_INVALID_ID,
+        .semId.val = OS_INVALID_ID,
+    },
+    .member =
+    {
+        .pListContainer = (list_t*)&g_kernal_member_list[0],
+        .pMemoryContainer = (u8_t*)&g_kernal_member_container[0],
+        .pSetting = (kernal_member_setting_t*)&g_kernal_member_setting[0],
+    },
+};
+
+/**
+ * Global At_RTOS application interface init.
+ */
+const at_rtos_api_t AtOS =
 {
     .thread_init = thread_init,
     .thread_sleep = thread_sleep,
@@ -47,164 +100,460 @@ const static at_rtos_api_t at_rtos_init =
     .queue_receive = queue_receive,
 
     .os_id_is_invalid = os_id_is_invalid,
-    .kernal_run = kernal_rtos_run,
+    .kernal_atos_run = kernal_atos_run,
 };
 
-at_rtos_api_t *atos = (at_rtos_api_t*)&at_rtos_init;
-
-/* The gloable kernal symbol */
-ATOS_STACK_DEFINE(g_stack_kernalThread, KERNAL_THREAD_STACK_SIZE);
-
-static u8_t g_kernal_object_container[KERNAL_MEMBER_MAP_NUMBER] = {0u};
-static list_t g_kernal_member_list[KERNAL_MEMBER_LIST_NUMBER] = {LIST_NULL};
-static kernal_member_setting_t g_kernal_member_setting[KERNAL_MEMBER_NUMBER] =
-{
-    [KERNAL_MEMBER_THREAD]         = {KERNAL_MEMBER_MAP_1, (SET_BITS(KERNAL_MEMBER_LIST_THREAD_WAIT, KERNAL_MEMBER_LIST_THREAD_EXIT))},
-    [KERNAL_MEMBER_TIMER_INTERNAL] = {KERNAL_MEMBER_MAP_2, (SET_BITS(KERNAL_MEMBER_LIST_TIMER_STOP, KERNAL_MEMBER_LIST_TIMER_RUN))},
-    [KERNAL_MEMBER_TIMER]          = {KERNAL_MEMBER_MAP_3, (SET_BITS(KERNAL_MEMBER_LIST_TIMER_STOP, KERNAL_MEMBER_LIST_TIMER_RUN))},
-    [KERNAL_MEMBER_SEMAPHORE]      = {KERNAL_MEMBER_MAP_4, (SET_BITS(KERNAL_MEMBER_LIST_SEMAPHORE_LOCK, KERNAL_MEMBER_LIST_SEMAPHORE_UNLOCK))},
-    [KERNAL_MEMBER_MUTEX]          = {KERNAL_MEMBER_MAP_5, (SET_BITS(KERNAL_MEMBER_LIST_MUTEX_LOCK, KERNAL_MEMBER_LIST_MUTEX_UNLOCK))},
-    [KERNAL_MEMBER_EVENT]          = {KERNAL_MEMBER_MAP_6, (SET_BITS(KERNAL_MEMBER_LIST_EVENT_INACTIVE, KERNAL_MEMBER_LIST_EVENT_ACTIVE))},
-    [KERNAL_MEMBER_QUEUE]          = {KERNAL_MEMBER_MAP_7, (SET_BIT(KERNAL_MEMBER_LIST_QUEUE_INIT))},
-};
-
-static kernal_context_t g_kernal_object =
-{
-    .current = 0u,
-    .list = LIST_NULL,
-    .run = FALSE,
-    .thread =
-    {
-        .thId.val = OS_INVALID_ID,
-        .semId.val = OS_INVALID_ID,
-    },
-    .member =
-    {
-        .pListContainer = (list_t*)&g_kernal_member_list[0],
-        .pMemoryContainer = (u8_t*)&g_kernal_object_container[0],
-        .pSetting = (kernal_member_setting_t*)&g_kernal_member_setting[0],
-    },
-};
-
+/**
+ * The local function lists for current file internal use.
+ */
 __ASM void kernal_run_theFirstThread(u32_t sp);
 static u32_t _kernal_start_privilege_routine(arguments_t *pArgs);
 
-list_t *kernal_member_list_get(u8_t member_id, u8_t list_id)
+/**
+ * @brief To set a PendSV.
+ */
+static void _kernal_setPendSV(void)
+{
+    SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+}
+
+/**
+ * @brief Check if kernal is in privilege mode.
+ *
+ * @return The true indicates the kernal is in privilege mode.
+ */
+static b_t _kernal_isInPrivilegeMode(void)
+{
+    if (__get_IPSR())
+    {
+        return TRUE;
+    }
+
+    if (__get_PRIMASK() == SET_BIT(0))
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief Get the next thread id.
+ *
+ * @return The next thread id.
+ */
+static os_id_t _kernal_thread_nextIdGet(void)
+{
+    ENTER_CRITICAL_SECTION();
+    list_t *pListPending = (list_t *)_impl_kernal_list_pendingHeadGet();
+    linker_head_t* pHead = (linker_head_t*)(pListPending->pHead);
+    EXIT_CRITICAL_SECTION();
+
+    return pHead->id;
+}
+
+/**
+ * @brief Compare the priority between the current and extract thread.
+ *
+ * @param pCurNode The pointer of the current thread node.
+ * @param pExtractNode The pointer of the extract thread node.
+ *
+ * @return The false indicates it's a right position and it can kill the loop calling.
+ */
+static b_t _kernal_thread_node_Order_compare_condition(list_node_t *pCurNode, list_node_t *pExtractNode)
+{
+    thread_context_t *pCurThread = (thread_context_t *)pCurNode;
+    thread_context_t *pExtractThread = (thread_context_t *)pExtractNode;
+
+    if ((!pCurThread) || (!pExtractThread))
+    {
+        /* no available thread */
+        return FALSE;
+    }
+
+    if (pCurThread->priority.level < pExtractThread->priority.level)
+    {
+        /* Find a right position and doesn't has to do schedule */
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * @brief Push one thread context into target list.
+ *
+ * @param pCurHead The pointer of the thread linker head.
+ */
+static void _kernal_thread_list_transfer_toTargetBlocking(linker_head_t *pCurHead, list_t *pToBlockingList)
+{
+    ENTER_CRITICAL_SECTION();
+
+    if (pToBlockingList)
+    {
+        linker_list_transaction_specific(&pCurHead->linker, pToBlockingList, _kernal_thread_node_Order_compare_condition);
+    }
+
+    EXIT_CRITICAL_SECTION();
+}
+
+/**
+ * @brief Kernal thread try to do entry schedule in the PendSV routine.
+ */
+static void _kernal_thread_entry_schedule(void)
+{
+    thread_context_t *pCurThread = NULL;
+    list_iterator_t it = ITERATION_NULL;
+    thread_entry_t *pEntry = NULL;
+
+    list_t *pList = (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_ENTRY);
+    list_iterator_init(&it, pList);
+    while (list_iterator_next_condition(&it, (void *)&pCurThread))
+    {
+        pEntry = &pCurThread->schedule.entry;
+
+        if (pEntry->pEntryCallFun)
+        {
+            pEntry->pEntryCallFun(pCurThread->head.id);
+            pEntry->pEntryCallFun = NULL;
+            pEntry->release = OS_INVALID_ID;
+            pCurThread->schedule.hold = OS_INVALID_ID;
+        }
+
+        _impl_kernal_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
+    }
+}
+
+/**
+ * @brief Kernal thread try to do exit schedule in the PendSV routine.
+ *
+ * @return The true indicates the kernal request a timer schedule.
+ */
+static b_t _kernal_thread_exit_schedule(void)
+{
+    list_iterator_t it = ITERATION_NULL;
+    thread_context_t *pCurThread = NULL;
+    thread_exit_t *pExit = NULL;
+    b_t request = FALSE;
+
+    /* The thread block */
+    list_t *pList = (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_EXIT);
+    list_iterator_init(&it, pList);
+    while (list_iterator_next_condition(&it, (void *)&pCurThread))
+    {
+        pExit = &pCurThread->schedule.exit;
+
+        if (pExit->timeout_us)
+        {
+            _impl_thread_timer_start(_impl_kernal_member_unified_id_threadToTimer(pCurThread->head.id), pExit->timeout_us, pExit->pTimeoutCallFun);
+            if (pExit->timeout_us != WAIT_FOREVER)
+            {
+                request = TRUE;
+            }
+        }
+
+        _kernal_thread_list_transfer_toTargetBlocking((linker_head_t*)&pCurThread->head, (list_t*)pExit->pToList);
+    }
+
+    return request;
+}
+
+/**
+ * @brief To check if the kernal message arrived.
+ */
+static u32_t _kernal_message_arrived(void)
+{
+    return semaphore_take(g_kernal_resource.thread.semId, SEMAPHORE_WAIT_FOREVER);
+}
+
+/**
+ * @brief The kernal thread only serve for RTOS with highest priority.
+ */
+static void _kernal_atos_thread(void)
+{
+    while (1)
+    {
+        u32p_t postcode = (_kernal_message_arrived());
+        if (PC_IOK(postcode))
+        {
+            _impl_timer_reamining_elapsed_handler();
+        }
+    }
+}
+
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
+{
+    UNUSED_MSG(pArgs);
+
+    ENTER_CRITICAL_SECTION();
+
+    g_kernal_resource.thread.thId = thread_init(_kernal_atos_thread,
+                                              g_kernal_stack,
+                                              KERNAL_THREAD_STACK_SIZE,
+                                              PRIORITY_KERNAL_SCHDULE,
+                                              KERNAL_THREAD_NAME_STRING);
+
+    if (os_id_is_invalid(g_kernal_resource.thread.thId))
+    {
+       return _PC_CMPT_FAILED;
+    }
+
+    g_kernal_resource.thread.semId = semaphore_init(0u, SEMAPHORE_LIMITATION_BINARY_COUNT, KERNAL_THREAD_NAME_STRING);
+    if (os_id_is_invalid(g_kernal_resource.thread.semId))
+    {
+        return _PC_CMPT_FAILED;
+    }
+
+    NVIC_SetPriority(PendSV_IRQn, 0xFF); // Set PendSV to lowest possible priority
+    NVIC_SetPriority(SVCall_IRQn, 0xFF); // Set SV to lowest possible priority
+    NVIC_SetPriority(SysTick_IRQn, 0xFFu);
+    _impl_clock_time_init(_impl_timer_elapsed_handler);
+
+    g_kernal_resource.current = _kernal_thread_nextIdGet();
+    g_kernal_resource.run = TRUE;
+
+    EXIT_CRITICAL_SECTION();
+
+    kernal_run_theFirstThread(*thread_psp_addressGet(g_kernal_resource.current));
+
+    // nothing arrive
+    return _PC_CMPT_FAILED;
+}
+
+
+/**
+ * @brief Get the kernal member ending unified id according to the member id.
+ *
+ * @param member_id The kernal member id.
+ *
+ * @return The value of the kernal member ending unified id.
+ */
+static u32_t _kernal_member_id_toUnifiedIdEnd(u8_t member_id)
+{
+    return ((member_id < KERNAL_MEMBER_NUMBER) ? (g_kernal_resource.member.pSetting[member_id].mem) : (OS_INVALID_ID));
+}
+
+/**
+ * @brief Get the kernal member unified id range according to the member id.
+ *
+ * @param member_id The kernal member id.
+ *
+ * @return The value of the kernal member unified id range.
+ */
+static u32_t _kernal_member_id_toUnifiedIdRange(u8_t member_id)
+{
+    return ((member_id < KERNAL_MEMBER_NUMBER) ?
+            (_kernal_member_id_toUnifiedIdEnd(member_id) - _impl_kernal_member_id_toUnifiedIdStart(member_id)) : (0u));
+}
+
+/**
+ * @brief kernal schedule in PendSV interrupt content.
+ *
+ * @param ppCurThreadPsp The current thread psp address.
+ * @param ppNextThreadPSP The next thread psp address.
+ */
+void _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
+{
+    if (_kernal_thread_exit_schedule())
+    {
+        _impl_kernal_timer_schedule_request();
+    }
+
+    _kernal_thread_entry_schedule();
+
+    os_id_t next = _kernal_thread_nextIdGet();
+
+    *ppCurPsp = (u32_t*)thread_psp_addressGet(g_kernal_resource.current);
+    *ppNextPSP = (u32_t*)thread_psp_addressGet(next);
+
+    g_kernal_resource.current = next;
+}
+
+/**
+ * @brief Get the kernal member list according to the member id and list id.
+ *
+ * @param member_id The kernal member unique id.
+ * @param list_id The list unique id.
+ *
+ * @return The pointer of the list pointer.
+ */
+list_t *_impl_kernal_member_list_get(u8_t member_id, u8_t list_id)
 {
     return (list_t*)(((member_id < KERNAL_MEMBER_NUMBER) && (list_id < KERNAL_MEMBER_LIST_NUMBER)) ?
-                     ((g_kernal_object.member.pSetting[member_id].list & SET_BIT(list_id)) ?
-                     (&g_kernal_object.member.pListContainer[list_id]):(NULL)) : (NULL));
+                     ((g_kernal_resource.member.pSetting[member_id].list & SET_BIT(list_id)) ?
+                     (&g_kernal_resource.member.pListContainer[list_id]):(NULL)) : (NULL));
 }
 
-u8_t* kernal_member_unified_id_toContainerAddress(u32_t unified_id)
+/**
+ * @brief Get the kernal member address according to the unified id.
+ *
+ * @param unified_id The kernal member unified id.
+ *
+ * @return The pointer of the memeber address.
+ */
+u8_t* _impl_kernal_member_unified_id_toContainerAddress(u32_t unified_id)
 {
-    return (u8_t*)((unified_id < KERNAL_MEMBER_MAP_NUMBER) ? (&g_kernal_object.member.pMemoryContainer[unified_id]) : (NULL));
+    return (u8_t*)((unified_id < KERNAL_MEMBER_MAP_NUMBER) ?
+                   (&g_kernal_resource.member.pMemoryContainer[unified_id]) : (NULL));
 }
 
-u32_t kernal_member_containerAddress_toUnifiedid(u32_t container_address)
+/**
+ * @brief Get the kernal unified id according to the member address.
+ *
+ * @param container_address The kernal member address.
+ *
+ * @return The value of the kernal unified id.
+ */
+u32_t _impl_kernal_member_containerAddress_toUnifiedid(u32_t container_address)
 {
-    u32_t start = (u32_t)(u8_t*)&g_kernal_object.member.pMemoryContainer[0];
-    return (u32_t)(((container_address >= start) && (container_address < (start + KERNAL_MEMBER_MAP_NUMBER))) ? (container_address - start) : (OS_INVALID_ID));
+    u32_t start = (u32_t)(u8_t*)&g_kernal_resource.member.pMemoryContainer[0];
+    return (u32_t)(((container_address >= start) && (container_address < (start + KERNAL_MEMBER_MAP_NUMBER))) ?
+                   (container_address - start) : (OS_INVALID_ID));
 }
 
-u32_t kernal_member_id_toUnifiedIdStart(u8_t member_id)
+/**
+ * @brief Get the kernal member start unified id according to the member id.
+ *
+ * @param member_id The kernal member id.
+ *
+ * @return The value of the kernal member unified id.
+ */
+u32_t _impl_kernal_member_id_toUnifiedIdStart(u8_t member_id)
 {
-    return ((member_id < KERNAL_MEMBER_NUMBER) ? (((member_id) ? (g_kernal_object.member.pSetting[member_id-1].mem): (0u))) : (OS_INVALID_ID));
+    return ((member_id < KERNAL_MEMBER_NUMBER) ? (((member_id) ?
+             (g_kernal_resource.member.pSetting[member_id-1].mem): (0u))) : (OS_INVALID_ID));
 }
 
-u32_t kernal_member_id_toUnifiedIdEnd(u8_t member_id)
+/**
+ * @brief Get the kernal member start address according to the member unique id.
+ *
+ * @param member_id The kernal member id.
+ *
+ * @return The value of the kernal member address range.
+ */
+u8_t* _impl_kernal_member_id_toContainerStartAddress(u32_t member_id)
 {
-    return ((member_id < KERNAL_MEMBER_NUMBER) ? (g_kernal_object.member.pSetting[member_id].mem) : (OS_INVALID_ID));
+    return (u8_t*)((member_id < KERNAL_MEMBER_NUMBER) ?
+                   (_impl_kernal_member_unified_id_toContainerAddress(_impl_kernal_member_id_toUnifiedIdStart(member_id))) : (NULL));
 }
 
-u32_t kernal_member_id_toUnifiedIdRange(u8_t member_id)
+/**
+ * @brief Get the kernal member ending address according to the member unique id.
+ *
+ * @param member_id The kernal member id.
+ *
+ * @return The value of the kernal member ending address.
+ */
+u8_t* _impl_kernal_member_id_toContainerEndAddress(u32_t member_id)
 {
-    return ((member_id < KERNAL_MEMBER_NUMBER) ? (kernal_member_id_toUnifiedIdEnd(member_id) - kernal_member_id_toUnifiedIdStart(member_id)) : (0u));
+    return (u8_t*)((member_id < KERNAL_MEMBER_NUMBER) ?
+                   (_impl_kernal_member_unified_id_toContainerAddress(_kernal_member_id_toUnifiedIdEnd(member_id))) : (NULL));
 }
 
-u8_t* kernal_member_id_toContainerStartAddress(u32_t member_id)
-{
-    return (u8_t*)((member_id < KERNAL_MEMBER_NUMBER) ? (kernal_member_unified_id_toContainerAddress(kernal_member_id_toUnifiedIdStart(member_id))) : (NULL));
-}
-
-u8_t* kernal_member_id_toContainerEndAddress(u32_t member_id)
-{
-    return (u8_t*)((member_id < KERNAL_MEMBER_NUMBER) ? (kernal_member_unified_id_toContainerAddress(kernal_member_id_toUnifiedIdEnd(member_id))) : (NULL));
-}
-
-u32_t kernal_member_id_unifiedConvert(u8_t member_id, u32_t unified_id)
+/**
+ * @brief Get the kernal member number according to the member id and unified id.
+ *
+ * @param member_id The kernal member id.
+ * @param unified_id The kernal member unified id.
+ *
+ * @return The value of the kernal member number.
+ */
+u32_t _impl_kernal_member_id_unifiedConvert(u8_t member_id, u32_t unified_id)
 {
     return (u32_t)((member_id < KERNAL_MEMBER_NUMBER) ?
-            (((unified_id >= kernal_member_id_toUnifiedIdStart(member_id)) ?
-                (unified_id - kernal_member_id_toUnifiedIdStart(member_id)) : (0U))
-                / kernal_member_id_toUnifiedIdRange(member_id)) : (0U));
+            (((unified_id >= _impl_kernal_member_id_toUnifiedIdStart(member_id)) ?
+                (unified_id - _impl_kernal_member_id_toUnifiedIdStart(member_id)) : (0U))
+                / _kernal_member_id_toUnifiedIdRange(member_id)) : (0U));
 }
 
 
 /**
  * @brief Check if the kernal member unique id if is's invalid.
  *
- * Check if the kernal member unique id if is's invalid.
+ * @param member_id The kernal member unique id.
+ * @param unified_id The kernal member unified id.
  *
- * @param id The provided unique id.
- *
- * @retval TRUE The id is invalid
- *         FALSE The id is valid
+ * @return The value of true is invalid, otherwise is valid.
  */
-b_t kernal_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id)
+b_t _impl_kernal_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id)
 {
     return ((member_id >= KERNAL_MEMBER_NUMBER) ||
             (unified_id == OS_INVALID_ID) ||
-            (unified_id < kernal_member_id_toUnifiedIdStart(member_id)) ||
-            (unified_id >= kernal_member_id_toUnifiedIdEnd(member_id)));
+            (unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) ||
+            (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id)));
 }
 
 /**
  * @brief Check if the thread unique id if is's invalid.
  *
- * Check if the thread unique id if is's invalid.
- *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is invalid
- *         FALSE The id is valid
+ * @return The value of true is invalid, otherwise is valid.
  */
 b_t _impl_kernal_os_id_is_invalid(struct os_id id)
 {
     return ((id.val == OS_INVALID_ID) || (id.val >= KERNAL_MEMBER_MAP_NUMBER));
 }
 
-u32_t kernal_member_unified_id_threadToTimer(u32_t unified_id)
+/**
+ * @brief Convert the thread id into timer id.
+ *
+ * @param unified_id The thread unified id.
+ *
+ * @return The value of timer unified id.
+ */
+u32_t _impl_kernal_member_unified_id_threadToTimer(u32_t unified_id)
 {
     u32_t uid = OS_INVALID_ID;
 
-    if (!kernal_member_unified_id_isInvalid(KERNAL_MEMBER_THREAD, unified_id))
+    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_THREAD, unified_id))
     {
-        uid = (unified_id - kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD)) / sizeof(thread_context_t);
-        uid = (uid * sizeof(timer_context_t)) + kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL);
+        uid = (unified_id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD)) / sizeof(thread_context_t);
+        uid = (uid * sizeof(timer_context_t)) + _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL);
     }
     return uid;
 }
 
-u32_t kernal_member_unified_id_timerToThread(u32_t unified_id)
+/**
+ * @brief Convert the timer id into thread id.
+ *
+ * @param unified_id The timer unified id.
+ *
+ * @return The value of thread unified id.
+ */
+u32_t _impl_kernal_member_unified_id_timerToThread(u32_t unified_id)
 {
     u32_t uid = OS_INVALID_ID;
 
-    if (!kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, unified_id))
+    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, unified_id))
     {
-        uid = (unified_id - kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) / sizeof(timer_context_t);
-        uid = (uid * sizeof(thread_context_t)) + kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD);
+        uid = (unified_id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) / sizeof(timer_context_t);
+        uid = (uid * sizeof(thread_context_t)) + _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD);
     }
     return uid;
 }
 
-u8_t kernal_member_unified_id_toId(u32_t unified_id)
+/**
+ * @brief Get the kernal member id.
+ *
+ * @param unified_id The provided unified id.
+ *
+ * @return The value of the kernal member id.
+ */
+u8_t _impl_kernal_member_unified_id_toId(u32_t unified_id)
 {
     u8_t member_id = KERNAL_MEMBER_THREAD;
 
     while((member_id < KERNAL_MEMBER_NUMBER) &&
-           (unified_id < kernal_member_id_toUnifiedIdStart(member_id)) ||
-           (unified_id >= kernal_member_id_toUnifiedIdEnd(member_id)))
+           (unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) ||
+           (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id)))
     {
         member_id++;
     }
@@ -213,69 +562,45 @@ u8_t kernal_member_unified_id_toId(u32_t unified_id)
 }
 
 /**
- * @brief Get the kernal thread pending list head address.
+ * @brief Get the kernal thread pending list head.
  *
- * Get the kernal thread pending list head address.
- *
- * @param NONE.
- *
- * @retval VALUE The pending list head address.
+ * @return The pending list head.
  */
-list_t* kernal_list_pendingHeadGet(void)
+list_t* _impl_kernal_list_pendingHeadGet(void)
 {
-    return (list_t*)(&g_kernal_object.list);
+    return (list_t*)(&g_kernal_resource.list);
 }
 
 /**
- * @brief Get the next thread id.
+ * @brief Get the current running thread id.
  *
- * Get the next thread id.
- *
- * @param NONE.
- *
- * @retval VALUE The next thread id.
+ * @return The id of current running thread.
  */
-os_id_t kernal_thread_nextIdGet(void)
+os_id_t _impl_kernal_thread_runIdGet(void)
 {
-    ENTER_CRITICAL_SECTION();
-    list_t *pListPending = (list_t *)kernal_list_pendingHeadGet();
-    linker_head_t* pHead = (linker_head_t*)(pListPending->pHead);
-    EXIT_CRITICAL_SECTION();
-
-    return pHead->id;
+    return (os_id_t)g_kernal_resource.current;
 }
 
 /**
- * @brief Get the current runtime thread id.
+ * @brief Get the current running thread context.
  *
- * Get the current runtime thread id.
- *
- * @param NONE.
- *
- * @retval VALUE The id of current thread.
+ * @return The context pointer of current running thread.
  */
-os_id_t kernal_thread_runIdGet(void)
+void* _impl_kernal_thread_runContextGet(void)
 {
-    return (os_id_t)g_kernal_object.current;
-}
-
-thread_context_t* kernal_thread_runContextGet(void)
-{
-    return (thread_context_t*)kernal_member_unified_id_toContainerAddress(kernal_thread_runIdGet());
+    return (void*)_impl_kernal_member_unified_id_toContainerAddress(_impl_kernal_thread_runIdGet());
 }
 
 /**
- * @brief Initialize a stack frame.
- *
- * Initialize a stack frame.
+ * @brief Initialize a thread stack frame.
  *
  * @param pEntryFunction The entry function pointer.
  * @param pAddress The stack address.
  * @param size The stack size.
  *
- * @retval VALUE The PSP stack address.
+ * @return The PSP stack address.
  */
-u32_t kernal_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
+u32_t _impl_kernal_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
 {
     u32_t psp_frame = (u32_t)pAddress + size - sizeof(stack_snapshot_t);
 
@@ -317,57 +642,23 @@ u32_t kernal_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32
     #else
         ((stack_snapshot_t *)psp_frame)->CONTROL = BIT(1) & BIT(0);      /* PSP with Unprivileged */
     #endif
-    ((stack_snapshot_t *)psp_frame)->EXC_RETURN = 0xFFFFFFFDu;          /* EXC_RETURN */
+
+    ((stack_snapshot_t *)psp_frame)->EXC_RETURN = 0xFFFFFFFDu;           /* EXC_RETURN */
 #endif
 
     return (u32_t)psp_frame;
 }
 
 /**
- * @brief Compare the priority between the current and extract thread.
- *
- * Compare the priority between the current and extract thread.
- *
- * @param pCurNode The pointer of the current thread node.
- * @param pExtractNode The pointer of the extract thread node.
- *
- * @retval TRUE Not a correct position.
- * @retval FALSE find a right position and it can kill the loop routine.
- */
-static b_t kernal_thread_node_Order_compare_condition(list_node_t *pCurNode, list_node_t *pExtractNode)
-{
-    thread_context_t *pCurThread = (thread_context_t *)pCurNode;
-    thread_context_t *pExtractThread = (thread_context_t *)pExtractNode;
-
-    if ((!pCurThread) || (!pExtractThread))
-    {
-        /* no available thread */
-        return FALSE;
-    }
-
-    if (pCurThread->priority.level < pExtractThread->priority.level)
-    {
-        /* Find a right position and don't need to do schedule */
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-/**
  * @brief Push one thread context into exit list.
  *
- * Push one thread context into exit list.
- *
  * @param pCurHead The pointer of the thread linker head.
- *
- * @retval NONE .
  */
-void kernal_thread_list_transfer_toExit(linker_head_t *pCurHead)
+static void _impl_kernal_thread_list_transfer_toExit(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    list_t *pToExitList = (list_t*)kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_EXIT);
+    list_t *pToExitList = (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_EXIT);
     linker_list_transaction_common(&pCurHead->linker, pToExitList, LIST_TAIL);
 
     EXIT_CRITICAL_SECTION();
@@ -376,39 +667,14 @@ void kernal_thread_list_transfer_toExit(linker_head_t *pCurHead)
 /**
  * @brief Push one thread context into entry list.
  *
- * Push one thread context into entry list.
- *
  * @param pCurHead The pointer of the thread linker head.
- *
- * @retval NONE .
  */
-void kernal_thread_list_transfer_toEntry(linker_head_t *pCurHead)
+void _impl_kernal_thread_list_transfer_toEntry(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    list_t *pToEntryList = (list_t*)kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_ENTRY);
+    list_t *pToEntryList = (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_ENTRY);
     linker_list_transaction_common(&pCurHead->linker, pToEntryList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Push one thread context into target list.
- *
- * Push one thread context into target list.
- *
- * @param pCurHead The pointer of the thread linker head.
- *
- * @retval NONE .
- */
-void kernal_thread_list_transfer_toTargetBlocking(linker_head_t *pCurHead, list_t *pToBlockingList)
-{
-    ENTER_CRITICAL_SECTION();
-
-    if (pToBlockingList)
-    {
-        linker_list_transaction_specific(&pCurHead->linker, pToBlockingList, kernal_thread_node_Order_compare_condition);
-    }
 
     EXIT_CRITICAL_SECTION();
 }
@@ -416,203 +682,70 @@ void kernal_thread_list_transfer_toTargetBlocking(linker_head_t *pCurHead, list_
 /**
  * @brief Push one thread context into pending list.
  *
- * Push one thread context into pending list.
- *
  * @param pCurHead The pointer of the thread linker head.
- *
- * @retval NONE .
  */
-void kernal_thread_list_transfer_toPend(linker_head_t *pCurHead)
+void _impl_kernal_thread_list_transfer_toPend(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    list_t *pToPendList = (list_t *)kernal_list_pendingHeadGet();
-    linker_list_transaction_specific(&pCurHead->linker, pToPendList, kernal_thread_node_Order_compare_condition);
+    list_t *pToPendList = (list_t *)_impl_kernal_list_pendingHeadGet();
+    linker_list_transaction_specific(&pCurHead->linker, pToPendList, _kernal_thread_node_Order_compare_condition);
 
     EXIT_CRITICAL_SECTION();
 }
 
-
 /**
- * @brief The thread is trying to sleep.
- *
- * The thread is trying to sleep.
+ * @brief The thread is trying to exit into suspend.
  *
  * @param id The thread unique id.
+ * @param hold The member unique id hold on the thread.
  * @param pToList The blocking list.
- * @param pSleepObject Which object casue this.
- * @param reason The sleep reason.
  * @param timeout If the thread has sleep time setting.
  * @param pCallback The timeout callback function pointer.
  *
- * @retval VALUE The result of operation.
+ * @return The result of exit operation.
  */
-u32p_t kernal_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToList, u32_t timeout_us, void (*pCallback)(os_id_t))
+u32p_t _impl_kernal_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToList, u32_t timeout_us, void (*pCallback)(os_id_t))
 {
-    thread_context_t *pCurThread = (thread_context_t*)(kernal_member_unified_id_toContainerAddress(id));
+    thread_context_t *pCurThread = (thread_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
 
     pCurThread->schedule.hold = hold;
     pCurThread->schedule.exit.pToList = pToList;
     pCurThread->schedule.exit.timeout_us = timeout_us;
     pCurThread->schedule.exit.pTimeoutCallFun = pCallback;
 
-    kernal_thread_list_transfer_toExit((linker_head_t*)&pCurThread->head);
-    return kernal_thread_schedule_request();
+    _impl_kernal_thread_list_transfer_toExit((linker_head_t*)&pCurThread->head);
+    return _impl_kernal_thread_schedule_request();
 }
 
 /**
- * @brief Try to trigger one thread wakeup.
- *
- * Try to trigger one thread wakeup.
+ * @brief Try to trigger one thread active.
  *
  * @param id The thread unique id.
  * @param release The thread release id.
  * @param result The thread entry result.
+ * @param pCallback The timeout callback function pointer.
  *
- * @retval VALUE The result of operation.
+ * @return The result of entry operation.
  */
-u32p_t kernal_thread_entry_trigger(os_id_t id, os_id_t release, u32_t result, void (*pCallback)(os_id_t))
+u32p_t _impl_kernal_thread_entry_trigger(os_id_t id, os_id_t release, u32_t result, void (*pCallback)(os_id_t))
 {
-    thread_context_t *pCurThread = (thread_context_t*)(kernal_member_unified_id_toContainerAddress(id));
+    thread_context_t *pCurThread = (thread_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
 
     pCurThread->schedule.entry.release = release;
     pCurThread->schedule.entry.result = result;
     pCurThread->schedule.entry.pEntryCallFun = pCallback;
 
-    kernal_thread_list_transfer_toEntry((linker_head_t*)&pCurThread->head);
-    return kernal_thread_schedule_request();
-}
-
-b_t kernal_thread_exit_schedule(void)
-{
-    list_iterator_t it = ITERATION_NULL;
-    thread_context_t *pCurThread = NULL;
-    thread_exit_t *pExit = NULL;
-    b_t request = FALSE;
-
-    /* The thread block */
-    list_t *pList = (list_t *)kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_EXIT);
-    list_iterator_init(&it, pList);
-    while (list_iterator_next_condition(&it, (void *)&pCurThread))
-    {
-    	pExit = &pCurThread->schedule.exit;
-
-        if (pExit->timeout_us)
-        {
-            _impl_thread_timer_start(kernal_member_unified_id_threadToTimer(pCurThread->head.id), pExit->timeout_us, pExit->pTimeoutCallFun);
-            if (pExit->timeout_us != WAIT_FOREVER)
-            {
-                request = TRUE;
-            }
-        }
-
-        kernal_thread_list_transfer_toTargetBlocking((linker_head_t*)&pCurThread->head, (list_t*)pExit->pToList);
-    }
-
-    return request;
-}
-
-void kernal_thread_entry_schedule(void)
-{
-    thread_context_t *pCurThread = NULL;
-    list_iterator_t it = ITERATION_NULL;
-    thread_entry_t *pEntry = NULL;
-
-    list_t *pList = (list_t *)kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_ENTRY);
-    list_iterator_init(&it, pList);
-    while (list_iterator_next_condition(&it, (void *)&pCurThread))
-    {
-        pEntry = &pCurThread->schedule.entry;
-
-        if (pEntry->pEntryCallFun)
-        {
-            pEntry->pEntryCallFun(pCurThread->head.id);
-            pEntry->pEntryCallFun = NULL;
-            pEntry->release = OS_INVALID_ID;
-            pCurThread->schedule.hold = OS_INVALID_ID;
-        }
-
-        kernal_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
-    }
-}
-
-/**
- * @brief kernal schedule in pendsv interrupt content.
- *
- * kernal schedule in pendsv interrupt content.
- *
- * @param ppCurThreadPsp The current thread psp address.
- * @param ppNextThreadPSP The next thread psp address.
- *
- * @retval NONE.
- */
-void kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
-{
-    if (kernal_thread_exit_schedule())
-    {
-        _impl_kernal_timer_schedule_request();
-    }
-
-    kernal_thread_entry_schedule();
-
-    os_id_t next = kernal_thread_nextIdGet();
-
-    *ppCurPsp = (u32_t*)thread_psp_addressGet(g_kernal_object.current);
-    *ppNextPSP = (u32_t*)thread_psp_addressGet(next);
-
-    g_kernal_object.current = next;
-}
-
-/**
- * @brief To set PendSV.
- *
- * To set PendSV.
- *
- * @param NONE.
- *
- * @retval NONE.
- */
-void kernal_setPendSV(void)
-{
-    SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
-}
-
-/**
- * @brief Check if kernal is in privilege mode.
- *
- * Check if kernal is in privilege mode.
- *
- * @param NONE.
- *
- * @retval TRUE The kernal is in privilege mode.
- *         FALSE The kernal is not in privilege mode.
- */
-b_t kernal_isInPrivilegeMode(void)
-{
-    if (__get_IPSR())
-    {
-        return TRUE;
-    }
-
-    if (__get_PRIMASK() == SET_BIT(0))
-    {
-        return TRUE;
-    }
-
-    return FALSE;  //The kernal is not in privilege mode
+    _impl_kernal_thread_list_transfer_toEntry((linker_head_t*)&pCurThread->head);
+    return _impl_kernal_thread_schedule_request();
 }
 
 /**
  * @brief Check if kernal is in thread mode.
  *
- * Check if kernal is in thread mode.
- *
- * @param NONE.
- *
- * @retval TRUE The kernal is in thread mode.
- *         FALSE The kernal is not in thread mode.
+ * @return The true indicates the kernal is in thread mode.
  */
-b_t kernal_isInThreadMode(void)
+b_t _impl_kernal_isInThreadMode(void)
 {
     if (__get_IPSR())
     {
@@ -624,152 +757,61 @@ b_t kernal_isInThreadMode(void)
 /**
  * @brief Request the kernal do thread schedule.
  *
- * Request the kernal do thread schedule.
- *
- * @param NONE.
- *
- * @retval NONE.
+ * @return The result of the request operation.
  */
-u32p_t kernal_thread_schedule_request(void)
+u32p_t _impl_kernal_thread_schedule_request(void)
 {
-    if (kernal_isInPrivilegeMode())
+    if (_kernal_isInPrivilegeMode())
     {
-        kernal_setPendSV();
+        _kernal_setPendSV();
         return PC_SC_SUCCESS;
     }
     else
     {
-        return PC_FAILED(PC_CMPT_KERNAL);
+        return _PC_CMPT_FAILED;
     }
 }
 
 /**
  * @brief To check if the kernal OS is running.
  *
- * To check if the kernal OS is running.
- *
- * @param NONE.
- *
- * @retval TRUE The kernal OS is running.
- *         FALSE The kernal OS is inactive.
+ * return The true indicates the kernal OS is running.
  */
-b_t kernal_rtos_isRun(void)
+b_t _impl_kernal_rtos_isRun(void)
 {
-    return (b_t)((g_kernal_object.run) ? (TRUE) : (FALSE));
-}
-
-void kernal_message_notification(void)
-{
-    semaphore_give(g_kernal_object.thread.semId);
-}
-
-u32_t Kernal_message_arrived(void)
-{
-    return semaphore_take(g_kernal_object.thread.semId, SEMAPHORE_WAIT_FOREVER);
+    return (b_t)((g_kernal_resource.run) ? (TRUE) : (FALSE));
 }
 
 /**
- * @brief The kernal thread only serve for RTOS.
- *
- * The kernal thread only serve for RTOS.
- *
- * @param NONE.
- *
- * @retval NONE.
+ * @brief To issue a kernal message notification.
  */
-void kernal_rtos_thread(void)
+void _impl_kernal_message_notification(void)
 {
-    while (1)
+    u32p_t postcode = semaphore_give(g_kernal_resource.thread.semId);
+    if (PC_IER(postcode))
     {
-        if (PC_IOK(Kernal_message_arrived()))
-        {
-            _impl_timer_reamining_elapsed_handler();
-        }
+        /* TODO */
     }
-}
-
-/**
- * @brief The privilege routine running at handle mode.
- *
- * The privilege routine running at handle mode.
- *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
- */
-static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
-{
-    UNUSED_MSG(pArgs);
-
-    ENTER_CRITICAL_SECTION();
-
-    g_kernal_object.thread.thId = thread_init(kernal_rtos_thread,
-                                              g_stack_kernalThread,
-                                              KERNAL_THREAD_STACK_SIZE,
-                                              PRIORITY_KERNAL_SCHDULE,
-                                              KERNAL_THREAD_NAME_STRING);
-
-    if (os_id_is_invalid(g_kernal_object.thread.thId))
-    {
-       return PC_FAILED(PC_CMPT_KERNAL);
-    }
-
-    g_kernal_object.thread.semId = semaphore_init(0u, SEMAPHORE_LIMITATION_BINARY_COUNT, KERNAL_THREAD_NAME_STRING);
-    if (os_id_is_invalid(g_kernal_object.thread.semId))
-    {
-        return PC_FAILED(PC_CMPT_KERNAL);
-    }
-
-    NVIC_SetPriority(PendSV_IRQn, 0xFF); // Set PendSV to lowest possible priority
-    NVIC_SetPriority(SVCall_IRQn, 0xFF); // Set SV to lowest possible priority
-    NVIC_SetPriority(SysTick_IRQn, 0xFFu);
-    _impl_clock_time_init(_impl_timer_elapsed_handler);
-
-    g_kernal_object.current = kernal_thread_nextIdGet();
-    g_kernal_object.run = TRUE;
-
-    EXIT_CRITICAL_SECTION();
-
-    kernal_run_theFirstThread(*thread_psp_addressGet(g_kernal_object.current));
-
-    // nothing arrive
-    return PC_FAILED(PC_CMPT_KERNAL);
 }
 
 /**
  * @brief The kernal OS start to run.
- *
- * The kernal OS start to run.
- *
- * @param NONE.
- *
- * @retval NONE.
  */
-u32p_t kernal_rtos_run(void)
+u32p_t _impl_kernal_at_rtos_run(void)
 {
-    u32p_t status = PC_SC_SUCCESS;
-
-    if (!kernal_rtos_isRun())
+    if (!_impl_kernal_rtos_isRun())
     {
-        return kernal_privilege_invoke(_kernal_start_privilege_routine, NULL);
+        return _impl_kernal_privilege_invoke(_kernal_start_privilege_routine, NULL);
     }
-
-   return status;
+    return _PC_CMPT_FAILED;
 }
 
 /**
  * @brief kernal call privilege function in SVC interrupt content.
  *
- * kernal call privilege function in SVC interrupt content.
- *
  * @param svc_args The function arguments.
- *
- * @retval NONE.
  */
-void kernal_privilege_call_inSVC_c(u32_t *svc_args)
+void _impl_kernal_privilege_call_inSVC_c(u32_t *svc_args)
 {
     /*
     * Stack contains:
@@ -787,16 +829,24 @@ void kernal_privilege_call_inSVC_c(u32_t *svc_args)
     }
 }
 
+/**
+ * @brief kernal privilege function invoke interface.
+ *
+ * @param pCallFun The privilege function entry pointer.
+ * @param pArgs The arguments list pool.
+ *
+ * @return The result of the privilege function.
+ */
 u32_t _impl_kernal_privilege_invoke(const void* pCallFun, arguments_t* pArgs)
 {
     if (!pCallFun)
     {
-        return PC_FAILED(PC_CMPT_KERNAL);
+        return _PC_CMPT_FAILED;
     }
 
     u32_t ret = 0u;
 
-    if (kernal_isInPrivilegeMode())
+    if (_kernal_isInPrivilegeMode())
     {
         ENTER_CRITICAL_SECTION();
         pPrivilege_callFunc_t pCall = (pPrivilege_callFunc_t)pCallFun;
@@ -805,7 +855,7 @@ u32_t _impl_kernal_privilege_invoke(const void* pCallFun, arguments_t* pArgs)
     }
     else
     {
-        ret = kernal_svc_call((u32_t)pCallFun, (u32_t)pArgs, 0u, 0u);
+        ret = _impl_kernal_svc_call((u32_t)pCallFun, (u32_t)pArgs, 0u, 0u);
     }
 
     return ret;

@@ -16,27 +16,27 @@ extern "C" {
 
 void SysTick_Handler(void)
 {
-	_impl_clock_isr();
+    _impl_clock_isr();
 }
 
 void HardFault_Handler(void)
 {
-	while(1){};
+    while(1){};
 }
 
 __ASM void SVC_Handler(void)
 {
     /* Before call this the [R0-R3, R12, LR, PC, PSR] store into PSP */
-    TST   LR, #0x04                             				/* call from which stack pointer base on the bit 2 of EXC_RETURN (LR) */
+    TST   LR, #0x04                                             /* call from which stack pointer base on the bit 2 of EXC_RETURN (LR) */
     ITE   EQ
-    MRSEQ R0, MSP                               				/* Set R0 = MSP */
-    MRSNE R0, PSP                               				/* Set R0 = PSP */
+    MRSEQ R0, MSP                                               /* Set R0 = MSP */
+    MRSNE R0, PSP                                               /* Set R0 = PSP */
 
-    B     __cpp(kernal_privilege_call_inSVC_c)  				/* call kernal_privilege_call_inSVC_c */
-	
+    B     __cpp(_impl_kernal_privilege_call_inSVC_c)            /* call _impl_kernal_privilege_call_inSVC_c */
+
     /**
      * return from exception, restoring {R0-R3, R12, LR, PC, PSR}
-	 */
+     */
     ALIGN 4
 }
 
@@ -45,19 +45,19 @@ __ASM void PendSV_Handler(void)
 {
     /**
      * Save current context
-     * Before call this the {R0-R3, R12, LR, PC, PSR} store into PSP 
-	 */
-    CPSID    I                    // Disable interrupts
+     * Before call this the {R0-R3, R12, LR, PC, PSR} store into PSP
+    */
+    CPSID    I                                                   /* Disable interrupts */
     ISB
 
 
     /**
-     *	Call kernal_scheduler_inPendSV_c 
-	 */
+     * Call kernal_scheduler_inPendSV_c
+     */
     PUSH     {R0, R1, R12, LR}
     MOV      R0, SP                                              /* R0 points to the argument ppCurPsp  */
     ADD      R1, SP, #4                                          /* R1 points to the argument ppNextPSP */
-    BL       __cpp(kernal_scheduler_inPendSV_c)                  /* Call kernal_scheduler_inPendSV_c */
+    BL       __cpp(_impl_kernal_scheduler_inPendSV_c)            /* Call _impl_kernal_scheduler_inPendSV_c */
     POP      {R0, R1, R12, LR}                                   /* R0 = ppCurPsp, R1 = ppNextPSP */
 
     CMP      R0, R1                                              /* if R0 = R1 */
@@ -75,12 +75,12 @@ __ASM void PendSV_Handler(void)
     STMDB    R2!, {R3 - R11}                                     /* Save CONTROL, {R4 - R11} */
     STMDB    R2!, {LR}                                           /* Save EXC_RETURN in saved context */
 #else
-    STMDB    R2!, {R4 - R11}      								 /* Save {R4 - R11} */
+    STMDB    R2!, {R4 - R11}                                    /* Save {R4 - R11} */
 #endif
-	
+
     /**
      * Context switching code
-	 */
+    */
     STR      R2, [R0]                                            /* *ppCurPSP = CurPSP */
     LDR      R2, [R1]                                            /* NextPSP = *pNextPSP */
 
@@ -99,10 +99,10 @@ __ASM void PendSV_Handler(void)
 #endif
 
     MSR      PSP, R2                                             /* Set PSP to next thread */
-	
+
     /**
      * End of Context switching code
-	 */
+     */
 Exit
     CPSIE       I                                                /* Enable interrupts */
     ISB
@@ -114,28 +114,28 @@ Exit
 
 __ASM void kernal_run_theFirstThread(u32_t sp)
 {
-	/**
-	 * initialize R4-R11 from context frame using passed SP
-	 */
+    /**
+     * initialize R4-R11 from context frame using passed SP
+     */
 #if defined FPU_ENABLED
-    LDMIA   R0!, {R2 - R11}       								/* Context includes EXC_RETURN and CONTROL {R4 - R11} */
+    LDMIA   R0!, {R2 - R11}                                     /* Context includes EXC_RETURN and CONTROL {R4 - R11} */
 #else
-    LDMIA   R0!, {R4 - R11}       								/* Context {R4 - R11} */
+    LDMIA   R0!, {R4 - R11}                                     /* Context {R4 - R11} */
 #endif
 
-	/* MOV     R2, #0xFFFFFFFD */
+    /* MOV     R2, #0xFFFFFFFD */
 
-    MSR     PSP, R0               								/* load PSP with what is now the current SP value */
+    MSR     PSP, R0                                             /* load PSP with what is now the current SP value */
 
-    MOV     R1, #3                								/* set the CONTROL[SPSEL] bit to start using PSP (no FPU active, unpriviledged) */
+    MOV     R1, #3                                              /* set the CONTROL[SPSEL] bit to start using PSP (no FPU active, unpriviledged) */
     MSR     CONTROL, R1
     ISB
 
     /* STR     R2, [LR] */                                      /* Set EXC_RETURN */
-	MOV     LR, #0xFFFFFFFD
-    BX      LR                    								/* return to caller */
+    MOV     LR, #0xFFFFFFFD
+    BX      LR                                                  /* return to caller */
 
-	ALIGN 4
+    ALIGN 4
 }
 
 #ifdef __cplusplus

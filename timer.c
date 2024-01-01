@@ -54,7 +54,7 @@ static u32_t _kernal_timer_schedule_request_privilege_routine(arguments_t *pArgs
  */
 static timer_context_t* _timer_object_contextGet(os_id_t id)
 {
-    return (timer_context_t*)(kernal_member_unified_id_toContainerAddress(id));
+    return (timer_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
 }
 
 /**
@@ -64,7 +64,7 @@ static timer_context_t* _timer_object_contextGet(os_id_t id)
  */
 static list_t* _timer_list_stopingHeadGet(void)
 {
-    return (list_t*)kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_STOP);
+    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_STOP);
 }
 
 /**
@@ -74,7 +74,7 @@ static list_t* _timer_list_stopingHeadGet(void)
  */
 static list_t* _timer_list_waitingHeadGet(void)
 {
-    return (list_t*)kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_WAIT);
+    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_WAIT);
 }
 
 /**
@@ -84,7 +84,7 @@ static list_t* _timer_list_waitingHeadGet(void)
  */
 static list_t* _timer_list_endingHeadGet(void)
 {
-    return (list_t*)kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_END);
+    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_END);
 }
 
 /**
@@ -94,7 +94,7 @@ static list_t* _timer_list_endingHeadGet(void)
  */
 static list_t* _timer_list_pendingHeadGet(void)
 {
-    return (list_t*)kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_PEND);
+    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_PEND);
 }
 
 /**
@@ -104,7 +104,7 @@ static list_t* _timer_list_pendingHeadGet(void)
  */
 static list_t* _timer_list_runningHeadGet(void)
 {
-    return (list_t*)kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_RUN);
+    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_RUN);
 }
 
 /**
@@ -265,8 +265,8 @@ static linker_head_t* _timer_linker_head_fromWaiting(void)
  */
 static b_t _timer_id_isInvalid(i32_t id)
 {
-    return ((kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id)) &&
-            (kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id)));
+    return ((_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id)) &&
+            (_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id)));
 }
 
 /**
@@ -292,14 +292,14 @@ static b_t _timer_object_isInit(i32_t id)
  */
 u32_t _impl_timer_os_id_to_number(os_id_t id)
 {
-    if (!kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id))
+    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id))
     {
-        return (u32_t)((id - kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) /
+        return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) /
                         sizeof(timer_context_t));
     }
-    else if (!kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id))
+    else if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id))
     {
-        return (u32_t)((id - kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER)) /
+        return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER)) /
                         sizeof(timer_context_t));
     }
     else
@@ -328,7 +328,7 @@ os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t time
         [3] = {(u32_t)pName},
     };
 
-    return kernal_privilege_invoke(_timer_init_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke(_timer_init_privilege_routine, arguments);
 }
 
 /**
@@ -426,7 +426,7 @@ u32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
         [2] = {(u32_t)timeout_ms},
     };
 
-    return kernal_privilege_invoke(_timer_start_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke(_timer_start_privilege_routine, arguments);
 }
 
 /**
@@ -453,7 +453,7 @@ u32p_t _impl_timer_stop(os_id_t id)
         [0] = {(u32_t)id},
     };
 
-    return kernal_privilege_invoke(_timer_stop_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke(_timer_stop_privilege_routine, arguments);
 }
 
 /**
@@ -493,7 +493,7 @@ b_t _impl_timer_status_isBusy(os_id_t id)
  */
 u32_t _impl_timer_total_system_get(void)
 {
-    return kernal_privilege_invoke(_timer_total_system_get_privilege_routine, NULL);
+    return _impl_kernal_privilege_invoke(_timer_total_system_get_privilege_routine, NULL);
 }
 
 /**
@@ -503,7 +503,7 @@ u32_t _impl_timer_total_system_get(void)
  */
 u32p_t _impl_kernal_timer_schedule_request(void)
 {
-    return kernal_privilege_invoke(_kernal_timer_schedule_request_privilege_routine, NULL);
+    return _impl_kernal_privilege_invoke(_kernal_timer_schedule_request_privilege_routine, NULL);
 }
 
 /**
@@ -522,8 +522,8 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
     u32_t timeout_ms = (u32_t)(pArgs[2].u32_val);
     const char_t *pName = (const char_t *)pArgs[3].u32_val;
 
-    timer_context_t *pCurTimer = (timer_context_t *)kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_TIMER);
-    os_id_t id = kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER);
+    timer_context_t *pCurTimer = (timer_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_TIMER);
+    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER);
 
     do {
         if (!_timer_object_isInit(id))
@@ -543,8 +543,8 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
         }
 
             pCurTimer++;
-            id = kernal_member_containerAddress_toUnifiedid((u32_t)pCurTimer);
-    } while ((u32_t)pCurTimer < (u32_t)kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_TIMER));
+            id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurTimer);
+    } while ((u32_t)pCurTimer < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_TIMER));
 
     id = ((!_timer_id_isInvalid(id)) ? (id) : (OS_INVALID_ID));
 
@@ -696,9 +696,6 @@ void _impl_timer_reamining_elapsed_handler(void)
     }
 }
 
-
-static vu32_t give = 0u;
-
 /**
  * @brief Kernal RTOS handle the clock time.
  *
@@ -722,7 +719,7 @@ void _impl_timer_elapsed_handler(u32_t elapsed_us)
             g_timer_resource.system_us += pCurTimer->duration_us;
             pCurTimer->duration_us = 0u;
 
-            if (kernal_member_unified_id_toId(pCurTimer->head.id) == KERNAL_MEMBER_TIMER_INTERNAL)
+            if (_impl_kernal_member_unified_id_toId(pCurTimer->head.id) == KERNAL_MEMBER_TIMER_INTERNAL)
             {
                 _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
 
@@ -780,7 +777,7 @@ void _impl_timer_elapsed_handler(u32_t elapsed_us)
 
     if (request)
     {
-        kernal_message_notification();
+        _impl_kernal_message_notification();
     }
     _impl_kernal_timer_schedule_request();
 
