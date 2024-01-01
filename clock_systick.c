@@ -14,10 +14,10 @@ extern "C" {
 #endif
 
 /* Convert the microsecond to clock count */
-#define _CONVERT_MICROSENCOND_TO_COUNT(us)      (((u64_t)(us) * (PORTAL_SYSTEM_CORE_CLOCK_HZ / 1000000u)) - 1u)
+#define _CONVERT_MICROSENCOND_TO_COUNT(us)      ((u32_t)(us) * (PORTAL_SYSTEM_CORE_CLOCK_MHZ) - 1u)
 
 /* Convert the clock count to microsecond */
-#define _CONVERT_COUNT_TO_MICROSENCOND(count)   (((u64_t)(count) + 1u) / (PORTAL_SYSTEM_CORE_CLOCK_HZ / 1000000u))
+#define _CONVERT_COUNT_TO_MICROSENCOND(count)   ((u32_t)(count) / (PORTAL_SYSTEM_CORE_CLOCK_MHZ))
 
 enum
 {
@@ -26,6 +26,9 @@ enum
 
     /* The minimum timeout setting value is in order to avoid the clock dead looping call */
     _CLOCK_INTERVAL_MIN_US = (PORTAL_SYSTEM_CLOCK_INTERVAL_MIN_US),
+
+    /* The minimum count setting value is in order to avoid the clock dead looping call */
+    _CLOCK_INTERVAL_MIN_COUNT = (_CONVERT_MICROSENCOND_TO_COUNT(_CLOCK_INTERVAL_MIN_US)),
 };
 
 /**
@@ -135,7 +138,7 @@ void _impl_clock_time_interval_set(u32_t interval_us)
     if (interval_us == WAIT_FOREVER)
     {
         SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
-         g_clock_resource.ctrl_enabled = FALSE;
+        g_clock_resource.ctrl_enabled = FALSE;
         return;
     }
     else if (!g_clock_resource.ctrl_enabled)
@@ -149,6 +152,10 @@ void _impl_clock_time_interval_set(u32_t interval_us)
     {
         interval_us = _CLOCK_INTERVAL_MAX_US;
     }
+    else if (interval_us < _CLOCK_INTERVAL_MIN_US)
+    {
+        interval_us = _CLOCK_INTERVAL_MIN_US;
+    }
     u32_t set_count = _CONVERT_MICROSENCOND_TO_COUNT(interval_us);
 
     u32_t elapsed = _clock_elapsed();
@@ -161,6 +168,7 @@ void _impl_clock_time_interval_set(u32_t interval_us)
      * The following code helps to reduce the redundance time,
      * but it can't be fixed entirily
      */
+    u32_t last_load = g_clock_resource.last_load;
     u32_t before = SysTick->VAL;
 
     u32_t unreported = g_clock_resource.total - g_clock_resource.reported;
@@ -171,42 +179,32 @@ void _impl_clock_time_interval_set(u32_t interval_us)
     }
     else
     {
-        set_count -= unreported;
-        interval_us = _CONVERT_COUNT_TO_MICROSENCOND(set_count);
-        set_count = _CONVERT_MICROSENCOND_TO_COUNT(interval_us) - unreported;
-        interval_us = _CONVERT_COUNT_TO_MICROSENCOND(set_count);
-
-        if (interval_us > _CLOCK_INTERVAL_MAX_US)
-        {
-            interval_us = _CLOCK_INTERVAL_MAX_US;
-        }
-        else if (interval_us < _CLOCK_INTERVAL_MIN_US)
-        {
-            interval_us = _CLOCK_INTERVAL_MIN_US;
-        }
-        else
+        if ((interval_us != _CLOCK_INTERVAL_MAX_US) && (set_count > unreported))
         {
             set_count -= unreported;
-            interval_us = _CONVERT_COUNT_TO_MICROSENCOND(set_count);
+            if (set_count < _CLOCK_INTERVAL_MIN_COUNT)
+            {
+                set_count = _CLOCK_INTERVAL_MIN_COUNT;
+            }
         }
 
-        g_clock_resource.last_load = _CONVERT_MICROSENCOND_TO_COUNT(interval_us);
+        g_clock_resource.last_load = set_count;
     }
 
     u32_t after = SysTick->VAL;
 
-	SysTick->LOAD = g_clock_resource.last_load;
-	SysTick->VAL = 0;
+    SysTick->LOAD = g_clock_resource.last_load;
+    SysTick->VAL = 0;
 
-	if (before < after)
-	{
-	    (void)SysTick->CTRL;
-        g_clock_resource.total += (before + (g_clock_resource.last_load - after));
-	}
-	else
-	{
+    if (before < after)
+    {
+        (void)SysTick->CTRL;
+        g_clock_resource.total += (before + (last_load - after));
+    }
+    else
+    {
         g_clock_resource.total += (before - after);
-	}
+    }
 
     EXIT_CRITICAL_SECTION();
 }
@@ -260,7 +258,7 @@ void _impl_clock_time_enable(void)
  */
 void _impl_clock_time_disable(void)
 {
-	SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
+    SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
 }
 
 /**
