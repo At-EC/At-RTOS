@@ -14,11 +14,16 @@
 extern "C" {
 #endif
 
+/**
+ * Local unique postcode.
+ */
 #define _PC_CMPT_FAILED              PC_FAILED(PC_CMPT_QUEUE)
 #define _QUEUE_WAKEUP_SENDER         PC_SC_B
 #define _QUEUE_WAKEUP_RECEIVER       PC_SC_A
 
-static void _queue_callback_fromTimeOut(os_id_t id);
+/**
+ * The local function lists for current file internal use.
+ */
 static u32_t _queue_init_privilege_routine(arguments_t *pArgs);
 static u32_t _queue_send_privilege_routine(arguments_t *pArgs);
 static u32_t _queue_receive_privilege_routine(arguments_t *pArgs);
@@ -28,11 +33,9 @@ static void _queue_schedule(os_id_t id);
 /**
  * @brief Get the queue context based on provided unique id.
  *
- * Get the queue context based on provided unique id, and then return the queue context pointer.
+ * @param id The timer unique id.
  *
- * @param id queue unique id.
- *
- * @retval VALUE The queue context.
+ * @return The pointer of the current unique id timer context.
  */
 static queue_context_t* _queue_object_contextGet(os_id_t id)
 {
@@ -40,13 +43,9 @@ static queue_context_t* _queue_object_contextGet(os_id_t id)
 }
 
 /**
- * @brief Get the queue init list head address.
+ * @brief Get the init queue list head.
  *
- * Get Get the queue init list head address.
- *
- * @param NONE.
- *
- * @retval VALUE The init list head address.
+ * @return The value of the init list head.
  */
 static list_t* _queue_list_initHeadGet(void)
 {
@@ -54,13 +53,9 @@ static list_t* _queue_list_initHeadGet(void)
 }
 
 /**
- * @brief Get the instance blocking list head address.
+ * @brief Get the queue blocking thread list head address.
  *
- * Get the instance blocking list head address.
- *
- * @param NONE.
- *
- * @retval VALUE The blocking list head address.
+ * @return The blocking thread list head address.
  */
 static list_t* _queue_list_inBlockingHeadGet(os_id_t id)
 {
@@ -69,13 +64,9 @@ static list_t* _queue_list_inBlockingHeadGet(os_id_t id)
 }
 
 /**
- * @brief Get the instance blocking list head address.
+ * @brief Get the queue blocking thread list head address.
  *
- * Get the instance blocking list head address.
- *
- * @param NONE.
- *
- * @retval VALUE The blocking list head address.
+ * @return The blocking thread list head address.
  */
 static list_t* _queue_list_OutBlockingHeadGet(os_id_t id)
 {
@@ -86,11 +77,7 @@ static list_t* _queue_list_OutBlockingHeadGet(os_id_t id)
 /**
  * @brief Push one queue context into init list.
  *
- * Push one queue context into init list.
- *
  * @param pCurHead The pointer of the queue linker head.
- *
- * @retval NONE .
  */
 static void _queue_list_transferToInit(linker_head_t *pCurHead)
 {
@@ -105,12 +92,9 @@ static void _queue_list_transferToInit(linker_head_t *pCurHead)
 /**
  * @brief Check if the queue unique id if is's invalid.
  *
- * Check if the queue unique id if is's invalid.
- *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is invalid
- *         FALSE The id is valid
+ * @return The true is invalid, otherwise is valid.
  */
 static b_t _queue_id_isInvalid(i32_t id)
 {
@@ -120,35 +104,21 @@ static b_t _queue_id_isInvalid(i32_t id)
 /**
  * @brief Check if the queue object if is's initialized.
  *
- * Check if the queue unique id if is's initialization.
- *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is initialized.
- *         FALSE The id isn't initialized.
+ * @return The true is initialized, otherwise is uninitialized.
  */
 static b_t _queue_object_isInit(i32_t id)
 {
     queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(id);
 
-    if (pCurQueue)
-    {
-        return ((pCurQueue->head.linker.pList) ? (TRUE) : (FALSE));
-    }
-    else
-    {
-        return FALSE;
-    }
+    return ((pCurQueue) ? (((pCurQueue->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
 }
 
 /**
  * @brief The queue timeout callback fucntion.
  *
- * The queue timeout callback fucntion.
- *
  * @param id The queue unique id.
- *
- * @retval NONE.
  */
 static void _queue_callback_fromTimeOut(os_id_t id)
 {
@@ -159,11 +129,9 @@ static void _queue_callback_fromTimeOut(os_id_t id)
 /**
  * @brief Convert the internal os id to kernal member number.
  *
- * Convert the internal os id to kernal member number.
- *
  * @param id The provided unique id.
  *
- * @retval VALUE Member number.
+ * @return The value of member number.
  */
 u32_t _impl_queue_os_id_to_number(os_id_t id)
 {
@@ -173,14 +141,12 @@ u32_t _impl_queue_os_id_to_number(os_id_t id)
 /**
  * @brief Initialize a new queue.
  *
- * Initialize a new queue.
- *
  * @param pName The queue name.
  * @param pQueueBufferAddr The pointer of the queue buffer.
  * @param elementLen The element size.
  * @param elementNum The element number.
  *
- * @retval VALUE The queue unique id.
+ * @return The queue unique id.
  */
 os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
 {
@@ -213,13 +179,9 @@ os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t e
 /**
  * @brief Send a queue message.
  *
- * Send a queue message.
- *
  * @param pCurQueue The current queue context.
  * @param pUserBuffer The pointer of user's message buffer.
  * @param userSize The size of user's message buffer.
- *
- * @retval NONE.
  */
 static void _queue_message_send(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
 {
@@ -237,13 +199,9 @@ static void _queue_message_send(queue_context_t *pCurQueue, const u8_t *pUserBuf
 /**
  * @brief Receive a queue message.
  *
- * Receive a queue message.
- *
  * @param pCurQueue The current queue context.
  * @param pUserBuffer The pointer of user's message buffer.
  * @param userSize The size of user's message buffer.
- *
- * @retval NONE.
  */
 static void _queue_message_receive(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
 {
@@ -261,14 +219,12 @@ static void _queue_message_receive(queue_context_t *pCurQueue, const u8_t *pUser
 /**
  * @brief Send a queue message.
  *
- * Send a queue message.
- *
  * @param id The queue unique id.
  * @param pUserBuffer The pointer of the message buffer address.
  * @param bufferSize The queue buffer size.
  * @param timeout_ms The queue send timeout option.
  *
- * @retval The result of the operation.
+ * @return The result of the operation.
  */
 u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u32_t timeout_ms)
 {
@@ -284,7 +240,7 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u
 
     if (!_impl_kernal_isInThreadMode())
     {
-        if (timeout_ms != QUEUE_IMMEDIATELY)
+        if (timeout_ms != OS_TIME_NOWAIT_VAL)
         {
             return _PC_CMPT_FAILED;
         }
@@ -321,14 +277,12 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u
 /**
  * @brief Receive a queue message.
  *
- * Receive a queue message.
- *
  * @param id The queue unique id.
  * @param pUserBuffer The pointer of the message buffer address.
  * @param bufferSize The queue buffer size.
  * @param timeout_ms The queue send timeout option.
  *
- * @retval The result of the operation.
+ * @return The result of the operation.
  */
 u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u32_t timeout_ms)
 {
@@ -347,7 +301,7 @@ u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
 
     if (!_impl_kernal_isInThreadMode())
     {
-        if (timeout_ms != QUEUE_IMMEDIATELY)
+        if (timeout_ms != OS_TIME_NOWAIT_VAL)
         {
             return _PC_CMPT_FAILED;
         }
@@ -383,16 +337,11 @@ u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
 {
@@ -438,16 +387,11 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
 {
@@ -470,7 +414,7 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
 
     if (pCurQueue->cacheSize == pCurQueue->elementNumber)
     {
-        if (timeout_ms == QUEUE_IMMEDIATELY)
+        if (timeout_ms == OS_TIME_NOWAIT_VAL)
         {
             EXIT_CRITICAL_SECTION();
             return _PC_CMPT_FAILED;
@@ -508,16 +452,11 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
 {
@@ -540,7 +479,7 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
 
     if (!pCurQueue->cacheSize)
     {
-        if (timeout_ms == QUEUE_IMMEDIATELY)
+        if (timeout_ms == OS_TIME_NOWAIT_VAL)
         {
             EXIT_CRITICAL_SECTION();
             return _PC_CMPT_FAILED;
@@ -578,14 +517,9 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief Queue invoke back handle routine.
+ * @brief The queue schedule routine execute the the pendsv context.
  *
- * Queue wakeup handle routine.
- *
- * @param pWakeupThread The thread pointer.
- *
- * @retval TRUE It's for queue object.
- * @retval FALSE It's not for queue object.
+ * @param id The unique id of the entry thread.
  */
 static void _queue_schedule(os_id_t id)
 {

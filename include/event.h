@@ -14,13 +14,9 @@
 extern "C" {
 #endif
 
-#define EVENT_USER_DEFINE_INSTANCE_NUMBER_MAX          (10u)
-
-#define EVENT_INSTANCE_NUMBER_MAX                      (EVENT_USER_DEFINE_INSTANCE_NUMBER_MAX)
-#define EVENT_ROOT_TARGET_INSTANCE                     (0u)
-#define EVENT_WAIT_FOREVER                             (0xFFFFFFFFu)
-#define EVENT_WAIT_ALL                                 (0xFFFFFFFFu)
-
+/**
+ * The implement function lists for rtos kernal internal use.
+ */
 u32_t   _impl_event_os_id_to_number(os_id_t id);
 os_id_t _impl_event_init(u32_t edge, pEvent_callbackFunc_t pCallFun, const char_t *pName);
 u32p_t  _impl_event_set(os_id_t id, u32_t event);

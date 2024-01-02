@@ -15,27 +15,27 @@
 extern "C" {
 #endif
 
+/**
+ * Local unique postcode.
+ */
 #define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_THREAD)
 
 /**
  * The local function lists for current file internal use.
  */
-static void  _thread_callback_fromTimeOut(os_id_t id);
 static os_id_t _thread_init_privilege_routine(arguments_t* pArgs);
-static u32_t _thread_resume_privilege_routine(arguments_t* pArgs);
-static u32_t _thread_suspend_privilege_routine(arguments_t* pArgs);
-static u32_t _thread_yield_privilege_routine(arguments_t* pArgs);
-static u32_t _thread_sleep_privilege_routine(arguments_t* pArgs);
-static u32_t _thread_delete_privilege_routine(arguments_t* pArgs);
+static u32_t   _thread_resume_privilege_routine(arguments_t* pArgs);
+static u32_t   _thread_suspend_privilege_routine(arguments_t* pArgs);
+static u32_t   _thread_yield_privilege_routine(arguments_t* pArgs);
+static u32_t   _thread_sleep_privilege_routine(arguments_t* pArgs);
+static u32_t   _thread_delete_privilege_routine(arguments_t* pArgs);
 
 /**
  * @brief Get the thread context based on provided unique id.
  *
- * Get the thread context based on provided unique id, and then return the thread context pointer.
- *
  * @param id Thread unique id.
  *
- * @retval VALUE The thread context.
+ * @return The pointer of the current unique id thread context.
  */
 static thread_context_t* _thread_object_contextGet(os_id_t id)
 {
@@ -45,11 +45,7 @@ static thread_context_t* _thread_object_contextGet(os_id_t id)
 /**
  * @brief Get the current runtime thread id.
  *
- * Get the current runtime thread id.
- *
- * @param NONE.
- *
- * @retval VALUE The id of current thread.
+ * @return The id of current running thread.
  */
 static os_id_t _thread_id_runtime_get(void)
 {
@@ -59,11 +55,7 @@ static os_id_t _thread_id_runtime_get(void)
 /**
  * @brief Get the current runtime thread object context.
  *
- * Get the current runtime thread object context.
- *
- * @param NONE.
- *
- * @retval VALUE The id of current thread object context.
+ * @return The pointer of current running thread.
  */
 static thread_context_t* _thread_object_runtime_get(void)
 {
@@ -71,13 +63,9 @@ static thread_context_t* _thread_object_runtime_get(void)
 }
 
 /**
- * @brief Get the thread waiting list head address.
+ * @brief Get the waiting thread list head.
  *
- * Get the thread waiting list head address.
- *
- * @param NONE.
- *
- * @retval VALUE The waiting list head address.
+ * @return The value of the waiting list head.
  */
 static list_t* _thread_list_waitingHeadGet(void)
 {
@@ -85,13 +73,9 @@ static list_t* _thread_list_waitingHeadGet(void)
 }
 
 /**
- * @brief Get the thread pending list head address.
+ * @brief Get the pending thread list head.
  *
- * Get the thread pending list head address.
- *
- * @param NONE.
- *
- * @retval VALUE The pending list head address.
+ * @return The value of the pending list head.
  */
 static list_t* _thread_list_pendingHeadGet(void)
 {
@@ -99,13 +83,9 @@ static list_t* _thread_list_pendingHeadGet(void)
 }
 
 /**
- * @brief Push one thread context into uninitialized status.
- *
- * Push one thread context into uninitialized status.
+ * @brief Push one thread into uninitialized status.
  *
  * @param pCurHead The pointer of the thread linker head.
- *
- * @retval NONE .
  */
 static void _thread_list_transfer_toUninitialized(linker_head_t *pCurHead)
 {
@@ -119,11 +99,7 @@ static void _thread_list_transfer_toUninitialized(linker_head_t *pCurHead)
 /**
  * @brief Push one thread context into waiting list.
  *
- * Push one thread context into waiting list.
- *
  * @param pCurHead The pointer of the thread linker head.
- *
- * @retval NONE .
  */
 static void _thread_list_transfer_toWait(linker_head_t *pCurHead)
 {
@@ -136,13 +112,9 @@ static void _thread_list_transfer_toWait(linker_head_t *pCurHead)
 }
 
 /**
- * @brief Push one thread context into Wakeup list.
- *
- * Push one thread context into Wakeup list.
+ * @brief Push one thread context into entry list.
  *
  * @param pCurHead The pointer of the thread linker head.
- *
- * @retval NONE .
  */
 static void _thread_list_transfer_toEntry(linker_head_t *pCurHead)
 {
@@ -156,11 +128,7 @@ static void _thread_list_transfer_toEntry(linker_head_t *pCurHead)
 /**
  * @brief Push one thread context into pending list.
  *
- * Push one thread context into pending list.
- *
  * @param pCurHead The pointer of the thread linker head.
- *
- * @retval NONE .
  */
 static void _thread_list_transfer_toPend(linker_head_t *pCurHead)
 {
@@ -174,11 +142,7 @@ static void _thread_list_transfer_toPend(linker_head_t *pCurHead)
 /**
  * @brief Pick up a highest priority thread from the pending list.
  *
- * Pick up a highest priority thread from the pending list.
- *
- * @param NONE
- *
- * @retval VALUE The highest thread head.
+ * @return The pointer of the pending thread head.
  */
 static linker_head_t* _thread_linker_head_fromPending(void)
 {
@@ -192,11 +156,7 @@ static linker_head_t* _thread_linker_head_fromPending(void)
 /**
  * @brief Pick up the next priority thread from the pending list.
  *
- * Pick up the next priority thread from the pending list.
- *
- * @param NONE
- *
- * @retval VALUE The next thread head.
+ * @return The pointer of the next pending thread head.
  */
 static linker_head_t* _thread_linker_Head_next_fromPending(void)
 {
@@ -206,30 +166,11 @@ static linker_head_t* _thread_linker_Head_next_fromPending(void)
 }
 
 /**
- * @brief Get the current thread PSP stack address.
- *
- * Get the current thread PSP stack address.
- *
- * @param id The thread unique id.
- *
- * @retval VALUE The PSP stacke address.
- */
-u32_t* thread_psp_addressGet(os_id_t id)
-{
-    thread_context_t* pCurThread = (thread_context_t*)_thread_object_contextGet(id);
-
-    return (u32_t*)&pCurThread->PSPStartAddr;
-}
-
-/**
  * @brief Check if the thread unique id if is's invalid.
- *
- * Check if the thread unique id if is's invalid.
  *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is invalid
- *         FALSE The id is valid
+ * @return The true indicates the id is invalid, otherwise it valid.
  */
 static b_t _thread_id_isInvalid(os_id_t id)
 {
@@ -237,37 +178,23 @@ static b_t _thread_id_isInvalid(os_id_t id)
 }
 
 /**
- * @brief Check if the thread object if is's initialized.
- *
- * Check if the thread unique id if is's initialization.
+ * @brief Check if the timer object if is's initialized.
  *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is initialized.
- *         FALSE The id isn't initialized.
+ * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t thread_object_isInit(os_id_t id)
+static b_t _thread_object_isInit(os_id_t id)
 {
     thread_context_t *pCurThread = (thread_context_t *)_thread_object_contextGet(id);
 
-    if (pCurThread)
-    {
-        return ((pCurThread->head.linker.pList) ? (TRUE) : (FALSE));
-    }
-    else
-    {
-        return FALSE;
-    }
+    return ((pCurThread) ? (((pCurThread->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
 }
 
 /**
  * @brief The thread timeout callback fucntion.
  *
- * The thread timeout callback fucntion.
- *
  * @param id The thread unique id.
- *
- * @retval NONE.
  */
 static void _thread_callback_fromTimeOut(os_id_t id)
 {
@@ -278,11 +205,7 @@ static void _thread_callback_fromTimeOut(os_id_t id)
 /**
  * @brief Convert the internal os id to kernal member number.
  *
- * Convert the internal os id to kernal member number.
- *
- * @param id The provided unique id.
- *
- * @retval VALUE Member number.
+ * @return The Member number.
  */
 u32_t _impl_thread_os_id_to_number(os_id_t id)
 {
@@ -292,15 +215,13 @@ u32_t _impl_thread_os_id_to_number(os_id_t id)
 /**
  * @brief Initialize a new thread.
  *
- * Initialize a new thread.
- *
  * @param pEntryFun The thread entry function pointer.
  * @param pAddress The thread stack address.
  * @param size The thread stack size.
  * @param priority The thread priority.
  * @param pName The thread name.
  *
- * @retval VALUE The thread unique id.
+ * @return The value of thread unique id.
  */
 os_id_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t size, u8_t priority, const char_t *pName)
 {
@@ -347,11 +268,9 @@ os_id_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t 
 /**
  * @brief Resume a thread to run.
  *
- * Resume a thread to run.
- *
  * @param id The thread unique id.
  *
- * @retval VALUE The result of thread resume.
+ * @return The result of thread resume operation.
  */
 u32p_t _impl_thread_resume(os_id_t id)
 {
@@ -360,7 +279,7 @@ u32p_t _impl_thread_resume(os_id_t id)
         return _PC_CMPT_FAILED;
     }
 
-    if (!thread_object_isInit(id))
+    if (!_thread_object_isInit(id))
     {
         return _PC_CMPT_FAILED;
     }
@@ -374,13 +293,11 @@ u32p_t _impl_thread_resume(os_id_t id)
 }
 
 /**
- * @brief Suspend a thread to allow other thread to run.
- *
- * Suspend a thread to allow other thread to run.
+ * @brief Suspend a thread to permit another to run.
  *
  * @param id The thread unique id.
  *
- * @retval VALUE The result of thread Suspend.
+ * @return The result of thread suspend operation.
  */
 u32p_t _impl_thread_suspend(os_id_t id)
 {
@@ -389,7 +306,7 @@ u32p_t _impl_thread_suspend(os_id_t id)
         return _PC_CMPT_FAILED;
     }
 
-    if (!thread_object_isInit(id))
+    if (!_thread_object_isInit(id))
     {
         return _PC_CMPT_FAILED;
     }
@@ -405,11 +322,9 @@ u32p_t _impl_thread_suspend(os_id_t id)
 /**
  * @brief Yield current thread to allow other thread to run.
  *
- * Yield a thread to allow other thread to run.
- *
  * @param id The thread unique id.
  *
- * @retval VALUE The result of thread yield.
+ * @return The result of thread yield operation.
  */
 u32p_t _impl_thread_yield(void)
 {
@@ -422,13 +337,11 @@ u32p_t _impl_thread_yield(void)
 }
 
 /**
- * @brief Delete a not current running thread, and the stack data will be erased but stack memory cann't be free.
- *
- * Delete a not current running thread, and the stack data will be erased but stack memory cann't be free.
+ * @brief Delete a idle thread, and erase the stack data.
  *
  * @param id The thread unique id.
  *
- * @retval VALUE The result of thread delete.
+ * @return The result of thread delete operation.
  */
 u32p_t _impl_thread_delete(os_id_t id)
 {
@@ -437,7 +350,7 @@ u32p_t _impl_thread_delete(os_id_t id)
         return _PC_CMPT_FAILED;
     }
 
-    if (!thread_object_isInit(id))
+    if (!_thread_object_isInit(id))
     {
         return _PC_CMPT_FAILED;
     }
@@ -451,13 +364,11 @@ u32p_t _impl_thread_delete(os_id_t id)
 }
 
 /**
- * @brief Set thread into sleep mode with timeout function.
- *
- * Set thread into sleep mode with timeout function.
+ * @brief Put the current running thread into sleep mode with timeout condition.
  *
  * @param timeout_ms The time user defined.
  *
- * @retval VALUE The result of thread sleep.
+ * @return The result of thread sleep operation.
  */
 u32p_t _impl_thread_sleep(u32_t timeout_ms)
 {
@@ -480,43 +391,11 @@ u32p_t _impl_thread_sleep(u32_t timeout_ms)
 }
 
 /**
- * @brief Check the thread stack if the data overflow.
+ * @brief It's sub-routine running at privilege mode.
  *
- * Check the thread stack if the data overflow.
+ * @param pArgs The function argument packages.
  *
- * @param NONE.
- *
- * @retval NONE.
- */
-void thread_stack_check(void)
-{
-    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_THREAD);
-    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD);
-
-    while (((u32_t)pCurThread < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_THREAD)) && (pCurThread) && thread_object_isInit(id))
-    {
-        if (*pCurThread->pStackAddr != STACT_UNUSED_FRAME_MARK)
-        {
-            /* Restore it so further checks don't trigger this same error */
-            *pCurThread->pStackAddr = STACT_UNUSED_FRAME_MARK;
-            while(1){};
-        }
-        pCurThread++;
-        id++;
-    }
-}
-
-/**
- * @brief The privilege routine running at handle mode.
- *
- * The privilege routine running at handle mode.
- *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static os_id_t _thread_init_privilege_routine(arguments_t* pArgs)
 {
@@ -532,7 +411,7 @@ static os_id_t _thread_init_privilege_routine(arguments_t* pArgs)
     os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD);
 
     do {
-        if (!thread_object_isInit(id))
+        if (!_thread_object_isInit(id))
         {
             _memset((char_t*)pCurThread, 0x0u, sizeof(thread_context_t));
 
@@ -562,16 +441,11 @@ static os_id_t _thread_init_privilege_routine(arguments_t* pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32p_t _thread_resume_privilege_routine(arguments_t* pArgs)
 {
@@ -591,16 +465,11 @@ static u32p_t _thread_resume_privilege_routine(arguments_t* pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32p_t _thread_suspend_privilege_routine(arguments_t* pArgs)
 {
@@ -625,16 +494,11 @@ static u32p_t _thread_suspend_privilege_routine(arguments_t* pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32p_t _thread_yield_privilege_routine(arguments_t* pArgs)
 {
@@ -659,16 +523,11 @@ static u32p_t _thread_yield_privilege_routine(arguments_t* pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32p_t _thread_delete_privilege_routine(arguments_t* pArgs)
 {
@@ -694,16 +553,11 @@ static u32p_t _thread_delete_privilege_routine(arguments_t* pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32p_t _thread_sleep_privilege_routine(arguments_t* pArgs)
 {

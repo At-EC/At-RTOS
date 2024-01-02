@@ -14,10 +14,15 @@
 extern "C" {
 #endif
 
+/**
+ * Local unique postcode.
+ */
 #define _PC_CMPT_FAILED                             PC_FAILED(PC_CMPT_SEMAPHORE)
 #define _SEMAPHORE_AVAILABLE_COUNT_MAXIMUM          (0xFFu)
 
-static void  _semaphore_callback_fromTimeOut(os_id_t id);
+/**
+ * The local function lists for current file internal use.
+ */
 static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs);
 static u32_t _semaphore_take_privilege_routine(arguments_t *pArgs);
 static u32_t _semaphore_give_privilege_routine(arguments_t *pArgs);
@@ -28,25 +33,20 @@ static void _semaphore_schedule(os_id_t id);
 /**
  * @brief Get the semaphore context based on provided unique id.
  *
- * Get the semaphore context based on provided unique id, and then return the semaphore context pointer.
+ * @param id The timer unique id.
  *
- * @param id The semaphore unique id.
- *
- * @retval VALUE The semaphore context.
+ * @return The pointer of the current unique id timer context.
  */
+
 static semaphore_context_t* _semaphore_object_contextGet(os_id_t id)
 {
     return (semaphore_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
 }
 
 /**
- * @brief Get the semaphore locking list head address.
+ * @brief Get the locking semaphore list head.
  *
- * Get the semaphore locking list head address.
- *
- * @param NONE.
- *
- * @retval VALUE The locking list head address.
+ * @return The value of the locking list head.
  */
 static list_t* _semaphore_list_lockingHeadGet(void)
 {
@@ -54,13 +54,9 @@ static list_t* _semaphore_list_lockingHeadGet(void)
 }
 
 /**
- * @brief Get the semaphore unlocking list head address.
+ * @brief Get the unlocking semaphore list head.
  *
- * Get the semaphore unlocking list head address.
- *
- * @param NONE.
- *
- * @retval VALUE The unlocking list head address.
+ * @return The value of the unlocking list head.
  */
 static list_t* _semaphore_list_unlockingHeadGet(void)
 {
@@ -70,11 +66,7 @@ static list_t* _semaphore_list_unlockingHeadGet(void)
 /**
  * @brief Get the semaphore blocking thread list head address.
  *
- * Get the blocking thread list head address.
- *
- * @param NONE.
- *
- * @retval VALUE the blocking thread list head address.
+ * @return The blocking thread list head address.
  */
 static list_t* _semaphore_list_blockingHeadGet(os_id_t id)
 {
@@ -86,11 +78,7 @@ static list_t* _semaphore_list_blockingHeadGet(os_id_t id)
 /**
  * @brief Push one semaphore context into locking list.
  *
- * Push one semaphore context into locking list.
- *
  * @param pCurHead The pointer of the semaphore linker head.
- *
- * @retval NONE .
  */
 static void _semaphore_list_transfer_toLock(linker_head_t *pCurHead)
 {
@@ -105,11 +93,7 @@ static void _semaphore_list_transfer_toLock(linker_head_t *pCurHead)
 /**
  * @brief Push one semaphore context into unlocking list.
  *
- * Push one semaphore context into unlocking list.
- *
  * @param pCurHead The pointer of the semaphore linker head.
- *
- * @retval NONE .
  */
 static void _semaphore_list_transfer_toUnlock(linker_head_t *pCurHead)
 {
@@ -122,13 +106,11 @@ static void _semaphore_list_transfer_toUnlock(linker_head_t *pCurHead)
 }
 
 /**
- * @brief Pick up a highest priority thread from the pending list.
+ * @brief Pick up a highest priority thread that blocking by the semaphore pending list.
  *
- * Pick up a highest priority thread from the pending list.
+ * @param The semaphore unique id.
  *
- * @param NONE
- *
- * @retval VALUE The highest thread head.
+ * @return The highest blocking thread head.
  */
 static linker_head_t* _semaphore_linker_head_fromBlocking(os_id_t id)
 {
@@ -142,12 +124,9 @@ static linker_head_t* _semaphore_linker_head_fromBlocking(os_id_t id)
 /**
  * @brief Check if the semaphore unique id if is's invalid.
  *
- * Check if the semaphore unique id if is's invalid.
- *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is invalid
- *         FALSE The id is valid
+ * @return The true is invalid, otherwise is valid.
  */
 static b_t _semaphore_id_isInvalid(i32_t id)
 {
@@ -157,35 +136,21 @@ static b_t _semaphore_id_isInvalid(i32_t id)
 /**
  * @brief Check if the semaphore object if is's initialized.
  *
- * Check if the semaphore unique id if is's initialization.
- *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is initialized.
- *         FALSE The id isn't initialized.
+ * @return The true is initialized, otherwise is uninitialized.
  */
 static b_t _semaphore_object_isInit(i32_t id)
 {
     semaphore_context_t *pCurSemaphore = (semaphore_context_t *)_semaphore_object_contextGet(id);
 
-    if (pCurSemaphore)
-    {
-        return ((pCurSemaphore->head.linker.pList) ? (TRUE) : (FALSE));
-    }
-    else
-    {
-        return FALSE;
-    }
+    return ((pCurSemaphore) ? (((pCurSemaphore->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
 }
 
 /**
  * @brief The semaphore timeout callback fucntion.
  *
- * The semaphore timeout callback fucntion.
- *
  * @param id The semaphore unique id.
- *
- * @retval NONE.
  */
 static void _semaphore_callback_fromTimeOut(os_id_t id)
 {
@@ -196,11 +161,9 @@ static void _semaphore_callback_fromTimeOut(os_id_t id)
 /**
  * @brief Convert the internal os id to kernal member number.
  *
- * Convert the internal os id to kernal member number.
- *
  * @param id The provided unique id.
  *
- * @retval VALUE Member number.
+ * @return The semaphore member's number.
  */
 u32_t _impl_semaphore_os_id_to_number(os_id_t id)
 {
@@ -210,13 +173,11 @@ u32_t _impl_semaphore_os_id_to_number(os_id_t id)
 /**
  * @brief Initialize a new semaphore.
  *
- * Initialize a new semaphore.
- *
  * @param pName The semaphore name.
  * @param availableCount The available count that allows the system take.
  * @param limitationCount The maximum count that it's the semaphore's limitation.
  *
- * @retval VALUE The semaphore unique id.
+ * @return The semaphore unique id.
  */
 os_id_t _impl_semaphore_init(u8_t availableCount, u8_t limitationCount, const char_t *pName)
 {
@@ -233,11 +194,9 @@ os_id_t _impl_semaphore_init(u8_t availableCount, u8_t limitationCount, const ch
 /**
  * @brief Take the semaphore away with timeout option.
  *
- * Take the semaphore away wiht timeout option.
- *
  * @param id The semaphore unique id.
  *
- * @retval VALUE The result of the operation.
+ * @return The result of the operation.
  */
 u32p_t _impl_semaphore_take(os_id_t id, u32_t timeout_ms)
 {
@@ -290,11 +249,9 @@ u32p_t _impl_semaphore_take(os_id_t id, u32_t timeout_ms)
 /**
  * @brief Give the semaphore to release the avaliable count.
  *
- * Give the semaphore to release the avaliable count.
- *
  * @param id The semaphore unique id.
  *
- * @retval VALUE The result of the operation.
+ * @return The result of the operation.
  */
 u32_t _impl_semaphore_give(os_id_t id)
 {
@@ -319,12 +276,9 @@ u32_t _impl_semaphore_give(os_id_t id)
 /**
  * @brief Flush the semaphore to release all the avaliable count.
  *
- * Flush the semaphore to release all the avaliable count.
- *
  * @param id The semaphore unique id.
  *
- * @retval POSTCODE_RTOS_SEMAPHORE_FLUSH_SUCCESS Semaphore flush successful.
- *         POSTCODE_RTOS_SEMAPHORE_FLUSH_FAILED Semaphore flush failed.
+ * @return The result of the operation.
  */
 u32_t _impl_semaphore_flush(os_id_t id)
 {
@@ -347,16 +301,11 @@ u32_t _impl_semaphore_flush(os_id_t id)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
 {
@@ -404,16 +353,11 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _semaphore_take_privilege_routine(arguments_t *pArgs)
 {
@@ -455,16 +399,11 @@ static u32_t _semaphore_take_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _semaphore_give_privilege_routine(arguments_t *pArgs)
 {
@@ -494,16 +433,11 @@ static u32_t _semaphore_give_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
 {
@@ -532,16 +466,10 @@ static u32_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
     return postcode;
 }
 
-
 /**
- * @brief Semaphore invoke back handle routine.
+ * @brief The semaphore schedule routine execute the the pendsv context.
  *
- * Semaphore wakeup handle routine.
- *
- * @param pWakeupThread The thread pointer.
- *
- * @retval TRUE It's for semaphore object.
- * @retval FALSE It's not for semaphore object.
+ * @param id The unique id of the entry thread.
  */
 static void _semaphore_schedule(os_id_t id)
 {

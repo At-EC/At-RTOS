@@ -80,10 +80,12 @@ typedef u32_t                                   u32p_t;
 #define ROUND_DOWN(size, align)                 (((u32_t)(size)) & (~(align - 1)))
 #define RANGE_ADDRESS_CONDITION(address, pool)  (((u32_t)(address) >= (u32_t)(pool)) && ((u32_t)(address) < ((u32_t)(pool) + (u16_t)SIZEOF(pool))))
 
+/**
+ * The implement string operation function lists for rtos kernal internal use.
+ */
 void  _memcpy(char_t *dst, const char_t *src, u32_t cnt);
 void  _memset(char_t *dst, u8_t val, u32_t cnt);
 i32_t _memcmp(const char_t *dst, const char_t *src, u32_t cnt);
-i32_t _memstr(const char_t *str, u32_t chr);
 u32_t _strlen(const char_t *str);
 
 #ifdef __cplusplus

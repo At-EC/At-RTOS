@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 /* Local defined the kernal thread stack */
-ATOS_STACK_DEFINE(g_kernal_stack, KERNAL_THREAD_STACK_SIZE);
+ATOS_STACK_DEFINE(g_kernal_schedule_stack, KERNAL_THREAD_STACK_SIZE);
 
 #define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_KERNAL)
 
@@ -138,6 +138,20 @@ static b_t _kernal_isInPrivilegeMode(void)
 }
 
 /**
+ * @brief Get the thread PSP stack address.
+ *
+ * @param id The thread unique id.
+ *
+ * @return The PSP stacke address.
+ */
+u32_t* _kernal_thread_PSP_Get(os_id_t id)
+{
+    thread_context_t* pCurThread = (thread_context_t*)_impl_kernal_member_unified_id_toContainerAddress(id);
+
+    return (u32_t*)&pCurThread->PSPStartAddr;
+}
+
+/**
  * @brief Get the next thread id.
  *
  * @return The next thread id.
@@ -246,7 +260,7 @@ static b_t _kernal_thread_exit_schedule(void)
         if (pExit->timeout_us)
         {
             _impl_thread_timer_start(_impl_kernal_member_unified_id_threadToTimer(pCurThread->head.id), pExit->timeout_us, pExit->pTimeoutCallFun);
-            if (pExit->timeout_us != WAIT_FOREVER)
+            if (pExit->timeout_us != OS_TIME_FOREVER_VAL)
             {
                 request = TRUE;
             }
@@ -263,13 +277,13 @@ static b_t _kernal_thread_exit_schedule(void)
  */
 static u32_t _kernal_message_arrived(void)
 {
-    return semaphore_take(g_kernal_resource.thread.semId, SEMAPHORE_WAIT_FOREVER);
+    return semaphore_take(g_kernal_resource.thread.semId, OS_TIME_FOREVER_VAL);
 }
 
 /**
  * @brief The kernal thread only serve for RTOS with highest priority.
  */
-static void _kernal_atos_thread(void)
+static void _kernal_atos_schedule_thread(void)
 {
     while (1)
     {
@@ -294,19 +308,19 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
 
     ENTER_CRITICAL_SECTION();
 
-    g_kernal_resource.thread.thId = thread_init(_kernal_atos_thread,
-                                              g_kernal_stack,
-                                              KERNAL_THREAD_STACK_SIZE,
-                                              PRIORITY_KERNAL_SCHDULE,
-                                              KERNAL_THREAD_NAME_STRING);
+    g_kernal_resource.thread.thId = AtOS.thread_init(_kernal_atos_schedule_thread,
+                                                     g_kernal_schedule_stack,
+                                                     KERNAL_THREAD_STACK_SIZE,
+                                                     OS_PRIORITY_KERNAL_THREAD_SCHEDULE_LEVEL,
+                                                     KERNAL_THREAD_NAME_STRING);
 
-    if (os_id_is_invalid(g_kernal_resource.thread.thId))
+    if (AtOS.os_id_is_invalid(g_kernal_resource.thread.thId))
     {
        return _PC_CMPT_FAILED;
     }
 
-    g_kernal_resource.thread.semId = semaphore_init(0u, SEMAPHORE_LIMITATION_BINARY_COUNT, KERNAL_THREAD_NAME_STRING);
-    if (os_id_is_invalid(g_kernal_resource.thread.semId))
+    g_kernal_resource.thread.semId = AtOS.semaphore_init(0u, OS_SEMPHORE_TICKET_BINARY, KERNAL_THREAD_NAME_STRING);
+    if (AtOS.os_id_is_invalid(g_kernal_resource.thread.semId))
     {
         return _PC_CMPT_FAILED;
     }
@@ -321,7 +335,7 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
 
     EXIT_CRITICAL_SECTION();
 
-    kernal_run_theFirstThread(*thread_psp_addressGet(g_kernal_resource.current));
+    kernal_run_theFirstThread(*_kernal_thread_PSP_Get(g_kernal_resource.current));
 
     // nothing arrive
     return _PC_CMPT_FAILED;
@@ -370,8 +384,8 @@ void _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
 
     os_id_t next = _kernal_thread_nextIdGet();
 
-    *ppCurPsp = (u32_t*)thread_psp_addressGet(g_kernal_resource.current);
-    *ppNextPSP = (u32_t*)thread_psp_addressGet(next);
+    *ppCurPsp = (u32_t*)_kernal_thread_PSP_Get(g_kernal_resource.current);
+    *ppNextPSP = (u32_t*)_kernal_thread_PSP_Get(next);
 
     g_kernal_resource.current = next;
 }

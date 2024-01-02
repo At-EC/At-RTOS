@@ -61,6 +61,8 @@ typedef struct os_time os_time_t;
 #define OS_PRIORITY_USER_THREAD_LOWEST_LEVEL        (OS_PRIOTITY_LOWEST_LEVEL + 1u)
 #define OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL       (OS_PRIOTITY_HIGHEST_LEVEL - 1u)
 
+#define OS_SEMPHORE_TICKET_BINARY                   (1u)
+
 #define OS_INVALID_ID                               OS_INVALID_ID_VAL
 
 

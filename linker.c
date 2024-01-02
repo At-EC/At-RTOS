@@ -14,13 +14,9 @@ extern "C" {
 /**
  * @brief linker node transaction from a list to another list.
  *
- * linker node transaction from a list to another list.
- *
  * @param pLinker The pointer of the linker.
  * @param pToList The pointer of the target list.
  * @param direction The direction of list
- *
- * @retval NONE.
  */
 void linker_list_transaction_common(linker_t *pLinker, list_t *pToList, list_direction_t direction)
 {
@@ -43,13 +39,9 @@ void linker_list_transaction_common(linker_t *pLinker, list_t *pToList, list_dir
 /**
  * @brief linker node transaction from a list to another list with specific condition.
  *
- * linker node transaction from a list to another list with specific condition.
- *
  * @param pLinker The pointer of the linker.
  * @param pToList The pointer of the target list.
  * @param pConditionFunc The pointer of the condition function.
- *
- * @retval NONE.
  */
 void linker_list_transaction_specific(linker_t *pLinker, list_t *pToList, pLinkerSpecificConditionFunc_t pConditionFunc)
 {

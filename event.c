@@ -14,9 +14,14 @@
 extern "C" {
 #endif
 
+/**
+ * Local unique postcode.
+ */
 #define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_EVENT)
 
-static void _event_callback_fromTimeOut(os_id_t id);
+/**
+ * The local function lists for current file internal use.
+ */
 static u32_t _event_init_privilege_routine(arguments_t *pArgs);
 static u32_t _event_set_privilege_routine(arguments_t *pArgs);
 static u32_t _event_wait_privilege_routine(arguments_t *pArgs);
@@ -26,11 +31,9 @@ static void _event_schedule(os_id_t id);
 /**
  * @brief Get the event context based on provided unique id.
  *
- * Get the event context based on provided unique id, and then return the event context pointer.
- *
  * @param id The event unique id.
  *
- * @retval VALUE The event context.
+ * @return The pointer of the current unique id event context.
  */
 static event_context_t* _event_object_contextGet(os_id_t id)
 {
@@ -38,13 +41,9 @@ static event_context_t* _event_object_contextGet(os_id_t id)
 }
 
 /**
- * @brief Get the event active head address.
+ * @brief Get the active event list head.
  *
- * Get the event active list head address.
- *
- * @param NONE.
- *
- * @retval VALUE The active list head address.
+ * @return The value of the active list head.
  */
 static list_t* _event_list_activeHeadGet(void)
 {
@@ -52,29 +51,11 @@ static list_t* _event_list_activeHeadGet(void)
 }
 
 /**
- * @brief Get the event inactive head address.
+ * @brief Pick up a highest priority thread that blocking by the event pending list.
  *
- * Get the event inactive list head address.
+ * @param The semaphore unique id.
  *
- * @param NONE.
- *
- * @retval VALUE The inactive list head address.
- */
-/* TODO
-static list_t* _event_list_inactiveHeadGet(void)
-{
-    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_EVENT, KERNAL_MEMBER_LIST_EVENT_INACTIVE);
-}
-*/
-
-/**
- * @brief Get the event blocking thread list head address.
- *
- * Get the blocking thread list head address.
- *
- * @param NONE.
- *
- * @retval VALUE the blocking thread list head address.
+ * @return The highest blocking thread head.
  */
 static list_t* _event_list_blockingHeadGet(os_id_t id)
 {
@@ -86,11 +67,7 @@ static list_t* _event_list_blockingHeadGet(os_id_t id)
 /**
  * @brief Push one event context into active list.
  *
- * Push one event context into active list.
- *
- * @param pCurHead The pointer of the event linker head.
- *
- * @retval NONE .
+ * @param pCurHead The pointer of the timer linker head.
  */
 static void _event_list_transfer_toActive(linker_head_t *pCurHead)
 {
@@ -103,35 +80,11 @@ static void _event_list_transfer_toActive(linker_head_t *pCurHead)
 }
 
 /**
- * @brief Push one event context into inactive list.
- *
- * Push one event context into inactive list.
- *
- * @param pCurHead The pointer of the event linker head.
- *
- * @retval NONE .
- */
-/* TODO
-static void _event_list_transfer_toInactive(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToInactiveList = (list_t *)_event_list_inactiveHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToInactiveList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-*/
-
-/**
  * @brief Check if the event unique id if is's invalid.
- *
- * Check if the event unique id if is's invalid.
  *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is invalid
- *         FALSE The id is valid
+ * @return The true is invalid, otherwise is valid.
  */
 static b_t _event_id_isInvalid(i32_t id)
 {
@@ -141,35 +94,21 @@ static b_t _event_id_isInvalid(i32_t id)
 /**
  * @brief Check if the event object if is's initialized.
  *
- * Check if the event unique id if is's initialization.
- *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is initialized.
- *         FALSE The id isn't initialized.
+ * @return The true is initialized, otherwise is uninitialized.
  */
 static b_t _event_object_isInit(i32_t id)
 {
     event_context_t *pCurEvent = (event_context_t *)_event_object_contextGet(id);
 
-    if (pCurEvent)
-    {
-        return ((pCurEvent->head.linker.pList) ? (TRUE) : (FALSE));
-    }
-    else
-    {
-        return FALSE;
-    }
+    return ((pCurEvent) ? (((pCurEvent->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
 }
 
 /**
  * @brief The event timeout callback fucntion.
  *
- * The event timeout callback fucntion.
- *
  * @param id The event unique id.
- *
- * @retval NONE.
  */
 static void _event_callback_fromTimeOut(os_id_t id)
 {
@@ -180,11 +119,9 @@ static void _event_callback_fromTimeOut(os_id_t id)
 /**
  * @brief Convert the internal os id to kernal member number.
  *
- * Convert the internal os id to kernal member number.
- *
  * @param id The provided unique id.
  *
- * @retval VALUE Member number.
+ * @return The value of member number.
  */
 u32_t _impl_event_os_id_to_number(os_id_t id)
 {
@@ -195,12 +132,10 @@ u32_t _impl_event_os_id_to_number(os_id_t id)
 /**
  * @brief Initialize a new event.
  *
- * Initialize a new event.
- *
  * @param pName The event name.
  * @param edge Callback function trigger edge condition.
  *
- * @retval VALUE The event unique id.
+ * @return The event unique id.
  */
 os_id_t _impl_event_init(u32_t edge, pEvent_callbackFunc_t pCallFun, const char_t *pName)
 {
@@ -217,13 +152,10 @@ os_id_t _impl_event_init(u32_t edge, pEvent_callbackFunc_t pCallFun, const char_
 /**
  * @brief Set a event value.
  *
- * Set a event value.
- *
  * @param id The event unique id.
  * @param id The event value.
  *
- * @retval POSTCODE_RTOS_EVENT_SET_SUCCESS event set successful.
- *         POSTCODE_RTOS_EVENT_SET_FAILED event set failed.
+ * @return The result of the operation.
  */
 u32p_t _impl_event_set(os_id_t id, u32_t event)
 {
@@ -249,16 +181,13 @@ u32p_t _impl_event_set(os_id_t id, u32_t event)
 /**
  * @brief Wait a target event.
  *
- * Wait a target event.
- *
  * @param id The event unique id.
  * @param pEvent The pointer of event value.
  * @param trigger If the trigger is not zero, All changed bits seen can wake up the thread to handle event.
  * @param listen Current thread listen which bits in the event.
  * @param timeout_ms The event wait timeout setting.
  *
- * @retval POSTCODE_RTOS_EVENT_WAIT_SUCCESS event wait successful.
- *         POSTCODE_RTOS_EVENT_WAIT_FAILED event wait failed.
+ * @return The result of the operation.
  */
 u32p_t _impl_event_wait(os_id_t id, u32_t *pEvent, u32_t trigger, u32_t listen, u32_t timeout_ms)
 {
@@ -312,16 +241,11 @@ u32p_t _impl_event_wait(os_id_t id, u32_t *pEvent, u32_t trigger, u32_t listen, 
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _event_init_privilege_routine(arguments_t *pArgs)
 {
@@ -363,16 +287,11 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _event_set_privilege_routine(arguments_t *pArgs)
 {
@@ -417,16 +336,11 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
 {
@@ -454,14 +368,9 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief Event invoke back handle routine.
+ * @brief The event schedule routine execute the the pendsv context.
  *
- * Event wakeup handle routine.
- *
- * @param pWakeupThread The thread pointer.
- *
- * @retval TRUE It's for event object.
- * @retval FALSE It's not for event object.
+ * @param id The unique id of the entry thread.
  */
 static void _event_schedule(os_id_t id)
 {

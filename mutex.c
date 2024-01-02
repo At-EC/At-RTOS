@@ -14,8 +14,14 @@
 extern "C" {
 #endif
 
+/**
+ * Local unique postcode.
+ */
 #define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_MUTEX)
 
+/**
+ * The local function lists for current file internal use.
+ */
 static u32_t _mutex_init_privilege_routine(arguments_t *pArgs);
 static u32_t _mutex_lock_privilege_routine(arguments_t *pArgs);
 static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs);
@@ -23,11 +29,9 @@ static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs);
 /**
  * @brief Get the mutex context based on provided unique id.
  *
- * Get the mutex context based on provided unique id, and then return the mutex context pointer.
- *
  * @param id The mutex unique id.
  *
- * @retval VALUE The mutex context.
+ * @return The pointer of the current unique id timer context.
  */
 static mutex_context_t* _mutex_object_contextGet(os_id_t id)
 {
@@ -35,13 +39,9 @@ static mutex_context_t* _mutex_object_contextGet(os_id_t id)
 }
 
 /**
- * @brief Get the mutex locking list head address.
+ * @brief Get the locking mutex list head.
  *
- * Get the mutex locking list head address.
- *
- * @param NONE.
- *
- * @retval VALUE The locking list head address.
+ * @return The value of the locking list head.
  */
 static list_t* _mutex_list_lockingHeadGet(void)
 {
@@ -49,13 +49,9 @@ static list_t* _mutex_list_lockingHeadGet(void)
 }
 
 /**
- * @brief Get the mutex unlocking list head address.
+ * @brief Get the unlocking mutex list head.
  *
- * Get the mutex unlocking list head address.
- *
- * @param NONE.
- *
- * @retval VALUE The unlocking list head address.
+ * @return The value of the unlocking list head.
  */
 static list_t* _mutex_list_unlockingHeadGet(void)
 {
@@ -65,11 +61,7 @@ static list_t* _mutex_list_unlockingHeadGet(void)
 /**
  * @brief Get the mutex blocking thread list head address.
  *
- * Get the blocking thread list head address.
- *
- * @param NONE.
- *
- * @retval VALUE the blocking thread list head address.
+ * @return The blocking thread list head address.
  */
 static list_t* _mutex_list_blockingHeadGet(os_id_t id)
 {
@@ -79,13 +71,9 @@ static list_t* _mutex_list_blockingHeadGet(os_id_t id)
 }
 
 /**
- * @brief Push one mutex context into unlocking list.
- *
- * Push one mutex context into unlocking list.
+ * @brief Push one mutex context into lock list.
  *
  * @param pCurHead The pointer of the mutex linker head.
- *
- * @retval NONE .
  */
 static void _mutex_list_transfer_toLock(linker_head_t *pCurHead)
 {
@@ -98,13 +86,9 @@ static void _mutex_list_transfer_toLock(linker_head_t *pCurHead)
 }
 
 /**
- * @brief Push one mutex context into locking list.
- *
- * Push one mutex context into locking list.
+ * @brief Push one mutex context into unlock list.
  *
  * @param pCurHead The pointer of the mutex linker head.
- *
- * @retval NONE .
  */
 static void _mutex_list_transfer_toUnlock(linker_head_t *pCurHead)
 {
@@ -119,11 +103,9 @@ static void _mutex_list_transfer_toUnlock(linker_head_t *pCurHead)
 /**
  * @brief Pick up a highest priority thread from the mutex blocking list.
  *
- * Pick up a highest priority thread from the mutex blocking list.
- *
  * @param id The mutex context id
  *
- * @retval VALUE The highest thread head.
+ * @return The highest thread head.
  */
 static linker_head_t* _mutex_linker_head_fromBlocking(os_id_t id)
 {
@@ -137,12 +119,9 @@ static linker_head_t* _mutex_linker_head_fromBlocking(os_id_t id)
 /**
  * @brief Check if the mutex unique id if is's invalid.
  *
- * Check if the mutex unique id if is's invalid.
- *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is invalid
- *         FALSE The id is valid
+ * @return The true is invalid, otherwise is valid.
  */
 static b_t _mutex_id_isInvalid(i32_t id)
 {
@@ -152,35 +131,23 @@ static b_t _mutex_id_isInvalid(i32_t id)
 /**
  * @brief Check if the mutex object if is's initialized.
  *
- * Check if the mutex unique id if is's initialization.
- *
  * @param id The provided unique id.
  *
- * @retval TRUE The id is initialized.
- *         FALSE The id isn't initialized.
+ * @return The true is initialized, otherwise is uninitialized.
  */
 static b_t _mutex_object_isInit(i32_t id)
 {
     mutex_context_t *pCurMutex = (mutex_context_t *)_mutex_object_contextGet(id);
 
-    if (pCurMutex)
-    {
-        return ((pCurMutex->head.linker.pList) ? (TRUE) : (FALSE));
-    }
-    else
-    {
-        return FALSE;
-    }
+    return ((pCurMutex) ? (((pCurMutex->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
 }
 
 /**
  * @brief Convert the internal os id to kernal member number.
  *
- * Convert the internal os id to kernal member number.
- *
  * @param id The provided unique id.
  *
- * @retval VALUE Member number.
+ * @return The value of member number.
  */
 u32_t _impl_mutex_os_id_to_number(os_id_t id)
 {
@@ -190,11 +157,9 @@ u32_t _impl_mutex_os_id_to_number(os_id_t id)
 /**
  * @brief Initialize a new mutex.
  *
- * Initialize a new mutex.
- *
  * @param pName The mutex name.
  *
- * @retval VALUE The mutex unique id.
+ * @return The mutex unique id.
  */
 os_id_t _impl_mutex_init(const char_t *pName)
 {
@@ -209,11 +174,9 @@ os_id_t _impl_mutex_init(const char_t *pName)
 /**
  * @brief Mutex lock to avoid another thread access this resource.
  *
- * Mutex lock to avoid another thread access this resource.
- *
  * @param id The mutex unique id.
  *
- * @retval VALUE The result of the operation.
+ * @return The result of the operation.
  */
 u32p_t _impl_mutex_lock(os_id_t id)
 {
@@ -242,14 +205,11 @@ u32p_t _impl_mutex_lock(os_id_t id)
 }
 
 /**
- * @brief Mutex unlock to allow another thread can access this resource.
- *
- * Mutex unlock to allow another thread can access this resource.
+ * @brief Mutex unlock to allow another access the resource.
  *
  * @param id The mutex unique id.
  *
- * @retval POSTCODE_RTOS_MUTEX_UNLOCK_SUCCESS mutex lock successful.
- *         POSTCODE_RTOS_MUTEX_UNLOCK_FAILED mutex lock failed.
+ * @return The result of the operation.
  */
 u32p_t _impl_mutex_unlock(os_id_t id)
 {
@@ -272,16 +232,11 @@ u32p_t _impl_mutex_unlock(os_id_t id)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
 {
@@ -319,16 +274,11 @@ static u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _mutex_lock_privilege_routine(arguments_t *pArgs)
 {
@@ -365,16 +315,11 @@ static u32_t _mutex_lock_privilege_routine(arguments_t *pArgs)
 }
 
 /**
- * @brief The privilege routine running at handle mode.
+ * @brief It's sub-routine running at privilege mode.
  *
- * The privilege routine running at handle mode.
+ * @param pArgs The function argument packages.
  *
- * @param args_0 The function argument 1.
- * @param args_1 The function argument 2.
- * @param args_2 The function argument 3.
- * @param args_3 The function argument 4.
- *
- * @retval VALUE The result of privilege routine.
+ * @return The result of privilege routine.
  */
 static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
 {

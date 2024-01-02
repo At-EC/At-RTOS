@@ -135,7 +135,7 @@ void _impl_clock_isr(void)
  */
 void _impl_clock_time_interval_set(u32_t interval_us)
 {
-    if (interval_us == WAIT_FOREVER)
+    if (interval_us == OS_TIME_FOREVER_VAL)
     {
         SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
         g_clock_resource.ctrl_enabled = FALSE;

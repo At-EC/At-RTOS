@@ -14,9 +14,9 @@
 extern "C" {
 #endif
 
-#define SEMAPHORE_LIMITATION_BINARY_COUNT                  (1u)
-#define SEMAPHORE_WAIT_FOREVER                             (WAIT_FOREVER)
-
+/**
+ * The implement function lists for rtos kernal internal use.
+ */
 u32_t   _impl_semaphore_os_id_to_number(os_id_t id);
 os_id_t _impl_semaphore_init(u8_t availableCount, u8_t limitationCount, const char_t *pName);
 u32p_t  _impl_semaphore_take(os_id_t id, u32_t timeout_ms);

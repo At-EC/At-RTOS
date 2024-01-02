@@ -288,7 +288,7 @@ static b_t _timer_object_isInit(i32_t id)
  *
  * @param id The provided unique id.
  *
- * @retval The value of member number.
+ * @return The value of member number.
  */
 u32_t _impl_timer_os_id_to_number(os_id_t id)
 {
@@ -371,7 +371,7 @@ void _impl_thread_timer_start(os_id_t id, u32_t timeout_ms, void (*pCallback)(os
     timer_context_t* pCurTimer = _timer_object_contextGet(id); // Only for internal thread use
 
     pCurTimer->call.pThread = pCallback;
-    pCurTimer->timeout_ms = WAIT_FOREVER;
+    pCurTimer->timeout_ms = OS_TIME_FOREVER_VAL;
     pCurTimer->isCycle = FALSE;
 
     if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet())
@@ -379,7 +379,7 @@ void _impl_thread_timer_start(os_id_t id, u32_t timeout_ms, void (*pCallback)(os
         _timer_list_remove_fromWaitList((linker_head_t*)&pCurTimer->head);
     }
 
-    if (timeout_ms == WAIT_FOREVER)
+    if (timeout_ms == OS_TIME_FOREVER_VAL)
     {
         _timer_list_transfer_toEndList((linker_head_t *)&pCurTimer->head);
     }
@@ -578,7 +578,7 @@ static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
         _timer_list_remove_fromWaitList((linker_head_t*)&pCurTimer->head);
     }
 
-    if (pCurTimer->timeout_ms == WAIT_FOREVER)
+    if (pCurTimer->timeout_ms == OS_TIME_FOREVER_VAL)
     {
         _timer_list_transfer_toEndList((linker_head_t *)&pCurTimer->head);
     }
@@ -664,7 +664,7 @@ static u32_t _kernal_timer_schedule_request_privilege_routine(arguments_t *pArgs
     }
     else
     {
-        _impl_clock_time_interval_set(WAIT_FOREVER);
+        _impl_clock_time_interval_set(OS_TIME_FOREVER_VAL);
     }
 
     EXIT_CRITICAL_SECTION();

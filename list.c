@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
- 
+
 #include "list.h"
 
 #ifdef __cplusplus
@@ -21,8 +21,7 @@ extern "C" {
  * @param pList The pointer of the list.
  * @param pNode The pointer of the node.
  *
- * @retval TRUE The node is existed.
- * @retval FALSE The node is not existed.
+ * @return The true indicates the node is existed, otherwist is not existed.
  */
 b_t list_node_isExisted(list_t *pList, list_node_t *pNode)
 {
@@ -52,7 +51,7 @@ b_t list_node_isExisted(list_t *pList, list_node_t *pNode)
  *
  * @param pList The pointer of the list.
  *
- * @retval Value The total number of node
+ * @return Value The total number of node
  */
 u32_t list_size(list_t *pList)
 {
@@ -80,8 +79,7 @@ u32_t list_size(list_t *pList)
  * @param pList The pointer of the list.
  * @param pNode The pointer of the node.
  *
- * @retval TRUE The process of removing a node is successful.
- * @retval FALSE The process of removing a node is failed.
+ * @return The value true indicates the process of removing a node is successful, otherwise is failed.
  */
 b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
 {
@@ -128,8 +126,7 @@ b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
  * @param pBefore The pointer of the before node.
  * @param pTargetNode The pointer of the target node.
  *
- * @retval TRUE The process of removing a node is successful.
- * @retval FALSE The process of removing a node is failed.
+ * @return The value true indicates the process is successful, otherwise is failed.
  */
 b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTargetNode)
 {
@@ -176,8 +173,7 @@ b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTa
  * @param pInNode The pointer of the pushed node.
  * @param direction The direction of list
  *
- * @retval TRUE The process of push a node is successful.
- * @retval FALSE The process of push a node is failed.
+ * @return The value true indicates the process is successful, otherwise is failed.
  */
 b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t direction)
 {
@@ -221,8 +217,7 @@ b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t directi
  * @param pList The pointer of the list.
  * @param direction The direction of list.
  *
- * @retval VALUE The output node pointer.
- * @retval NULL No available output node.
+ * @return The value is node pointer, but the null indicates there is no available node to pop.
  */
 list_node_t *list_node_pop(list_t *pList, list_direction_t direction)
 {
@@ -283,8 +278,7 @@ list_node_t *list_node_pop(list_t *pList, list_direction_t direction)
  * @param pIterator The pointer of the iterator.
  * @param pList The pointer of the list.
  *
- * @retval TRUE iterator symbol create successful.
- * @retval FALSE iterator symbol create failed.
+ * @return The true indicates the iterator symbol created successful, otherwist is failed.
  */
 b_t list_iterator_init(list_iterator_t* pIterator, list_t *pList)
 {
@@ -312,7 +306,7 @@ b_t list_iterator_init(list_iterator_t* pIterator, list_t *pList)
  *
  * @param pIterator The pointer of the iterator.
  *
- * @retval VALUE One node in the list.
+ * @return The next node pointer in the list.
  */
 list_node_t *list_iterator_next(list_iterator_t *pIterator)
 {
@@ -338,8 +332,7 @@ list_node_t *list_iterator_next(list_iterator_t *pIterator)
  * @param pIterator The pointer of the iterator.
  * @param ppOutNode The double pointer of the output node.
  *
- * @retval TRUE The output node is not NULL.
- * @retval TRUE The output node is NULL.
+ * @return The true indicates the output node is not NULL.
  */
 b_t list_iterator_next_condition(list_iterator_t *pIterator, list_node_t **ppOutNode)
 {

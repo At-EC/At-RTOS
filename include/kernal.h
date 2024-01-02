@@ -25,8 +25,6 @@ extern "C" {
     #undef FPU_ENABLED
 #endif
 
-#define WAIT_FOREVER                            (0xFFFFFFFFu)
-
 #define KERNAL_THREAD_STACK_SIZE                (1024u)
 #define KERNAL_THREAD_NAME_STRING               "kernal"
 
