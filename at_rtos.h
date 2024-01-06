@@ -182,7 +182,7 @@ static inline u32p_t queue_receive(os_queue_id_t id, const u8_t *pUserBuffer, u1
 
 static inline b_t os_id_is_invalid(struct os_id id)
 {
-    return (id.val == OS_INVALID_ID);
+    return (b_t)_impl_kernal_os_id_is_invalid(id);
 }
 
 typedef struct

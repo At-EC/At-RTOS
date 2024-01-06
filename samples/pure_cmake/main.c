@@ -29,11 +29,13 @@ void cmake_test_thread(void)
 
 int main(void)
 {
-    os_thread_it_t cmake_thread_id = AtOS.thread_init(cmake_test_thread,
-                                                      g_cmake_test_stack,
-                                                      CMAME_TEST_STACK_SIZE,
-                                                      5u,
-                                                      "cmake_thread");
+    os_thread_it_t cmake_thread_id = {OS_INVALID_ID};
+	
+	cmake_thread_id = AtOS.thread_init(cmake_test_thread,
+                                       g_cmake_test_stack,
+                                       CMAME_TEST_STACK_SIZE,
+                                       5u,
+                                       "cmake_thread");
 
     if (AtOS.os_id_is_invalid(cmake_thread_id))
     {
