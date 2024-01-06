@@ -1,0 +1,23 @@
+name: At_RTOS_Kernel_cmake
+on: [push, pull_request]
+
+jobs:
+  CMake-Example:
+    name: CMake Example with Native GCC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install GCC
+        shell: bash
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install build-essential
+
+      - name: Build Pure CMake
+        shell: bash
+        working-directory: samples/pure_cmake
+        run: |
+          cmake -S . -B build
+          cmake --build build
