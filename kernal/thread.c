@@ -9,7 +9,6 @@
 #include "kernal.h"
 #include "timer.h"
 #include "thread.h"
-#include "arch/arch.h"
 
 #ifdef __cplusplus
 extern "C" {

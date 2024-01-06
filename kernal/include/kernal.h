@@ -9,7 +9,7 @@
 #define _KERNAL_H_
 
 #include "member_struct.h"
-#include "arch/arch.h"
+#include "arch32/arch.h"
 #include "svc_call.h"
 
 #ifdef __cplusplus

@@ -7,7 +7,7 @@
 
 #include "kernal.h"
 #include "clock_systick.h"
-#include "os_config.h"
+#include "rtos_configuration.h"
 
 #ifdef __cplusplus
 extern "C" {

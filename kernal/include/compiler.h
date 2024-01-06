@@ -8,7 +8,7 @@
 #ifndef _COMPILER_H_
 #define _COMPILER_H_
 
-#include "arch/cmsis/Include/cmsis_compiler.h"
+#include "arch32/arm/cmsis/include/cmsis_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {

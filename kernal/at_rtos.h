@@ -12,8 +12,8 @@
 extern "C" {
 #endif
 
-#include "include/basic.h"
-#include "os_config.h"
+#include "basic.h"
+#include "rtos_configuration.h"
 
 #define ATOS_STACK_DEFINE(name, size)           static u32_t name[((u32_t)(size) / sizeof(u32_t))] = {0x0u}; \
 S_ASSERT(((size) >= STACK_SIZE_MINIMUM) , "The stack size must be higher than STACK_SIZE_MINIMUM")

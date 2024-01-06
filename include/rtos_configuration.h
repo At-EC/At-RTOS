@@ -5,8 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#ifndef _OS_CONFIG_H_
-#define _OS_CONFIG_H_
+#ifndef _RTOS_CONFIGURATION_H_
+#define _RTOS_CONFIGURATION_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define AT_RTOS_FEATURE_ENABLE                    (1u)
 #define AT_RTOS_FEATURE_DISABLE                   (0u)
@@ -31,5 +35,9 @@
 
 #define __v7em
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* _RTOS_CONFIGURATION_H_ */
 

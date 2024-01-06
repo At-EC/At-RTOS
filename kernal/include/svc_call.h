@@ -9,7 +9,7 @@
 #define _SVC_CALL_H_
 
 #include "type.h"
-#include "arch/arch.h"
+#include "arch32/arch.h"
 
 #ifdef __cplusplus
 extern "C" {

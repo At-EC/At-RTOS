@@ -10,7 +10,7 @@
 
 #include "type.h"
 #include "linker.h"
-#include "os_config.h"
+#include "rtos_configuration.h"
 
 #ifdef __cplusplus
 extern "C" {
