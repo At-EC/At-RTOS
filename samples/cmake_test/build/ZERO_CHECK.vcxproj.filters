@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\root\Workspace\Code\ExploerRTOS\GD32307-START-V1.0 Demo\Project\02_USART_Printf\At_RTOS\samples\cmake_test\build\CMakeFiles\4746493c84c81e9e7c067dfebf0b58ba\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{C8AC8ED4-BB44-30AB-B380-86018E3ACC98}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

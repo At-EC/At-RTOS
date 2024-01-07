@@ -1,10 +1,25 @@
 cmake_minimum_required(VERSION 3.20)
 
-add_library(at_rtos_kernel STATIC)
+add_library(rtos_kernel STATIC)
 
-target_sources(at_rtos_kernal 
+add_subdirectory(kernal)
+
+target_sources(rtos_kernel 
+	PRIVATE
+	${CMAKE_CURRENT_LIST_DIR}/clock_systick.c
+	
 	PUBLIC
-	${CMKAE_CURRENT_LIST_DIR}/at_rtos.h
-	)
+	${CMAKE_CURRENT_LIST_DIR}/at_rtos.h
+	${CMAKE_CURRENT_LIST_DIR}/include/rtos_configuration.h
+)
 
-include(${CMAKE_CURRENT_LIST_DIR}/kernal/CMakeLists.txt)
+target_include_directories(rtos_kernel
+    INTERFACE
+    ${CMAKE_CURRENT_LIST_DIR}
+	${CMAKE_CURRENT_LIST_DIR}/include
+)
+
+target_link_libraries(rtos_kernel
+    PUBLIC
+    kernel_impl
+)

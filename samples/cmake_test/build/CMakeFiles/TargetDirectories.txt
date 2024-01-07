@@ -1,0 +1,5 @@
+C:/root/Workspace/Code/ExploerRTOS/GD32307-START-V1.0 Demo/Project/02_USART_Printf/At_RTOS/samples/cmake_test/build/CMakeFiles/example.dir
+C:/root/Workspace/Code/ExploerRTOS/GD32307-START-V1.0 Demo/Project/02_USART_Printf/At_RTOS/samples/cmake_test/build/CMakeFiles/ALL_BUILD.dir
+C:/root/Workspace/Code/ExploerRTOS/GD32307-START-V1.0 Demo/Project/02_USART_Printf/At_RTOS/samples/cmake_test/build/CMakeFiles/ZERO_CHECK.dir
+C:/root/Workspace/Code/ExploerRTOS/GD32307-START-V1.0 Demo/Project/02_USART_Printf/At_RTOS/samples/cmake_test/build/At_RTOS/CMakeFiles/rtos_kernel.dir
+C:/root/Workspace/Code/ExploerRTOS/GD32307-START-V1.0 Demo/Project/02_USART_Printf/At_RTOS/samples/cmake_test/build/At_RTOS/kernal/CMakeFiles/kernel_impl.dir

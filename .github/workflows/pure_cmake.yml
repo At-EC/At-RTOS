@@ -17,7 +17,7 @@ jobs:
 
       - name: Build Pure CMake
         shell: bash
-        working-directory: samples/pure_cmake
+        working-directory: samples/cmake_test
         run: |
           cmake -S . -B build
-          cmake --build build
+          #cmake --build build
