@@ -18,7 +18,7 @@ typedef u32_t os_id_t;
 
 struct os_id
 {
-    u16_t number;
+    u32_t number;
     u32_t val;
     const char_t *pName;
 };
