@@ -86,7 +86,7 @@ static void _event_list_transfer_toActive(linker_head_t *pCurHead)
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _event_id_isInvalid(i32_t id)
+static b_t _event_id_isInvalid(u32_t id)
 {
     return _impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_EVENT, id);
 }
@@ -112,7 +112,6 @@ static b_t _event_object_isInit(i32_t id)
  */
 static void _event_callback_fromTimeOut(os_id_t id)
 {
-    timer_context_t *pCurTimer = (timer_context_t *)_impl_kernal_member_unified_id_toContainerAddress(id);
     _impl_kernal_thread_entry_trigger(_impl_kernal_member_unified_id_timerToThread(id), id, PC_SC_TIMEOUT, _event_schedule);
 }
 
@@ -352,7 +351,6 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
     u32_t listen = (u32_t)pArgs[3].u32_val;
     u32_t timeout_ms = (u32_t)pArgs[4].u32_val;
 
-    event_context_t *pCurEvent = (event_context_t *)_event_object_contextGet(id);
     thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
 
     pCurThread->event.listen = listen;
@@ -378,7 +376,6 @@ static void _event_schedule(os_id_t id)
 
     if (_impl_kernal_member_unified_id_toId(pEntryThread->schedule.hold) == KERNAL_MEMBER_EVENT)
     {
-        event_context_t *pCurEvent = (event_context_t *)_event_object_contextGet(pEntryThread->schedule.hold);
         thread_entry_t *pEntry = &pEntryThread->schedule.entry;
 
         if ((pEntry->result == PC_SC_SUCCESS) || (pEntry->result == PC_SC_TIMEOUT))

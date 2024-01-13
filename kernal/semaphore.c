@@ -128,7 +128,7 @@ static linker_head_t* _semaphore_linker_head_fromBlocking(os_id_t id)
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _semaphore_id_isInvalid(i32_t id)
+static b_t _semaphore_id_isInvalid(u32_t id)
 {
     return _impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_SEMAPHORE, id);
 }
@@ -154,7 +154,6 @@ static b_t _semaphore_object_isInit(i32_t id)
  */
 static void _semaphore_callback_fromTimeOut(os_id_t id)
 {
-    timer_context_t *pCurTimer = (timer_context_t *)_impl_kernal_member_unified_id_toContainerAddress(id);
     _impl_kernal_thread_entry_trigger(_impl_kernal_member_unified_id_timerToThread(id), id, PC_SC_TIMEOUT, _semaphore_schedule);
 }
 

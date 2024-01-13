@@ -123,7 +123,7 @@ static linker_head_t* _mutex_linker_head_fromBlocking(os_id_t id)
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _mutex_id_isInvalid(i32_t id)
+static b_t _mutex_id_isInvalid(u32_t id)
 {
     return _impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_MUTEX, id);
 }

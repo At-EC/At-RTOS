@@ -171,7 +171,7 @@ static linker_head_t* _thread_linker_Head_next_fromPending(void)
  *
  * @return The true indicates the id is invalid, otherwise it valid.
  */
-static b_t _thread_id_isInvalid(os_id_t id)
+static b_t _thread_id_isInvalid(u32_t id)
 {
     return _impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_THREAD, id);
 }
@@ -197,7 +197,6 @@ static b_t _thread_object_isInit(os_id_t id)
  */
 static void _thread_callback_fromTimeOut(os_id_t id)
 {
-    timer_context_t *pCurTimer = (timer_context_t *)_impl_kernal_member_unified_id_toContainerAddress(id);
     _impl_kernal_thread_entry_trigger(_impl_kernal_member_unified_id_timerToThread(id), id, PC_SC_TIMEOUT, NULL);
 }
 

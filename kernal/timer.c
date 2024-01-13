@@ -263,7 +263,7 @@ static linker_head_t* _timer_linker_head_fromWaiting(void)
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _timer_id_isInvalid(i32_t id)
+static b_t _timer_id_isInvalid(u32_t id)
 {
     return ((_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id)) &&
             (_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id)));
@@ -276,7 +276,7 @@ static b_t _timer_id_isInvalid(i32_t id)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _timer_object_isInit(i32_t id)
+static b_t _timer_object_isInit(u32_t id)
 {
     timer_context_t *pCurTimer = (timer_context_t *)_timer_object_contextGet(id);
 
@@ -290,7 +290,7 @@ static b_t _timer_object_isInit(i32_t id)
  *
  * @return The value of member number.
  */
-u32_t _impl_timer_os_id_to_number(os_id_t id)
+u32_t _impl_timer_os_id_to_number(u32_t id)
 {
     if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id))
     {

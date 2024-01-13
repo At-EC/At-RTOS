@@ -24,7 +24,8 @@ target_compile_options(atos_kernal PRIVATE
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-padded>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-missing-variable-declarations>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-covered-switch-default>
-	$<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-error=format-truncation>
+	$<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-format-truncation>
+	$<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-int-to-pointer-cast>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-cast-align> )
 
 aux_source_directory(. DIR_SRCS)
