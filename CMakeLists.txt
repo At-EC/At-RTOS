@@ -6,7 +6,7 @@ include_directories(atos_kernal PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(atos_kernal
 	PRIVATE
-	${CMAKE_CURRENT_LIST_DIR}/idle.c
+	${CMAKE_CURRENT_LIST_DIR}/kernal_idle.c
 )
 
 include(${CMAKE_CURRENT_LIST_DIR}/kernal/CMakeLists.txt)

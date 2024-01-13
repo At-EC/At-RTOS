@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 /* Local defined the kernal thread stack */
-#define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_KERNAL)
+#define _PC_CMPT_FAILED                 PC_FAILED(PC_CMPT_KERNAL)
 #define SAMPLE_THREAD_STACK_SIZE        (1024u)
 
 ATOS_STACK_DEFINE(g_sample_thread_stack, SAMPLE_THREAD_STACK_SIZE);
@@ -25,7 +25,7 @@ void sample_entry_thread(void)
 {
     while (1)
     {
-		/* Nothing to do */
+        /* Nothing to do */
         AtOS.thread_sleep(1000);
     }
 }
@@ -42,11 +42,11 @@ int main(void)
     {
        return _PC_CMPT_FAILED;
     }
-	
-	while(1)
-	{
-		
-	}
+    
+    AtOS.kernal_atos_run();
+    D_ASSERT(0);
+    
+    while(1) {};
 }
 
 #ifdef __cplusplus
