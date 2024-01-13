@@ -98,7 +98,7 @@ static b_t _event_id_isInvalid(u32_t id)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _event_object_isInit(i32_t id)
+static b_t _event_object_isInit(u32_t id)
 {
     event_context_t *pCurEvent = (event_context_t *)_event_object_contextGet(id);
 
