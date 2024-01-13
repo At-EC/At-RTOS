@@ -7,7 +7,7 @@
 
 #include "basic.h"
 #include "kernal.h"
-#include "clock_systick.h"
+#include "clock_tick.h"
 #include "timer.h"
 
 #ifdef __cplusplus

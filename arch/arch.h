@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#include "rtos_configuration.h"
+#include "configuration.h"
 
 typedef enum IRQn {
     /******  Cortex-Mx Processor Exceptions Numbers
@@ -34,6 +34,10 @@ typedef enum IRQn {
 
 #ifndef __NVIC_PRIO_BITS
     #define __NVIC_PRIO_BITS            8
+#endif
+
+#ifndef KERNAL_SAMPLE
+	#define KERNAL_SAMPLE_BUILD         0
 #endif
 
 #if defined __v7em_f5ss ||  \
@@ -71,7 +75,7 @@ typedef enum IRQn {
         #define ARM_MATH_CM3 1
     #endif
     #undef __FPU_USED
-    #include "arm/cmsis/include/core_cm3.h"
+    #include "arch32/arm/cmsis/include/core_cm3.h"
 
 #elif defined __v7em
 
@@ -81,7 +85,7 @@ typedef enum IRQn {
         #define ARM_MATH_CM4 1
     #endif
     #undef __FPU_USED
-    #include "arm/cmsis/include/core_cm4.h"
+    #include "arch32/arm/cmsis/include/core_cm4.h"
 
 #elif defined __v7em_f4ss
     #define ARCH "v7em_f4ss"
@@ -91,7 +95,7 @@ typedef enum IRQn {
         #define ARM_MATH_CM4 1
     #endif
     #undef __FPU_USED
-    #include "arm/cmsis/include/core_cm4.h"
+    #include "arch32/arm/cmsis/include/core_cm4.h"
 
 #elif defined __v7em_f4sh
     #define ARCH "v7em_f4sh"
@@ -101,7 +105,7 @@ typedef enum IRQn {
         #define ARM_MATH_CM4 1
     #endif
     #undef __FPU_USED
-    #include "arm/cmsis/include/core_cm4.h"
+    #include "arch32/arm/cmsis/include/core_cm4.h"
 
 #elif defined __v7em_f5ss
     #define ARCH "v7em_f5ss"
@@ -112,7 +116,7 @@ typedef enum IRQn {
         #define ARM_MATH_CM7 1
     #endif
     #undef __FPU_USED
-    #include "arm/cmsis/include/core_cm7.h"
+    #include "arch32/arm/cmsis/include/core_cm7.h"
 
 #elif defined __v7em_f5sh
     #define ARCH "v7em_f5sh"
@@ -123,7 +127,7 @@ typedef enum IRQn {
         #define ARM_MATH_CM7 1
     #endif
     #undef __FPU_USED
-    #include "arm/cmsis/include/core_cm7.h"
+    #include "arch32/arm/cmsis/include/core_cm7.h"
 
 #elif defined __v7em_f5ds
     #define ARCH "v7em_f5ds"
@@ -134,7 +138,7 @@ typedef enum IRQn {
         #define ARM_MATH_CM7 1
     #endif
     #undef __FPU_USED
-    #include "arm/cmsis/include/core_cm7.h"
+    #include "arch32/arm/cmsis/include/core_cm7.h"
 
 #elif defined __v7em_f5dh
     #define ARCH "v7em_f5dh"
@@ -143,20 +147,29 @@ typedef enum IRQn {
     #define __FPU_PRESENT 1
     #define ARM_MATH_CM7 1
     #undef __FPU_USED
-    #include "arm/cmsis/include/core_cm7.h"
+    #include "arch32/arm/cmsis/include/core_cm7.h"
 
+#elif defined KERNAL_SAMPLE
+	#undef KERNAL_SAMPLE_BUILD
+	#define KERNAL_SAMPLE_BUILD 1
 #else
     #error "No ARM Arch is defined"
 #endif
 
-#define ARCH_ENTER_CRITICAL_SECTION()   vu32_t PRIMASK_Bit = __get_PRIMASK();        \
-                                          __disable_irq();                           \
-                                          __DSB();                                   \
-                                          __ISB();
+#if !defined KERNAL_SAMPLE
+	#define ARCH_ENTER_CRITICAL_SECTION()   vu32_t PRIMASK_Bit = __get_PRIMASK();        \
+											  __disable_irq();                           \
+											  __DSB();                                   \
+											  __ISB();
 
-#define ARCH_EXIT_CRITICAL_SECTION()    __set_PRIMASK(PRIMASK_Bit);                  \
-                                          __DSB();                                   \
-                                          __ISB();
+	#define ARCH_EXIT_CRITICAL_SECTION()    __set_PRIMASK(PRIMASK_Bit);                  \
+											  __DSB();                                   \
+											  __ISB();
+
+#else
+	#define ARCH_ENTER_CRITICAL_SECTION()
+	#define ARCH_EXIT_CRITICAL_SECTION()
+#endif
 
 #ifdef __cplusplus
 }

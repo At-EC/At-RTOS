@@ -5,23 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#ifndef _COMPILER_H_
-#define _COMPILER_H_
-
-#include "configuration.h"
-
-#if !defined KERNAL_SAMPLE
-	#include "arch32/arm/cmsis/include/cmsis_compiler.h"
-#endif
+#include "idle.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* TODO */
+/**
+ * @brief The idle thread entry function.
+ */
+void kernal_atos_idle_thread(void)
+{
+    while(1)
+    {
+		/* Nothing need to do, otherwise can be use for power management */
+    }
+}
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _COMPILER_H_ */

@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#ifndef _CLOCK_SYSTICK_H_
-#define _CLOCK_SYSTICK_H_
+#ifndef _CLOCK_TICK_H_
+#define _CLOCK_TICK_H_
 
 #include "type.h"
 
@@ -34,4 +34,4 @@ void  _impl_clock_time_init(time_report_handler_t pTime_function);
 }
 #endif
 
-#endif /* _CLOCK_SYSTICK_H_ */
+#endif /* _CLOCK_TICK_H_ */

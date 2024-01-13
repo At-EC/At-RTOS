@@ -27,6 +27,8 @@
 
 #include <stdint.h>
 
+#define __GNUC__
+
 /*
  * Arm Compiler 4/5
  */

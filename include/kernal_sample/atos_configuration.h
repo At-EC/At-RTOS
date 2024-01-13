@@ -5,23 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#ifndef _COMPILER_H_
-#define _COMPILER_H_
-
-#include "configuration.h"
-
-#if !defined KERNAL_SAMPLE
-	#include "arch32/arm/cmsis/include/cmsis_compiler.h"
-#endif
+#ifndef _ATOS_CONFIGURATION_H_
+#define _ATOS_CONFIGURATION_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* TODO */
-
+#define KERNAL_SAMPLE
+ 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _COMPILER_H_ */
+#endif /* _ATOS_CONFIGURATION_H_ */

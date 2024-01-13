@@ -9,10 +9,11 @@
 extern "C" {
 #endif
 
-#include "clock_systick.h"
+#include "clock_tick.h"
 #include "kernal.h"
 #include "basic.h"
 #include "compiler.h"
+#include "port.h"
 
 void SysTick_Handler(void)
 {
@@ -22,6 +23,42 @@ void SysTick_Handler(void)
 void HardFault_Handler(void)
 {
     while(1){};
+}
+
+b_t port_isInInterruptContent(void)
+{
+    if (__get_IPSR())
+    {
+        return TRUE;
+    }
+
+    if (__get_PRIMASK() == SET_BIT(0))
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+b_t port_isInThreadMode(void)
+{
+    if (__get_IPSR())
+    {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+void port_setPendSV(void)
+{
+    SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+}
+
+void port_interrupt_init(void)
+{
+    NVIC_SetPriority(PendSV_IRQn, 0xFF); // Set PendSV to lowest possible priority
+    NVIC_SetPriority(SVCall_IRQn, 0xFF); // Set SV to lowest possible priority
+    NVIC_SetPriority(SysTick_IRQn, 0xFFu);
 }
 
 __ASM void SVC_Handler(void)

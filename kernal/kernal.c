@@ -4,11 +4,12 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
+#include "at_rtos.h"
 #include "kernal.h"
 #include "compiler.h"
-#include "clock_systick.h"
-#include "at_rtos.h"
+#include "clock_tick.h"
+#include "idle.h"
+#include "unique.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,6 +17,7 @@ extern "C" {
 
 /* Local defined the kernal thread stack */
 ATOS_STACK_DEFINE(g_kernal_schedule_stack, KERNAL_THREAD_STACK_SIZE);
+ATOS_STACK_DEFINE(g_kernal_idle_stack, 512u);
 
 #define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_KERNAL)
 
@@ -53,7 +55,8 @@ static kernal_context_t g_kernal_resource =
     .run = FALSE,
     .thread =
     {
-        .thId.val = OS_INVALID_ID,
+        .scheduleId.val = OS_INVALID_ID,
+		.idleId.val = OS_INVALID_ID,
         .semId.val = OS_INVALID_ID,
     },
     .member =
@@ -106,7 +109,6 @@ const at_rtos_api_t AtOS =
 /**
  * The local function lists for current file internal use.
  */
-__ASM void kernal_run_theFirstThread(u32_t sp);
 static u32_t _kernal_start_privilege_routine(arguments_t *pArgs);
 
 /**
@@ -114,7 +116,7 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs);
  */
 static void _kernal_setPendSV(void)
 {
-    SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+    port_setPendSV();
 }
 
 /**
@@ -124,17 +126,7 @@ static void _kernal_setPendSV(void)
  */
 static b_t _kernal_isInPrivilegeMode(void)
 {
-    if (__get_IPSR())
-    {
-        return TRUE;
-    }
-
-    if (__get_PRIMASK() == SET_BIT(0))
-    {
-        return TRUE;
-    }
-
-    return FALSE;
+    return port_isInInterruptContent();
 }
 
 /**
@@ -308,13 +300,24 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
 
     ENTER_CRITICAL_SECTION();
 
-    g_kernal_resource.thread.thId = AtOS.thread_init(_kernal_atos_schedule_thread,
+    g_kernal_resource.thread.scheduleId = AtOS.thread_init(_kernal_atos_schedule_thread,
                                                      g_kernal_schedule_stack,
                                                      KERNAL_THREAD_STACK_SIZE,
                                                      OS_PRIORITY_KERNAL_THREAD_SCHEDULE_LEVEL,
                                                      KERNAL_THREAD_NAME_STRING);
 
-    if (AtOS.os_id_is_invalid(g_kernal_resource.thread.thId))
+    if (AtOS.os_id_is_invalid(g_kernal_resource.thread.scheduleId))
+    {
+       return _PC_CMPT_FAILED;
+    }
+
+    g_kernal_resource.thread.idleId = AtOS.thread_init(kernal_atos_idle_thread,
+                                                     g_kernal_idle_stack,
+                                                     IDLE_THREAD_STACK_SIZE,
+                                                     OS_PRIORITY_KERNAL_THREAD_IDLE_LEVEL,
+                                                     KERNAL_THREAD_NAME_STRING);
+
+    if (AtOS.os_id_is_invalid(g_kernal_resource.thread.idleId))
     {
        return _PC_CMPT_FAILED;
     }
@@ -325,9 +328,8 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
         return _PC_CMPT_FAILED;
     }
 
-    NVIC_SetPriority(PendSV_IRQn, 0xFF); // Set PendSV to lowest possible priority
-    NVIC_SetPriority(SVCall_IRQn, 0xFF); // Set SV to lowest possible priority
-    NVIC_SetPriority(SysTick_IRQn, 0xFFu);
+    port_interrupt_init();
+
     _impl_clock_time_init(_impl_timer_elapsed_handler);
 
     g_kernal_resource.current = _kernal_thread_nextIdGet();
@@ -340,7 +342,6 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
     // nothing arrive
     return _PC_CMPT_FAILED;
 }
-
 
 /**
  * @brief Get the kernal member ending unified id according to the member id.
@@ -761,11 +762,7 @@ u32p_t _impl_kernal_thread_entry_trigger(os_id_t id, os_id_t release, u32_t resu
  */
 b_t _impl_kernal_isInThreadMode(void)
 {
-    if (__get_IPSR())
-    {
-        return FALSE;
-    }
-    return TRUE;  //The kernal is not in Thread mode
+    return port_isInThreadMode();
 }
 
 /**

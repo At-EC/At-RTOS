@@ -10,61 +10,12 @@
 
 #include "type.h"
 #include "linker.h"
-#include "rtos_configuration.h"
+#include "configuration.h"
+#include "unique.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef u32_t os_id_t;
-
-struct os_id
-{
-    u16_t number;
-    u32_t val;
-    const char_t *pName;
-};
-
-struct os_priority
-{
-    u8_t level;
-};
-
-struct os_time
-{
-    u32_t ms;
-};
-
-typedef struct os_id os_thread_id_t;
-typedef struct os_id os_timer_id_t;
-typedef struct os_id os_semaphore_id_t;
-typedef struct os_id os_mutex_id_t;
-typedef struct os_id os_event_id_t;
-typedef struct os_id os_queue_id_t;
-
-typedef struct os_priority os_priority_t;
-typedef struct os_time os_time_t;
-
-#define OS_INVALID_ID_VAL                           (0xFFFFFFFFu)
-
-#define OS_TIME_INVALID_VAL                         (0xFFFFFFFFu)
-#define OS_TIME_FOREVER_VAL                         (0xFFFFFFFEu)
-#define OS_TIME_NOWAIT_VAL                          (0x0u)
-
-#define OS_PRIOTITY_INVALID_LEVEL                   (0xFFu)
-#define OS_PRIOTITY_LOWEST_LEVEL                    (0xFEu)
-#define OS_PRIOTITY_HIGHEST_LEVEL                   (0x0u)
-
-#define OS_PRIORITY_INVALID                         (OS_PRIOTITY_INVALID_LEVEL)
-#define OS_PRIORITY_KERNAL_THREAD_IDLE_LEVEL        (OS_PRIOTITY_LOWEST_LEVEL)
-#define OS_PRIORITY_KERNAL_THREAD_SCHEDULE_LEVEL    (OS_PRIOTITY_HIGHEST_LEVEL)
-#define OS_PRIORITY_USER_THREAD_LOWEST_LEVEL        (OS_PRIOTITY_LOWEST_LEVEL + 1u)
-#define OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL       (OS_PRIOTITY_HIGHEST_LEVEL - 1u)
-
-#define OS_SEMPHORE_TICKET_BINARY                   (1u)
-
-#define OS_INVALID_ID                               OS_INVALID_ID_VAL
-
 
 /* Start of section using anonymous unions */
 #if defined (__CC_ARM)
@@ -78,6 +29,8 @@ typedef struct os_time os_time_t;
     /* anonymous unions are enabled by default */
 #elif defined (__TASKING__)
     #pragma warning 586
+#elif defined (KERNAL_SAMPLE)
+	/* Nothing to do */
 #else
     #warning Not supported compiler type
 #endif
@@ -317,8 +270,8 @@ typedef struct
 
 typedef struct
 {
-    os_thread_id_t thId;
-
+    os_thread_id_t scheduleId;
+	os_thread_id_t idleId;
     os_semaphore_id_t semId;
 }kernal_thread_t;
 
@@ -396,6 +349,8 @@ typedef struct
         /* anonymous unions are enabled by default */
 #elif defined (__TASKING__)
     #pragma warning restore
+#elif defined (KERNAL_SAMPLE)
+	/* Nothing to do */
 #else
     #warning Not supported compiler type
 #endif

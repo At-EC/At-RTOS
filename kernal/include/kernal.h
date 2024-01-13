@@ -9,8 +9,9 @@
 #define _KERNAL_H_
 
 #include "member_struct.h"
-#include "arch32/arch.h"
-#include "svc_call.h"
+#include "arch.h"
+#include "unique.h"
+#include "port.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,15 +56,6 @@ extern "C" {
 #define KERNAL_MEMBER_MAP_NUMBER                (KERNAL_MEMBER_MAP_7)
 
 list_t *_impl_kernal_member_list_get(u8_t member_id, u8_t list_id);
-u8_t*   _impl_kernal_member_unified_id_toContainerAddress(u32_t unified_id);
-u32_t   _impl_kernal_member_containerAddress_toUnifiedid(u32_t container_address);
-u32_t   _impl_kernal_member_id_toUnifiedIdStart(u8_t member_id);
-u8_t*   _impl_kernal_member_id_toContainerStartAddress(u32_t member_id);
-u8_t*   _impl_kernal_member_id_toContainerEndAddress(u32_t member_id);
-b_t     _impl_kernal_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id);
-u8_t    _impl_kernal_member_unified_id_toId(u32_t unified_id);
-u32_t   _impl_kernal_member_unified_id_threadToTimer(u32_t unified_id);
-u32_t   _impl_kernal_member_unified_id_timerToThread(u32_t unified_id);
 u32_t   _impl_kernal_member_id_unifiedConvert(u8_t member_id, u32_t unified_id);
 void    _impl_kernal_thread_list_transfer_toEntry(linker_head_t *pCurHead);
 void    _impl_kernal_thread_list_transfer_toExit(linker_head_t *pCurHead);
@@ -78,13 +70,12 @@ u32_t   _impl_kernal_thread_schedule_request(void);
 b_t     _impl_kernal_rtos_isRun(void);
 u32p_t  _impl_kernal_at_rtos_run(void);
 void    _impl_kernal_message_notification(void);
-b_t     _impl_kernal_os_id_is_invalid(struct os_id id);
 void    _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP);
 void    _impl_kernal_privilege_call_inSVC_c(u32_t *svc_args);
 u32_t   _impl_kernal_privilege_invoke(const void* pCallFun, arguments_t* pArgs);
 void*   _impl_kernal_thread_runContextGet(void);
 
-static __INLINE u32p_t kernal_atos_run(void)
+static inline u32p_t kernal_atos_run(void)
 {
     return _impl_kernal_at_rtos_run();
 }
