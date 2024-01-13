@@ -83,10 +83,10 @@ typedef u32_t                                   u32p_t;
 /**
  * The implement string operation function lists for rtos kernal internal use.
  */
-void  _memcpy(char_t *dst, const char_t *src, u32_t cnt);
-void  _memset(char_t *dst, u8_t val, u32_t cnt);
-i32_t _memcmp(const char_t *dst, const char_t *src, u32_t cnt);
-u32_t _strlen(const char_t *str);
+void  _memcpy(void *dst, const void *src, u32_t cnt);
+void  _memset(void *dst, u8_t val, u32_t cnt);
+i32_t _memcmp(const void *dst, const void *src, u32_t cnt);
+u32_t _strlen(const uchar_t *str);
 
 #ifdef __cplusplus
 }

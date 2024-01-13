@@ -18,10 +18,10 @@ extern "C" {
  * @param src The pointer of the source.
  * @param cnt The opereation specific length.
  */
-void _memcpy(char_t *dst, const char_t *src, u32_t cnt)
+void _memcpy(void *dst, const void *src, u32_t cnt)
 {
-    char_t *d = (char_t *)dst;
-    const char_t *s = (const char_t *)src;
+    uchar_t *d = (uchar_t *)dst;
+    const uchar_t *s = (const uchar_t *)src;
     while (cnt--)
     {
         *d++ = *s++;
@@ -35,9 +35,9 @@ void _memcpy(char_t *dst, const char_t *src, u32_t cnt)
  * @param val The character value.
  * @param cnt The opereation specific length.
  */
-void _memset(char_t *dst, u8_t val, u32_t cnt)
+void _memset(void *dst, u8_t val, u32_t cnt)
 {
-    char_t *d = (char_t *)dst;
+    uchar_t *d = (uchar_t *)dst;
     while (cnt--)
     {
         *d++ = (u8_t)val;
@@ -53,9 +53,9 @@ void _memset(char_t *dst, u8_t val, u32_t cnt)
  *
  * @return The value 0 indicates the both strings are same, otherwise is different
  */
-i32_t _memcmp(const char_t *dst, const char_t *src, u32_t cnt)
+i32_t _memcmp(const void *dst, const void *src, u32_t cnt)
 {
-    const char_t *d = (const char_t *)dst, *s = (const char_t *)src;
+    const uchar_t *d = (const uchar_t *)dst, *s = (const uchar_t *)src;
     int r = 0;
     while (cnt-- && (r = *d++ - *s++) == 0);
     return r;
@@ -68,7 +68,7 @@ i32_t _memcmp(const char_t *dst, const char_t *src, u32_t cnt)
  *
  * @return The value of the string length
  */
-u32_t _strlen(const char_t *str)
+u32_t _strlen(const uchar_t *str)
 {
     u32_t len = 0u;
     while (*str++ != '\0')

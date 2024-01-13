@@ -22,7 +22,7 @@ extern "C" {
 #else
     #define _STATIC_MAGIC(pre)              _STATIC_MAGIC_2(pre, COMPLIER_UNIQUE_NUMBER)
 #endif
-#define S_ASSERT(cond, msg)                 typedef char_t _STATIC_MAGIC(static_assert)[FLAG(cond) * 2 - 1];
+#define S_ASSERT(cond, msg)                 typedef char_t _STATIC_MAGIC(static_assert)[FLAG(cond) * 2 - 1]
 
 
 #define COMPLIER_LINE_NUMBER                __LINE__
