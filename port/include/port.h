@@ -39,7 +39,7 @@ typedef u32_t (*pPrivilege_callFunc_t)(arguments_t *);
  */
 #if defined (__CC_ARM)
     __svc(SVC_KERNAL_INVOKE_NUMBER) u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
-    __ASM void kernal_run_theFirstThread(u32_t sp);
+    __ASM void _impl_port_run_theFirstThread(u32_t sp);
 #elif defined (__ICCARM)
     /* TODO */
 #elif defined (__GUNC__)
@@ -50,15 +50,18 @@ typedef u32_t (*pPrivilege_callFunc_t)(arguments_t *);
     /* TODO */
 #elif defined (KERNAL_SAMPLE)
     u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
-    void kernal_run_theFirstThread(u32_t sp);
+    void _impl_port_run_theFirstThread(u32_t sp);
 #else
     #warning Not supported compiler type
 #endif
 
-void port_setPendSV(void);
-b_t port_isInInterruptContent(void);
-b_t port_isInThreadMode(void);
-void port_interrupt_init(void);
+/**
+ * The implement function lists for rtos kernal internal use.
+ */
+void _impl_port_setPendSV(void);
+b_t  _impl_port_isInInterruptContent(void);
+b_t  _impl_port_isInThreadMode(void);
+void _impl_port_interrupt_init(void);
 
 #ifdef __cplusplus
 }

@@ -26,8 +26,29 @@ extern "C" {
     #undef FPU_ENABLED
 #endif
 
-#define KERNAL_THREAD_STACK_SIZE                (1024u)
-#define KERNAL_THREAD_NAME_STRING               "kernal"
+enum {
+    KERNAL_SCHEDULE_THREAD_INSTANCE = (0u),
+    KERNAL_IDLE_THREAD_INSTANCE,
+    KERNAL_APPLICATION_THREAD_INSTANCE,
+};
+
+enum {
+    KERNAL_SCHEDULE_SEMAPHORE_INSTANCE = (0u),
+    KERNAL_APPLICATION_SEMAPHORE_INSTANCE,
+};
+
+#ifndef KERNAL_THREAD_STACK_SIZE
+    #define KERNAL_SCHEDULE_THREAD_STACK_SIZE   (1024u)
+#else
+    #define KERNAL_SCHEDULE_THREAD_STACK_SIZE   (KERNAL_THREAD_STACK_SIZE)
+#endif
+
+
+#ifndef IDLE_THREAD_STACK_SIZE
+    #define KERNAL_IDLE_THREAD_STACK_SIZE       (512u)
+#else
+    #define KERNAL_IDLE_THREAD_STACK_SIZE       (IDLE_THREAD_STACK_SIZE)
+#endif
 
 #define STACT_UNUSED_DATA                       (0xDEu)
 #define STACT_UNUSED_FRAME_MARK                 (0xDEDEDEDEu)
@@ -38,10 +59,10 @@ extern "C" {
 #define ENTER_CRITICAL_SECTION()                ARCH_ENTER_CRITICAL_SECTION()
 #define EXIT_CRITICAL_SECTION()                 ARCH_EXIT_CRITICAL_SECTION()
 
-#define KERNAL_THREAD_MEMORY_SIZE               (sizeof(thread_context_t) * THREAD_INSTANCE_SUPPORTED_NUMBER)
-#define KERNAL_TIMER_INTERNAL_MEMORY_SIZE       (sizeof(timer_context_t) * THREAD_INSTANCE_SUPPORTED_NUMBER)
+#define KERNAL_THREAD_MEMORY_SIZE               (sizeof(thread_context_t) * (THREAD_INSTANCE_SUPPORTED_NUMBER + KERNAL_APPLICATION_THREAD_INSTANCE))
+#define KERNAL_TIMER_INTERNAL_MEMORY_SIZE       (sizeof(timer_context_t) * (THREAD_INSTANCE_SUPPORTED_NUMBER + KERNAL_APPLICATION_THREAD_INSTANCE))
 #define KERNAL_TIMER_MEMORY_SIZE                (sizeof(timer_context_t) * TIMER_INSTANCE_SUPPORTED_NUMBER)
-#define KERNAL_SEMAPHORE_MEMORY_SIZE            (sizeof(semaphore_context_t) * SEMAPHORE_INSTANCE_SUPPORTED_NUMBER)
+#define KERNAL_SEMAPHORE_MEMORY_SIZE            (sizeof(semaphore_context_t) * (SEMAPHORE_INSTANCE_SUPPORTED_NUMBER + KERNAL_APPLICATION_SEMAPHORE_INSTANCE))
 #define KERNAL_MUTEX_MEMORY_SIZE                (sizeof(mutex_context_t) * MUTEX_INSTANCE_SUPPORTED_NUMBER)
 #define KERNAL_EVENT_MEMORY_SIZE                (sizeof(event_context_t) * EVENT_INSTANCE_SUPPORTED_NUMBER)
 #define KERNAL_QUEUE_MEMORY_SIZE                (sizeof(queue_context_t) * QUEUE_INSTANCE_SUPPORTED_NUMBER)
@@ -73,6 +94,8 @@ void    _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP);
 void    _impl_kernal_privilege_call_inSVC_c(u32_t *svc_args);
 u32_t   _impl_kernal_privilege_invoke(const void* pCallFun, arguments_t* pArgs);
 void*   _impl_kernal_thread_runContextGet(void);
+void    _impl_kernal_atos_schedule_thread(void);
+void    _impl_kernal_semaphore_list_transfer_toLock(linker_head_t *pCurHead);
 
 static inline u32p_t kernal_atos_run(void)
 {

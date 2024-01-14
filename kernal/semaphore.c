@@ -314,8 +314,9 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
     u8_t limitationCount = (u8_t)(pArgs[1].u32_val);
     const char_t *pName = (const char_t *)(pArgs[2].u32_val);
 
-    semaphore_context_t *pCurSemaphore = (semaphore_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_SEMAPHORE);
-    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_SEMAPHORE);
+    u32_t offset = (sizeof(semaphore_context_t)*KERNAL_APPLICATION_SEMAPHORE_INSTANCE);
+    semaphore_context_t *pCurSemaphore = (semaphore_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_SEMAPHORE) + offset);
+    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_SEMAPHORE) + offset;
 
     do {
         if (!_semaphore_object_isInit(id))

@@ -243,12 +243,9 @@ os_id_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t 
         return OS_INVALID_ID;
     }
 
-    if (_memcmp((char_t*)KERNAL_THREAD_NAME_STRING, (char_t*)pName, sizeof(KERNAL_THREAD_NAME_STRING)))
+    if ((priority == OS_PRIORITY_KERNAL_THREAD_IDLE_LEVEL) || (priority == OS_PRIORITY_KERNAL_THREAD_SCHEDULE_LEVEL))
     {
-        if ((priority == OS_PRIORITY_KERNAL_THREAD_IDLE_LEVEL) || (priority == OS_PRIORITY_KERNAL_THREAD_SCHEDULE_LEVEL))
-        {
-            return OS_INVALID_ID;
-        }
+        return OS_INVALID_ID;
     }
 
     arguments_t arguments[] =
@@ -405,8 +402,9 @@ static os_id_t _thread_init_privilege_routine(arguments_t* pArgs)
     u8_t priority = (u8_t)pArgs[3].u32_val;
     const char_t *pName = (const char_t *)pArgs[4].u32_val;
 
-    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_THREAD);
-    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD);
+    u32_t offset = (sizeof(thread_context_t)*KERNAL_APPLICATION_THREAD_INSTANCE);
+    thread_context_t *pCurThread = (thread_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_THREAD) + offset);
+    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD) + offset;
 
     do {
         if (!_thread_object_isInit(id))

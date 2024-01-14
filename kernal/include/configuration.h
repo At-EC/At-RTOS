@@ -73,6 +73,10 @@ extern "C" {
     #define IDLE_THREAD_STACK_SIZE                    (512u)
 #endif
 
+#ifndef KERNAL_THREAD_STACK_SIZE
+    #define KERNAL_THREAD_STACK_SIZE                  (1024u)
+#endif
+
 #if !defined __CC_ARM &&  \
     !defined __ICCARM &&  \
     !defined __GUNC__ &&  \

@@ -15,24 +15,33 @@ extern "C" {
 #include "compiler.h"
 #include "port.h"
 
+/**
+ * @brief ARM core systick interrupt handle function.
+ */
 void SysTick_Handler(void)
 {
     _impl_clock_isr();
 }
 
+/**
+ * @brief ARM core fault interrupt handle function.
+ */
 void HardFault_Handler(void)
 {
     while(1){};
 }
 
-b_t port_isInInterruptContent(void)
+/**
+ * @brief To check if it's in interrupt content.
+ */
+b_t _impl_port_isInInterruptContent(void)
 {
     if (__get_IPSR())
     {
         return TRUE;
     }
 
-    if (__get_PRIMASK() == SET_BIT(0))
+    if (__get_PRIMASK() == SBIT(0))
     {
         return TRUE;
     }
@@ -40,7 +49,10 @@ b_t port_isInInterruptContent(void)
     return FALSE;
 }
 
-b_t port_isInThreadMode(void)
+/**
+ * @brief To check if it's in kernal thread content.
+ */
+b_t _impl_port_isInThreadMode(void)
 {
     if (__get_IPSR())
     {
@@ -49,18 +61,27 @@ b_t port_isInThreadMode(void)
     return TRUE;
 }
 
-void port_setPendSV(void)
+/**
+ * @brief ARM core trigger the pendsv interrupt.
+ */
+void _impl_port_setPendSV(void)
 {
     SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
 
-void port_interrupt_init(void)
+/**
+ * @brief ARM core config kernal thread interrupt priority.
+ */
+void _impl_port_interrupt_init(void)
 {
     NVIC_SetPriority(PendSV_IRQn, 0xFF); // Set PendSV to lowest possible priority
     NVIC_SetPriority(SVCall_IRQn, 0xFF); // Set SV to lowest possible priority
     NVIC_SetPriority(SysTick_IRQn, 0xFFu);
 }
 
+/**
+ * @brief ARM core SVC interrupt handle function.
+ */
 __ASM void SVC_Handler(void)
 {
     /* Before call this the [R0-R3, R12, LR, PC, PSR] store into PSP */
@@ -77,7 +98,9 @@ __ASM void SVC_Handler(void)
     ALIGN 4
 }
 
-
+/**
+ * @brief ARM core PendSV interrupt handle function.
+ */
 __ASM void PendSV_Handler(void)
 {
     /**
@@ -149,7 +172,10 @@ Exit
     ALIGN 4
 }
 
-__ASM void kernal_run_theFirstThread(u32_t sp)
+/**
+ * @brief ARM core trigger the first thread to run.
+ */
+__ASM void _impl_port_run_theFirstThread(u32_t sp)
 {
     /**
      * initialize R4-R11 from context frame using passed SP

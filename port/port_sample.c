@@ -15,57 +15,87 @@ extern "C" {
 #include "compiler.h"
 #include "port.h"
 
+/**
+ * @brief ARM core trigger the svc call interrupt.
+ */
 u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3)
 {
     /* TODO */
-    return 0u;
 }
 
-void port_setPendSV(void)
-{
-    /* TODO */
-}
-
-b_t port_isInInterruptContent(void)
-{
-    /* TODO */
-    return FALSE;
-}
-
-b_t port_isInThreadMode(void)
-{
-    /* TODO */
-    return FALSE;
-}
-
-void port_interrupt_init(void)
-{
-    /* TODO */
-}
-
+/**
+ * @brief ARM core systick interrupt handle function.
+ */
 void SysTick_Handler(void)
 {
-    _impl_clock_isr();
+    /* TODO */
 }
 
+/**
+ * @brief ARM core fault interrupt handle function.
+ */
 void HardFault_Handler(void)
 {
-   /* TODO */
+    /* TODO */
 }
 
+/**
+ * @brief To check if it's in interrupt content.
+ */
+b_t _impl_port_isInInterruptContent(void)
+{
+    /* TODO */
+
+    return FALSE;
+}
+
+/**
+ * @brief To check if it's in kernal thread content.
+ */
+b_t _impl_port_isInThreadMode(void)
+{
+    /* TODO */
+    return TRUE;
+}
+
+/**
+ * @brief ARM core trigger the pendsv interrupt.
+ */
+void _impl_port_setPendSV(void)
+{
+    /* TODO */
+}
+
+/**
+ * @brief ARM core config kernal thread interrupt priority.
+ */
+void _impl_port_interrupt_init(void)
+{
+    /* TODO */
+}
+
+/**
+ * @brief ARM core SVC interrupt handle function.
+ */
 void SVC_Handler(void)
 {
-   /* TODO */
+    /* TODO */
 }
 
+/**
+ * @brief ARM core PendSV interrupt handle function.
+ */
 void PendSV_Handler(void)
 {
-   /* TODO */
+    /* TODO */
 }
 
-void kernal_run_theFirstThread(u32_t sp)
+/**
+ * @brief ARM core trigger the first thread to run.
+ */
+void _impl_port_run_theFirstThread(u32_t sp)
 {
-   /* TODO */
+    /* TODO */
 }
 
 #ifdef __cplusplus

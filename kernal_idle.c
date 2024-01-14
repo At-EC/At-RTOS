@@ -14,7 +14,7 @@ extern "C" {
 /**
  * @brief The idle thread entry function.
  */
-void kernal_atos_idle_thread(void)
+void _impl_kernal_atos_idle_thread(void)
 {
     while(1)
     {

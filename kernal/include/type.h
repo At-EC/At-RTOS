@@ -62,13 +62,13 @@ typedef u32_t                                   u32p_t;
     #define COMPLIER_UNIQUE_NUMBER              __LINE__
 #endif
 
-#define HW_REG32(addr)                          (*(volatile u32_t *)(u32_t)(addr))
-#define HW_REG16(addr)                          (*(volatile u16_t *)(u32_t)(addr))
-#define HW_REG8(addr)                           (*(volatile u8_t *)(u32_t)(addr))
+#define VREG32(addr)                            (*(volatile u32_t *)(u32_t)(addr))
+#define VREG16(addr)                            (*(volatile u16_t *)(u32_t)(addr))
+#define VREG8(addr)                             (*(volatile u8_t *)(u32_t)(addr))
 
-#define SET_BIT(x)                              ((u32_t)((u32_t)0x01u<<(x)))
-#define SET_BITS(start, end)                    ((0xFFFFFFFFul << (start)) & (0xFFFFFFFFul >> (31u - (u32_t)(end))))
-#define GET_BITS(regval, start, end)            (((regval) & SET_BITS((start),(end))) >> (start))
+#define SBIT(x)                                 ((u32_t)((u32_t)0x01u<<(x)))
+#define SBITS(start, end)                       ((0xFFFFFFFFul << (start)) & (0xFFFFFFFFul >> (31u - (u32_t)(end))))
+#define GBITS(regval, start, end)               (((regval) & SBITS((start),(end))) >> (start))
 
 #define DEQUALIFY(s, v)                         ((s)(u32_t)(const volatile void *)(v))
 #define OFFSETOF(s, m)                          ((u32_t)(&((s *)0)->m))

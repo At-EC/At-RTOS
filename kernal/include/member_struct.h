@@ -268,13 +268,6 @@ typedef struct
     kernal_member_setting_t *pSetting;
 }kernal_member_t;
 
-typedef struct
-{
-    os_thread_id_t scheduleId;
-    os_thread_id_t idleId;
-    os_semaphore_id_t semId;
-}kernal_thread_t;
-
 /** @brief The rtos kernal structure. */
 typedef struct
 {
@@ -285,7 +278,6 @@ typedef struct
 
     kernal_member_t member;
 
-    kernal_thread_t thread;
     /* The kernal already start to do schedule */
     b_t run;
 } kernal_context_t;

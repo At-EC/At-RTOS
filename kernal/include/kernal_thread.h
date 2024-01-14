@@ -5,17 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#ifndef _USER_H_
-#define _USER_H_
+#ifndef _KERNAL_THREAD_H_
+#define _KERNAL_THREAD_H_
+
+#include "arch.h"
+#include "type.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void _impl_kernal_atos_idle_thread(void);
+void  _impl_kernal_thread_message_notification(void);
+u32_t _impl_kernal_thread_message_arrived(void);
+void  _impl_kernal_thread_init(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _USER_H_ */
+#endif /* _KERNAL_THREAD_H_ */
+

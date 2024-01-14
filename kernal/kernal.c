@@ -10,15 +10,15 @@
 #include "clock_tick.h"
 #include "idle.h"
 #include "unique.h"
+#include "kernal_thread.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Local defined the kernal thread stack */
-ATOS_STACK_DEFINE(g_kernal_schedule_stack, KERNAL_THREAD_STACK_SIZE);
-ATOS_STACK_DEFINE(g_kernal_idle_stack, 512u);
-
+/**
+ * Local unique postcode.
+ */
 #define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_KERNAL)
 
 /**
@@ -26,13 +26,13 @@ ATOS_STACK_DEFINE(g_kernal_idle_stack, 512u);
  */
 static kernal_member_setting_t g_kernal_member_setting[KERNAL_MEMBER_NUMBER] =
 {
-    [KERNAL_MEMBER_THREAD]         = {KERNAL_MEMBER_MAP_1, (SET_BITS(KERNAL_MEMBER_LIST_THREAD_WAIT, KERNAL_MEMBER_LIST_THREAD_EXIT))},
-    [KERNAL_MEMBER_TIMER_INTERNAL] = {KERNAL_MEMBER_MAP_2, (SET_BITS(KERNAL_MEMBER_LIST_TIMER_STOP, KERNAL_MEMBER_LIST_TIMER_RUN))},
-    [KERNAL_MEMBER_TIMER]          = {KERNAL_MEMBER_MAP_3, (SET_BITS(KERNAL_MEMBER_LIST_TIMER_STOP, KERNAL_MEMBER_LIST_TIMER_RUN))},
-    [KERNAL_MEMBER_SEMAPHORE]      = {KERNAL_MEMBER_MAP_4, (SET_BITS(KERNAL_MEMBER_LIST_SEMAPHORE_LOCK, KERNAL_MEMBER_LIST_SEMAPHORE_UNLOCK))},
-    [KERNAL_MEMBER_MUTEX]          = {KERNAL_MEMBER_MAP_5, (SET_BITS(KERNAL_MEMBER_LIST_MUTEX_LOCK, KERNAL_MEMBER_LIST_MUTEX_UNLOCK))},
-    [KERNAL_MEMBER_EVENT]          = {KERNAL_MEMBER_MAP_6, (SET_BITS(KERNAL_MEMBER_LIST_EVENT_INACTIVE, KERNAL_MEMBER_LIST_EVENT_ACTIVE))},
-    [KERNAL_MEMBER_QUEUE]          = {KERNAL_MEMBER_MAP_7, (SET_BIT(KERNAL_MEMBER_LIST_QUEUE_INIT))},
+    [KERNAL_MEMBER_THREAD]         = {KERNAL_MEMBER_MAP_1, (SBITS(KERNAL_MEMBER_LIST_THREAD_WAIT, KERNAL_MEMBER_LIST_THREAD_EXIT))},
+    [KERNAL_MEMBER_TIMER_INTERNAL] = {KERNAL_MEMBER_MAP_2, (SBITS(KERNAL_MEMBER_LIST_TIMER_STOP, KERNAL_MEMBER_LIST_TIMER_RUN))},
+    [KERNAL_MEMBER_TIMER]          = {KERNAL_MEMBER_MAP_3, (SBITS(KERNAL_MEMBER_LIST_TIMER_STOP, KERNAL_MEMBER_LIST_TIMER_RUN))},
+    [KERNAL_MEMBER_SEMAPHORE]      = {KERNAL_MEMBER_MAP_4, (SBITS(KERNAL_MEMBER_LIST_SEMAPHORE_LOCK, KERNAL_MEMBER_LIST_SEMAPHORE_UNLOCK))},
+    [KERNAL_MEMBER_MUTEX]          = {KERNAL_MEMBER_MAP_5, (SBITS(KERNAL_MEMBER_LIST_MUTEX_LOCK, KERNAL_MEMBER_LIST_MUTEX_UNLOCK))},
+    [KERNAL_MEMBER_EVENT]          = {KERNAL_MEMBER_MAP_6, (SBITS(KERNAL_MEMBER_LIST_EVENT_INACTIVE, KERNAL_MEMBER_LIST_EVENT_ACTIVE))},
+    [KERNAL_MEMBER_QUEUE]          = {KERNAL_MEMBER_MAP_7, (SBIT(KERNAL_MEMBER_LIST_QUEUE_INIT))},
 };
 
 /**
@@ -53,57 +53,12 @@ static kernal_context_t g_kernal_resource =
     .current = 0u,
     .list = LIST_NULL,
     .run = FALSE,
-    .thread =
-    {
-        .scheduleId.val = OS_INVALID_ID,
-        .idleId.val = OS_INVALID_ID,
-        .semId.val = OS_INVALID_ID,
-    },
     .member =
     {
         .pListContainer = (list_t*)&g_kernal_member_list[0],
         .pMemoryContainer = (u8_t*)&g_kernal_member_container[0],
         .pSetting = (kernal_member_setting_t*)&g_kernal_member_setting[0],
     },
-};
-
-/**
- * Global At_RTOS application interface init.
- */
-const at_rtos_api_t AtOS =
-{
-    .thread_init = thread_init,
-    .thread_sleep = thread_sleep,
-    .thread_resume = thread_resume,
-    .thread_suspend = thread_suspend,
-    .thread_yield = thread_yield,
-    .thread_delete = thread_delete,
-
-    .timer_init = timer_init,
-    .timer_start = timer_start,
-    .timer_stop = timer_stop,
-    .timer_isBusy = timer_isBusy,
-    .timer_system_total_ms = timer_system_total_ms,
-
-    .semaphore_init = semaphore_init,
-    .semaphore_take = semaphore_take,
-    .semaphore_give = semaphore_give,
-    .semaphore_flush = semaphore_flush,
-
-    .mutex_init = mutex_init,
-    .mutex_lock = mutex_lock,
-    .mutex_unlock = mutex_unlock,
-
-    .event_init = event_init,
-    .event_set = event_set,
-    .event_wait = event_wait,
-
-    .queue_init = queue_init,
-    .queue_send = queue_send,
-    .queue_receive = queue_receive,
-
-    .os_id_is_invalid = os_id_is_invalid,
-    .kernal_atos_run = kernal_atos_run,
 };
 
 /**
@@ -116,7 +71,7 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs);
  */
 static void _kernal_setPendSV(void)
 {
-    port_setPendSV();
+    _impl_port_setPendSV();
 }
 
 /**
@@ -126,7 +81,7 @@ static void _kernal_setPendSV(void)
  */
 static b_t _kernal_isInPrivilegeMode(void)
 {
-    return port_isInInterruptContent();
+    return _impl_port_isInInterruptContent();
 }
 
 /**
@@ -265,29 +220,6 @@ static b_t _kernal_thread_exit_schedule(void)
 }
 
 /**
- * @brief To check if the kernal message arrived.
- */
-static u32_t _kernal_message_arrived(void)
-{
-    return semaphore_take(g_kernal_resource.thread.semId, OS_TIME_FOREVER_VAL);
-}
-
-/**
- * @brief The kernal thread only serve for RTOS with highest priority.
- */
-static void _kernal_atos_schedule_thread(void)
-{
-    while (1)
-    {
-        u32p_t postcode = (_kernal_message_arrived());
-        if (PC_IOK(postcode))
-        {
-            _impl_timer_reamining_elapsed_handler();
-        }
-    }
-}
-
-/**
  * @brief It's sub-routine running at privilege mode.
  *
  * @param pArgs The function argument packages.
@@ -300,35 +232,9 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
 
     ENTER_CRITICAL_SECTION();
 
-    g_kernal_resource.thread.scheduleId = AtOS.thread_init(_kernal_atos_schedule_thread,
-                                                     g_kernal_schedule_stack,
-                                                     KERNAL_THREAD_STACK_SIZE,
-                                                     OS_PRIORITY_KERNAL_THREAD_SCHEDULE_LEVEL,
-                                                     KERNAL_THREAD_NAME_STRING);
+    _impl_kernal_thread_init();
 
-    if (AtOS.os_id_is_invalid(g_kernal_resource.thread.scheduleId))
-    {
-       return _PC_CMPT_FAILED;
-    }
-
-    g_kernal_resource.thread.idleId = AtOS.thread_init(kernal_atos_idle_thread,
-                                                     g_kernal_idle_stack,
-                                                     IDLE_THREAD_STACK_SIZE,
-                                                     OS_PRIORITY_KERNAL_THREAD_IDLE_LEVEL,
-                                                     KERNAL_THREAD_NAME_STRING);
-
-    if (AtOS.os_id_is_invalid(g_kernal_resource.thread.idleId))
-    {
-       return _PC_CMPT_FAILED;
-    }
-
-    g_kernal_resource.thread.semId = AtOS.semaphore_init(0u, OS_SEMPHORE_TICKET_BINARY, KERNAL_THREAD_NAME_STRING);
-    if (AtOS.os_id_is_invalid(g_kernal_resource.thread.semId))
-    {
-        return _PC_CMPT_FAILED;
-    }
-
-    port_interrupt_init();
+    _impl_port_interrupt_init();
 
     _impl_clock_time_init(_impl_timer_elapsed_handler);
 
@@ -337,7 +243,7 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
 
     EXIT_CRITICAL_SECTION();
 
-    kernal_run_theFirstThread(*_kernal_thread_PSP_Get(g_kernal_resource.current));
+    _impl_port_run_theFirstThread(*_kernal_thread_PSP_Get(g_kernal_resource.current));
 
     // nothing arrive
     return _PC_CMPT_FAILED;
@@ -402,7 +308,7 @@ void _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
 list_t *_impl_kernal_member_list_get(u8_t member_id, u8_t list_id)
 {
     return (list_t*)(((member_id < KERNAL_MEMBER_NUMBER) && (list_id < KERNAL_MEMBER_LIST_NUMBER)) ?
-                     ((g_kernal_resource.member.pSetting[member_id].list & SET_BIT(list_id)) ?
+                     ((g_kernal_resource.member.pSetting[member_id].list & SBIT(list_id)) ?
                      (&g_kernal_resource.member.pListContainer[list_id]):(NULL)) : (NULL));
 }
 
@@ -617,11 +523,13 @@ void* _impl_kernal_thread_runContextGet(void)
  */
 u32_t _impl_kernal_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
 {
+    _memset((uchar_t*)pAddress, STACT_UNUSED_DATA, size);
+
     u32_t psp_frame = (u32_t)pAddress + size - sizeof(stack_snapshot_t);
 
     psp_frame = STACK_ADDRESS_DOWN(psp_frame);
 
-    ((stack_snapshot_t *)psp_frame)->xPSR   = SET_BIT(24);              /* xPSR */
+    ((stack_snapshot_t *)psp_frame)->xPSR   = SBIT(24);              /* xPSR */
     ((stack_snapshot_t *)psp_frame)->R15_PC = (u32_t)pEntryFunction;    /* PC   */
     ((stack_snapshot_t *)psp_frame)->R14_LR = 0xFFFFFFFDu;              /* LR   */
 
@@ -710,6 +618,21 @@ void _impl_kernal_thread_list_transfer_toPend(linker_head_t *pCurHead)
 }
 
 /**
+ * @brief Push one semaphore context into lock list.
+ *
+ * @param pCurHead The pointer of the semaphore linker head.
+ */
+void _impl_kernal_semaphore_list_transfer_toLock(linker_head_t *pCurHead)
+{
+    ENTER_CRITICAL_SECTION();
+
+    list_t *pToLockList = (list_t *)(list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_SEMAPHORE, KERNAL_MEMBER_LIST_SEMAPHORE_LOCK);
+    linker_list_transaction_common(&pCurHead->linker, pToLockList, LIST_TAIL);
+
+    EXIT_CRITICAL_SECTION();
+}
+
+/**
  * @brief The thread is trying to exit into suspend.
  *
  * @param id The thread unique id.
@@ -762,7 +685,7 @@ u32p_t _impl_kernal_thread_entry_trigger(os_id_t id, os_id_t release, u32_t resu
  */
 b_t _impl_kernal_isInThreadMode(void)
 {
-    return port_isInThreadMode();
+    return _impl_port_isInThreadMode();
 }
 
 /**
@@ -798,10 +721,29 @@ b_t _impl_kernal_rtos_isRun(void)
  */
 void _impl_kernal_message_notification(void)
 {
-    u32p_t postcode = semaphore_give(g_kernal_resource.thread.semId);
-    if (PC_IER(postcode))
+    _impl_kernal_thread_message_notification();
+}
+
+/**
+ * @brief To check if the kernal message arrived.
+ */
+static u32_t _kernal_message_arrived(void)
+{
+    return _impl_kernal_thread_message_arrived();
+}
+
+/**
+ * @brief The kernal thread only serve for RTOS with highest priority.
+ */
+void _impl_kernal_atos_schedule_thread(void)
+{
+    while (1)
     {
-        /* TODO */
+        u32p_t postcode = (_kernal_message_arrived());
+        if (PC_IOK(postcode))
+        {
+            _impl_timer_reamining_elapsed_handler();
+        }
     }
 }
 
