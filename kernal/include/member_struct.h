@@ -30,7 +30,7 @@ extern "C" {
 #elif defined (__TASKING__)
     #pragma warning 586
 #elif defined (KERNAL_SAMPLE)
-	/* Nothing to do */
+    /* Nothing to do */
 #else
     #warning Not supported compiler type
 #endif
@@ -271,7 +271,7 @@ typedef struct
 typedef struct
 {
     os_thread_id_t scheduleId;
-	os_thread_id_t idleId;
+    os_thread_id_t idleId;
     os_semaphore_id_t semId;
 }kernal_thread_t;
 
@@ -350,7 +350,7 @@ typedef struct
 #elif defined (__TASKING__)
     #pragma warning restore
 #elif defined (KERNAL_SAMPLE)
-	/* Nothing to do */
+    /* Nothing to do */
 #else
     #warning Not supported compiler type
 #endif

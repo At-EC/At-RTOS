@@ -18,7 +18,7 @@ void kernal_atos_idle_thread(void)
 {
     while(1)
     {
-		/* Nothing need to do, otherwise can be use for power management */
+        /* TODO: Power Management */
     }
 }
 

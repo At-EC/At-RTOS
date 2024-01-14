@@ -46,8 +46,8 @@ static _clock_resource_t g_clock_resource = {0u};
  */
 static b_t _clock_isWrap(void)
 {
-	/* Nothing need to do for kernal cmake sample build. */
-	return FALSE;
+    /* Nothing need to do for kernal cmake sample build. */
+    return FALSE;
 }
 
 /**
@@ -57,8 +57,8 @@ static b_t _clock_isWrap(void)
  */
 static u32_t _clock_elapsed(void)
 {
-	/* Nothing need to do for kernal cmake sample build. */
-	return 0u;
+    /* Nothing need to do for kernal cmake sample build. */
+    return 0u;
 }
 
 /**
@@ -79,7 +79,7 @@ static void _clock_time_elapsed_report(u32_t us)
  */
 void _impl_clock_isr(void)
 {
-	/* Nothing need to do for kernal cmake sample build. */
+    /* Nothing need to do for kernal cmake sample build. */
 }
 
 /**
@@ -89,7 +89,7 @@ void _impl_clock_isr(void)
  */
 void _impl_clock_time_interval_set(u32_t interval_us)
 {
-	/* Nothing need to do for kernal cmake sample build. */
+    /* Nothing need to do for kernal cmake sample build. */
 }
 
 /**
@@ -99,7 +99,7 @@ void _impl_clock_time_interval_set(u32_t interval_us)
  */
 u32_t _impl_clock_time_elapsed_get(void)
 {
-	/* Nothing need to do for kernal cmake sample build. */
+    /* Nothing need to do for kernal cmake sample build. */
     return 0u;
 }
 
@@ -110,7 +110,7 @@ u32_t _impl_clock_time_elapsed_get(void)
  */
 u32_t _impl_clock_time_get(void)
 {
-	/* Nothing need to do for kernal cmake sample build. */
+    /* Nothing need to do for kernal cmake sample build. */
     return 0u;
 }
 
@@ -119,7 +119,7 @@ u32_t _impl_clock_time_get(void)
  */
 void _impl_clock_time_enable(void)
 {
-	/* Nothing need to do for kernal cmake sample build. */
+    /* Nothing need to do for kernal cmake sample build. */
 }
 
 /**
@@ -127,7 +127,7 @@ void _impl_clock_time_enable(void)
  */
 void _impl_clock_time_disable(void)
 {
-	/* Nothing need to do for kernal cmake sample build. */
+    /* Nothing need to do for kernal cmake sample build. */
 }
 
 /**
@@ -137,7 +137,7 @@ void _impl_clock_time_init(time_report_handler_t pTime_function)
 {
     g_clock_resource.pCallFunc = pTime_function;
 
-	/* Nothing need to do for kernal cmake sample build. */
+    /* Nothing need to do for kernal cmake sample build. */
 }
 
 #ifdef __cplusplus

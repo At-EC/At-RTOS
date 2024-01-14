@@ -11,7 +11,7 @@
 #include "configuration.h"
 
 #if !defined KERNAL_SAMPLE
-	#include "arch32/arm/cmsis/include/cmsis_compiler.h"
+    #include "arch32/arm/cmsis/include/cmsis_compiler.h"
 #endif
 
 #ifdef __cplusplus

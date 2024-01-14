@@ -56,7 +56,7 @@ static kernal_context_t g_kernal_resource =
     .thread =
     {
         .scheduleId.val = OS_INVALID_ID,
-		.idleId.val = OS_INVALID_ID,
+        .idleId.val = OS_INVALID_ID,
         .semId.val = OS_INVALID_ID,
     },
     .member =

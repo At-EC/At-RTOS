@@ -38,8 +38,8 @@ typedef u32_t (*pPrivilege_callFunc_t)(arguments_t *);
  * Define the common svc call function interface.
  */
 #if defined (__CC_ARM)
-	__svc(SVC_KERNAL_INVOKE_NUMBER) u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
-	__ASM void kernal_run_theFirstThread(u32_t sp);
+    __svc(SVC_KERNAL_INVOKE_NUMBER) u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
+    __ASM void kernal_run_theFirstThread(u32_t sp);
 #elif defined (__ICCARM)
     /* TODO */
 #elif defined (__GUNC__)
@@ -49,8 +49,8 @@ typedef u32_t (*pPrivilege_callFunc_t)(arguments_t *);
 #elif defined (__TASKING__)
     /* TODO */
 #elif defined (KERNAL_SAMPLE)
-	u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
-	void kernal_run_theFirstThread(u32_t sp);
+    u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
+    void kernal_run_theFirstThread(u32_t sp);
 #else
     #warning Not supported compiler type
 #endif
