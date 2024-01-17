@@ -1,8 +1,18 @@
 $VersionFile = "atos_version.h"
 $VersionPath = "../kernal/include"
-$FileContent = 
-'#ifndef _ATOS_VERSION_H_
+$FileContent = '/**
+ * Copyright (c) Riven Zheng (zhengheiot@gmail.com).
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+#ifndef _ATOS_VERSION_H_
 #define _ATOS_VERSION_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define ATOS_BUILD_TIME                             "2024-01-01,01:01"
 
@@ -23,6 +33,10 @@ $FileContent =
 
 #define ATOS_VERSION_PRODUCTION_RELEASE_MASK        (0xFFu)
 #define ATOS_VERSION_PRODUCTION_RELEASE_POS         (24u)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif'
 
@@ -61,8 +75,19 @@ $Generate = '"' + $Production + "." + $Official + "." + $Changes + "." + $Catego
 
 $FileContent | Out-File -Append $TargetFile
 
-$Output = '#ifndef ATOS_VERSION_H_
-#define ATOS_VERSION_H_
+$Output = '/**
+ * Copyright (c) Riven Zheng (zhengheiot@gmail.com).
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+ 
+#ifndef _ATOS_VERSION_H_
+#define _ATOS_VERSION_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 '
 $timestamp = Get-Date -Format "yyyy-mm-dd,HH:mm"
@@ -96,6 +121,10 @@ $Output += '
 
 #define ATOS_VERSION_PRODUCTION_RELEASE_MASK        (0xFFu)
 #define ATOS_VERSION_PRODUCTION_RELEASE_POS         (24u)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif'
 
