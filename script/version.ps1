@@ -44,8 +44,8 @@ $TargetFile = Join-Path $VersionPath -ChildPath $VersionFile
 
 if (-not (Test-Path -Path $TargetFile))
 {
-    New-Item -Path $TargetFile -ItemType File
-    $FileContent | Out-File -Append $TargetFile
+    New-Item -Path $TargetFile -ItemType File 
+    $FileContent | Out-File -FilePath $TargetFile -Force -Encoding utf8
 }
 
 $ReadContent = [string](Get-Content -Path $TargetFile)
@@ -128,4 +128,4 @@ $Output += '
 
 #endif'
 
-$Output | Out-File -FilePath $TargetFile -Force
+$Output | Out-File -FilePath $TargetFile -Force -Encoding utf8
