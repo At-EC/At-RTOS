@@ -36,6 +36,7 @@ target_sources(atos_kernal
     ${CMAKE_CURRENT_LIST_DIR}/include/type.h
     ${CMAKE_CURRENT_LIST_DIR}/include/unique.h
     ${CMAKE_CURRENT_LIST_DIR}/include/kernal_thread.h
+    ${CMAKE_CURRENT_LIST_DIR}/include/atos_version.h
 )
 
 target_include_directories(atos_kernal
