@@ -73,7 +73,7 @@ $Categories = ($Range | Select-String -Pattern $MatchNumber -AllMatches).Matches
 
 $Generate = '"' + $Production + "." + $Official + "." + $Changes + "." + $Categories + '"'
 
-$FileContent | Out-File -Append $TargetFile
+$FileContent | Out-File -FilePath $TargetFile -Force -Encoding utf8
 
 $Output = '/**
  * Copyright (c) Riven Zheng (zhengheiot@gmail.com).

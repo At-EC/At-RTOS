@@ -2,7 +2,7 @@ name: At_RTOS_kernal_Sample
 on: [push, pull_request]
 
 jobs:
-  CMake-Example:
+  CMake-Sample:
     name: Kernal CMake Sample with Native GCC
     runs-on: ubuntu-latest
     steps:

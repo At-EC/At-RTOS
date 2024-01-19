@@ -1,0 +1,16 @@
+name: Auto Generate At-RTOS Version
+on: [push, pull_request]
+
+jobs:
+  Auto-Version:
+    name: Generate At-RTOS Version
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Execute Version Script
+        shell: powershell
+        working-directory: script
+        run: |
+          .\version.cmd
