@@ -6,7 +6,9 @@ jobs:
     name: Generate At-RTOS Version
     runs-on: windows-latest
     steps:
-
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        
       - name: Execute Version Script
         shell: powershell
         working-directory: script

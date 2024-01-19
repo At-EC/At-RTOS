@@ -73,6 +73,9 @@ $Categories = ($Range | Select-String -Pattern $MatchNumber -AllMatches).Matches
 
 $Generate = '"' + $Production + "." + $Official + "." + $Changes + "." + $Categories + '"'
 
+Write-Host "Auto Version: $Generate"
+Write-Host "Created Time: $timestamp"
+
 $FileContent | Out-File -FilePath $TargetFile -Force -Encoding utf8
 
 $Output = '/**
