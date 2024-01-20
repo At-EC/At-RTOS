@@ -13,6 +13,7 @@ jobs:
         shell: powershell
         working-directory: script
         run: |
+          git reset --soft HEAD^
           powershell.exe -ExecutionPolicy bypass .\version.ps1
           
       - name: Configure git
@@ -22,11 +23,11 @@ jobs:
           git config --global user.email ${{ github.actor }}@users.noreply.github.com
           git status
           git add .
-          git commit --amend --no-edit
+          git commit -m "At-EC executes the auto-version script"
           
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
-          force: true
+          
