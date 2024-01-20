@@ -73,9 +73,6 @@ $Categories = ($Range | Select-String -Pattern $MatchNumber -AllMatches).Matches
 
 $Generate = '"' + $Production + "." + $Official + "." + $Changes + "." + $Categories + '"'
 
-Write-Host "Auto Version: $Generate"
-Write-Host "Created Time: $timestamp"
-
 $FileContent | Out-File -FilePath $TargetFile -Force -Encoding utf8
 
 $Output = '/**
@@ -94,6 +91,10 @@ extern "C" {
 
 '
 $timestamp = Get-Date -Format "yyyy-mm-dd,HH:mm"
+
+Write-Host "Auto Version: $Generate"
+Write-Host "Created Time: $timestamp"
+
 $Output += '#define ATOS_BUILD_TIME                             "2024-01-01,01:01"
 
 ' -replace '\d{4}-\d{2}-\d{2},\d{2}:\d{2}', $timestamp

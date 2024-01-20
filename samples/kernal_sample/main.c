@@ -40,13 +40,13 @@ int main(void)
 
     if (AtOS.os_id_is_invalid(g_sample_thread_id))
     {
-       return _PC_CMPT_FAILED;
+       /* return _PC_CMPT_FAILED; */
     }
-    
+
     /* At_RTOS kernal running starts */
     AtOS.kernal_atos_run();
     D_ASSERT(0);
-    
+
     while(1) {};
 }
 

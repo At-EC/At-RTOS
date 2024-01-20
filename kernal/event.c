@@ -140,9 +140,9 @@ os_id_t _impl_event_init(u32_t edge, pEvent_callbackFunc_t pCallFun, const char_
 {
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)edge},
-        [1] = {(u32_t)pCallFun},
-        [2] = {(u32_t)pName},
+        [0] = {.u32_val = (u32_t)edge},
+        [1] = {.ptr_val = (pEvent_callbackFunc_t)pCallFun},
+        [2] = {.pch_val = (const char_t *)pName},
     };
 
     return _impl_kernal_privilege_invoke(_event_init_privilege_routine, arguments);
@@ -170,8 +170,8 @@ u32p_t _impl_event_set(os_id_t id, u32_t event)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
-        [1] = {(u32_t)event},
+        [0] = {.u32_val = (u32_t)id},
+        [1] = {.u32_val = (u32_t)event},
     };
 
     return _impl_kernal_privilege_invoke(_event_set_privilege_routine, arguments);
@@ -212,11 +212,11 @@ u32p_t _impl_event_wait(os_id_t id, u32_t *pEvent, u32_t trigger, u32_t listen, 
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
-        [1] = {(u32_t)pEvent},
-        [2] = {(u32_t)trigger},
-        [3] = {(u32_t)listen},
-        [4] = {(u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)id},
+        [1] = {.u32_val = (u32_t)pEvent},
+        [2] = {.u32_val = (u32_t)trigger},
+        [3] = {.u32_val = (u32_t)listen},
+        [4] = {.u32_val = (u32_t)timeout_ms},
     };
 
     u32p_t postcode = _impl_kernal_privilege_invoke(_event_wait_privilege_routine, arguments);
@@ -251,8 +251,8 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     u32_t edge = (u32_t)(pArgs[0].u32_val);
-    pEvent_callbackFunc_t pCallFun = (pEvent_callbackFunc_t)(pArgs[1].u32_val);
-    const char_t *pName = (const char_t *)(pArgs[2].u32_val);
+    pEvent_callbackFunc_t pCallFun = (pEvent_callbackFunc_t)(pArgs[1].ptr_val);
+    const char_t *pName = (const char_t *)(pArgs[2].pch_val);
 
     event_context_t *pCurEvent = (event_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_EVENT);
     os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_EVENT);

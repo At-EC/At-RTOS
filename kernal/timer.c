@@ -322,10 +322,10 @@ os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t time
 {
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)pCallFun},
-        [1] = {(u32_t)isCycle},
-        [2] = {(u32_t)timeout_ms},
-        [3] = {(u32_t)pName},
+        [0] = {.ptr_val = (const void*)pCallFun},
+        [1] = {.b_val = (u32_t)isCycle},
+        [2] = {.u32_val = (u32_t)timeout_ms},
+        [3] = {.pch_val = (const void*)pName},
     };
 
     return _impl_kernal_privilege_invoke(_timer_init_privilege_routine, arguments);
@@ -421,9 +421,9 @@ u32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
-        [1] = {(u32_t)isCycle},
-        [2] = {(u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)id},
+        [1] = {.b_val = (u32_t)isCycle},
+        [2] = {.u32_val = (u32_t)timeout_ms},
     };
 
     return _impl_kernal_privilege_invoke(_timer_start_privilege_routine, arguments);
@@ -450,7 +450,7 @@ u32p_t _impl_timer_stop(os_id_t id)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
+        [0] = {.u32_val = (u32_t)id},
     };
 
     return _impl_kernal_privilege_invoke(_timer_stop_privilege_routine, arguments);
@@ -517,10 +517,10 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].u32_val);
-    b_t isCycle = (u32_t)(pArgs[1].u32_val);
+    pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].ptr_val);
+    b_t isCycle = (u32_t)(pArgs[1].b_val);
     u32_t timeout_ms = (u32_t)(pArgs[2].u32_val);
-    const char_t *pName = (const char_t *)pArgs[3].u32_val;
+    const char_t *pName = (const char_t *)pArgs[3].pch_val;
 
     timer_context_t *pCurTimer = (timer_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_TIMER);
     os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER);
@@ -565,7 +565,7 @@ static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    b_t isCycle = (b_t)pArgs[1].u32_val;
+    b_t isCycle = (b_t)pArgs[1].b_val;
     u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
 
     timer_context_t *pCurTimer = (timer_context_t *)_timer_object_contextGet(id);

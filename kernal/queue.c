@@ -166,10 +166,10 @@ os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t e
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)pQueueBufferAddr},
-        [1] = {(u32_t)elementLen},
-        [2] = {(u32_t)elementNum},
-        [3] = {(u32_t)pName},
+        [0] = {.u32_val = (u32_t)pQueueBufferAddr},
+        [1] = {.u16_val = (u16_t)elementLen},
+        [2] = {.u16_val = (u16_t)elementNum},
+        [3] = {.pch_val = (const char_t *)pName},
     };
 
     return _impl_kernal_privilege_invoke(_queue_init_privilege_routine, arguments);
@@ -182,7 +182,7 @@ os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t e
  * @param pUserBuffer The pointer of user's message buffer.
  * @param userSize The size of user's message buffer.
  */
-static void _queue_message_send(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
+static void _message_send(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
 {
     u8_t *pInBuffer = (u8_t*)((u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress));
     _memset((char_t*)pInBuffer, 0x0u, pCurQueue->elementLength);
@@ -202,7 +202,7 @@ static void _queue_message_send(queue_context_t *pCurQueue, const u8_t *pUserBuf
  * @param pUserBuffer The pointer of user's message buffer.
  * @param userSize The size of user's message buffer.
  */
-static void _queue_message_receive(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
+static void _message_receive(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
 {
     u8_t *pOutBuffer = (u8_t*)((pCurQueue->rightPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress);
     _memset((char_t*)pUserBuffer, 0x0u, userSize);
@@ -247,10 +247,10 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
-        [1] = {(u32_t)pUserBuffer},
-        [2] = {(u32_t)bufferSize},
-        [3] = {(u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)id},
+        [1] = {.ptr_val = (const void *)pUserBuffer},
+        [2] = {.u16_val = (u16_t)bufferSize},
+        [3] = {.u32_val = (u32_t)timeout_ms},
     };
 
     u32p_t postcode = _impl_kernal_privilege_invoke(_queue_send_privilege_routine, arguments);
@@ -308,10 +308,10 @@ u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
-        [1] = {(u32_t)pUserBuffer},
-        [2] = {(u32_t)bufferSize},
-        [3] = {(u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)id},
+        [1] = {.ptr_val = (const void *)pUserBuffer},
+        [2] = {.u16_val = (u16_t)bufferSize},
+        [3] = {.u32_val = (u32_t)timeout_ms},
     };
 
     u32p_t postcode = _impl_kernal_privilege_invoke(_queue_receive_privilege_routine, arguments);
@@ -346,10 +346,10 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    const void *pQueueBufferAddr = (const void *)(pArgs[0].u32_val);
-    u16_t elementLen = (u16_t)(pArgs[1].u32_val);
-    u16_t elementNum = (u16_t)(pArgs[2].u32_val);
-    const char_t *pName = (const char_t *)(pArgs[3].u32_val);
+    const void *pQueueBufferAddr = (const void *)(pArgs[0].ptr_val);
+    u16_t elementLen = (u16_t)(pArgs[1].u16_val);
+    u16_t elementNum = (u16_t)(pArgs[2].u16_val);
+    const char_t *pName = (const char_t *)(pArgs[3].pch_val);
 
     queue_context_t *pCurQueue = (queue_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_QUEUE);
     os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_QUEUE);
@@ -397,8 +397,8 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    const u8_t *pUserBuffer = (const void *)pArgs[1].u32_val;
-    u16_t bufferSize = (u16_t)pArgs[2].u32_val;
+    const u8_t *pUserBuffer = (const void *)pArgs[1].ptr_val;
+    u16_t bufferSize = (u16_t)pArgs[2].u16_val;
     u32_t timeout_ms = (u32_t)pArgs[3].u32_val;
 
     u32p_t postcode = PC_SC_SUCCESS;
@@ -433,7 +433,7 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
     }
     else
     {
-        _queue_message_send(pCurQueue, pUserBuffer, bufferSize);
+        _message_send(pCurQueue, pUserBuffer, bufferSize);
 
         /* Try to wakeup a blocking thread */
         list_iterator_t it = {0u};
@@ -462,8 +462,8 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    const u8_t *pUserBuffer = (const u8_t *)pArgs[1].u32_val;
-    u16_t bufferSize = (u16_t)pArgs[2].u32_val;
+    const u8_t *pUserBuffer = (const u8_t *)pArgs[1].ptr_val;
+    u16_t bufferSize = (u16_t)pArgs[2].u16_val;
     u32_t timeout_ms = (u32_t)pArgs[3].u32_val;
 
     u32p_t postcode = PC_SC_SUCCESS;
@@ -498,7 +498,7 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
     }
     else
     {
-        _queue_message_receive(pCurQueue, pUserBuffer, bufferSize);
+        _message_receive(pCurQueue, pUserBuffer, bufferSize);
 
         /* Try to wakeup a blocking thread */
         list_iterator_t it = {0u};
@@ -593,11 +593,11 @@ static void _queue_schedule(os_id_t id)
         {
             if (isRxAvail)
             {
-                _queue_message_receive((queue_context_t*)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+                _message_receive((queue_context_t*)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
             }
             else if (isTxAvail)
             {
-                _queue_message_send((queue_context_t*)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+                _message_send((queue_context_t*)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
             }
             pEntry->result = PC_SC_SUCCESS;
         }

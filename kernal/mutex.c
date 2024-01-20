@@ -165,7 +165,7 @@ os_id_t _impl_mutex_init(const char_t *pName)
 {
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)pName},
+        [0] = {.pch_val = (const char_t *)pName},
     };
 
     return _impl_kernal_privilege_invoke(_mutex_init_privilege_routine, arguments);
@@ -197,7 +197,7 @@ u32p_t _impl_mutex_lock(os_id_t id)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
+        [0] = {.u32_val = (u32_t)id},
     };
 
     return _impl_kernal_privilege_invoke(_mutex_lock_privilege_routine, arguments);
@@ -225,7 +225,7 @@ u32p_t _impl_mutex_unlock(os_id_t id)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
+        [0] = {.u32_val = (u32_t)id},
     };
 
     return _impl_kernal_privilege_invoke(_mutex_unlock_privilege_routine, arguments);
@@ -242,7 +242,7 @@ static u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    const char_t *pName = (const char_t *)(pArgs[0].u32_val);
+    const char_t *pName = (const char_t *)(pArgs[0].pch_val);
 
     mutex_context_t *pCurMutex = (mutex_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_MUTEX);
     os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_MUTEX);

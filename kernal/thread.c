@@ -250,11 +250,11 @@ os_id_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t 
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)pEntryFun},
-        [1] = {(u32_t)pAddress},
-        [2] = {(u32_t)size},
-        [3] = {(u32_t)priority},
-        [4] = {(u32_t)pName},
+        [0] = {.ptr_val = (void*)pEntryFun},
+        [1] = {.u32_val = (u32_t)pAddress},
+        [2] = {.u32_val = (u32_t)size},
+        [3] = {.u8_val = (u8_t)priority},
+        [4] = {.pch_val = (const void *)pName},
     };
 
     return _impl_kernal_privilege_invoke(_thread_init_privilege_routine, arguments);
@@ -281,7 +281,7 @@ u32p_t _impl_thread_resume(os_id_t id)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
+        [0] = {.u32_val = (u32_t)id},
     };
 
     return _impl_kernal_privilege_invoke(_thread_resume_privilege_routine, arguments);
@@ -308,7 +308,7 @@ u32p_t _impl_thread_suspend(os_id_t id)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
+        [0] = {.u32_val = (u32_t)id},
     };
 
     return _impl_kernal_privilege_invoke(_thread_suspend_privilege_routine, arguments);
@@ -352,7 +352,7 @@ u32p_t _impl_thread_delete(os_id_t id)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
+        [0] = {.u32_val = (u32_t)id},
     };
 
     return _impl_kernal_privilege_invoke(_thread_delete_privilege_routine, arguments);
@@ -379,7 +379,7 @@ u32p_t _impl_thread_sleep(u32_t timeout_ms)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)timeout_ms},
     };
 
     return _impl_kernal_privilege_invoke(_thread_sleep_privilege_routine, arguments);
@@ -396,11 +396,11 @@ static os_id_t _thread_init_privilege_routine(arguments_t* pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    pThread_entryFunc_t pEntryFun = (pThread_entryFunc_t)pArgs[0].u32_val;
+    pThread_entryFunc_t pEntryFun = (pThread_entryFunc_t)pArgs[0].ptr_val;
     u32_t *pAddress = (u32_t *)pArgs[1].u32_val;
     u32_t size = (u32_t)pArgs[2].u32_val;
-    u8_t priority = (u8_t)pArgs[3].u32_val;
-    const char_t *pName = (const char_t *)pArgs[4].u32_val;
+    u8_t priority = (u8_t)pArgs[3].u8_val;
+    const char_t *pName = (const char_t *)pArgs[4].pch_val;
 
     u32_t offset = (sizeof(thread_context_t)*KERNAL_APPLICATION_THREAD_INSTANCE);
     thread_context_t *pCurThread = (thread_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_THREAD) + offset);

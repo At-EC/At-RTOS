@@ -330,6 +330,28 @@ typedef struct
     u32_t xPSR;          /* N-4. Program status register */
 } stack_snapshot_t;
 
+/**
+ * Data structure for svc call function arguments
+ */
+typedef struct
+{
+    union
+    {
+        /* The function arguments */
+        u32_t u32_val;
+
+        u16_t u16_val;
+
+        u8_t u8_val;
+
+        b_t b_val;
+
+        const void* ptr_val;
+
+        const char_t* pch_val;
+    };
+}arguments_t;
+
 /* End of section using anonymous unions */
 #if defined (__CC_ARM)
     #pragma pop

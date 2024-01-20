@@ -16,15 +16,6 @@ extern "C" {
 #endif
 
 /**
- * Data structure for svc call function arguments
- */
-typedef struct
-{
-    /* The function arguments */
-    u32_t u32_val;
-}arguments_t;
-
-/**
  * Define the privilege call function interface.
  */
 typedef u32_t (*pPrivilege_callFunc_t)(arguments_t *);

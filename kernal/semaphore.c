@@ -182,9 +182,9 @@ os_id_t _impl_semaphore_init(u8_t availableCount, u8_t limitationCount, const ch
 {
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)availableCount},
-        [1] = {(u32_t)limitationCount},
-        [2] = {(u32_t)pName},
+        [0] = {.u8_val = (u8_t)availableCount},
+        [1] = {.u8_val = (u8_t)limitationCount},
+        [2] = {.pch_val = (const char_t *)pName},
     };
 
     return _impl_kernal_privilege_invoke(_semaphore_init_privilege_routine, arguments);
@@ -221,8 +221,8 @@ u32p_t _impl_semaphore_take(os_id_t id, u32_t timeout_ms)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
-        [1] = {(u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)id},
+        [1] = {.u32_val = (u32_t)timeout_ms},
     };
 
     u32p_t postcode = _impl_kernal_privilege_invoke(_semaphore_take_privilege_routine, arguments);
@@ -266,7 +266,7 @@ u32_t _impl_semaphore_give(os_id_t id)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
+        [0] = {.u32_val = (u32_t)id},
     };
 
     return _impl_kernal_privilege_invoke(_semaphore_give_privilege_routine, arguments);
@@ -293,7 +293,7 @@ u32_t _impl_semaphore_flush(os_id_t id)
 
     arguments_t arguments[] =
     {
-        [0] = {(u32_t)id},
+        [0] = {.u32_val = (u32_t)id},
     };
 
     return _impl_kernal_privilege_invoke(_semaphore_flush_privilege_routine, arguments);
@@ -310,9 +310,9 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    u8_t availableCount = (u8_t)(pArgs[0].u32_val);
-    u8_t limitationCount = (u8_t)(pArgs[1].u32_val);
-    const char_t *pName = (const char_t *)(pArgs[2].u32_val);
+    u8_t availableCount = (u8_t)(pArgs[0].u8_val);
+    u8_t limitationCount = (u8_t)(pArgs[1].u8_val);
+    const char_t *pName = (const char_t *)(pArgs[2].pch_val);
 
     u32_t offset = (sizeof(semaphore_context_t)*KERNAL_APPLICATION_SEMAPHORE_INSTANCE);
     semaphore_context_t *pCurSemaphore = (semaphore_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_SEMAPHORE) + offset);
