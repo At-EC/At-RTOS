@@ -90,7 +90,7 @@ extern "C" {
 #endif
 
 '
-$timestamp = Get-Date -Format "yyyy-mm-dd,HH:mm"
+$timestamp = Get-Date -Format "yyyy-MM-dd,HH:mm"
 
 Write-Host "Auto Version: $Generate"
 Write-Host "Created Time: $timestamp"
