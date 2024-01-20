@@ -22,7 +22,7 @@ jobs:
           git config --global user.email ${{ github.actor }}@users.noreply.github.com
           git status
           git add .
-          git commit --amend --no-edit
+          git commit -m "The auto-version action bot commit" 
           
       - name: Push changes
         uses: ad-m/github-push-action@master
