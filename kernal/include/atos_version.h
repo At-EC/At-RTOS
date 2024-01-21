@@ -12,12 +12,12 @@
 extern "C" {
 #endif
 
-#define ATOS_BUILD_TIME                             "2024-01-21,10:53"
+#define ATOS_BUILD_TIME                             "2024-01-21,16:01"
 
-#define ATOS_VERSION_STRING                         "0.0.38.0"
+#define ATOS_VERSION_STRING                         "0.0.39.0"
 #define ATOS_VERSION_PRODUCTION_RELEASE_NUMBER      (0u)
 #define ATOS_VERSION_OFFICIAL_RELEASE_NUMBER        (0u)
-#define ATOS_VERSION_CHANGES_NUMBER                 (38u)
+#define ATOS_VERSION_CHANGES_NUMBER                 (39u)
 #define ATOS_VERSION_CATEGORIES_NUMBER              (0u)
 
 #define ATOS_VERSION_CATEGORIES_MASK                (0x0Fu)

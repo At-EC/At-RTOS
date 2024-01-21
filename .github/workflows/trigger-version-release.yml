@@ -1,4 +1,4 @@
-name: Trigger-version-release
+name: trigger-version-release
 on:
   workflow_dispatch:
     inputs:
@@ -17,17 +17,19 @@ jobs:
         
       - name: Execute Version Script
         id: version
-        shell: bash
+        shell: powershell
         working-directory: script
-        run: $GITHUB_OUTPUT = $(powershell.exe -ExecutionPolicy bypass .\auto-version.ps1)
+        run: |
+         $message = powershell.exe -ExecutionPolicy bypass .\auto-version.ps1
+         echo "value=$message" >> "$env:GITHUB_OUTPUT"
           
       - name: Configure git
-        shell: bash
+        shell: powershell
         run: |
           git config --global user.name ${{ github.actor }}
           git config --global user.email ${{ github.actor }}@users.noreply.github.com
           git add .
-          git commit -m "[${{steps.version.outputs.value}}]: At-RTOS new release."
+          git commit -m "[v${{steps.version.outputs.value}}]: At-RTOS new release."
           
       - name: Push changes
         uses: ad-m/github-push-action@master
@@ -45,4 +47,5 @@ jobs:
           release_name: v${{steps.version.outputs.value}}
           draft: false
           prerelease: false
+          owner: ${{ github.actor }}
           

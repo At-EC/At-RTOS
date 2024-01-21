@@ -71,7 +71,11 @@ $MatchProduction = '#define ATOS_VERSION_CATEGORIES_NUMBER              \([0-9]+
 $Range = ($ReadContent | Select-String -Pattern $MatchProduction -AllMatches).Matches.Value
 $Categories = ($Range | Select-String -Pattern $MatchNumber -AllMatches).Matches.Value
 
-$Generate = '"' + $Production + "." + $Official + "." + $Changes + "." + $Categories + '"'
+$Generate = $Production + "." + $Official + "." + $Changes + "." + $Categories
+
+Write-Host $Generate
+
+$Generate = '"' + $Generate + '"'
 
 $FileContent | Out-File -FilePath $TargetFile -Force -Encoding utf8
 
@@ -91,8 +95,6 @@ extern "C" {
 
 '
 $timestamp = Get-Date -Format "yyyy-MM-dd,HH:mm"
-
-Write-Host $Generate
 
 $Output += '#define ATOS_BUILD_TIME                             "2024-01-01,01:01"
 
