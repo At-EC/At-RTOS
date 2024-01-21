@@ -92,8 +92,7 @@ extern "C" {
 '
 $timestamp = Get-Date -Format "yyyy-MM-dd,HH:mm"
 
-Write-Host "Auto Version: $Generate"
-Write-Host "Created Time: $timestamp"
+Write-Host $Generate
 
 $Output += '#define ATOS_BUILD_TIME                             "2024-01-01,01:01"
 

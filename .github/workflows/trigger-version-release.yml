@@ -1,0 +1,48 @@
+name: Trigger-version-release
+on:
+  workflow_dispatch:
+    inputs:
+      commit_id:
+        description: 'Commit ID'
+        required: true
+        default: 'HEAD'
+
+jobs:
+  auto-version:
+    name: Generate At-RTOS Version
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        
+      - name: Execute Version Script
+        id: version
+        shell: bash
+        working-directory: script
+        run: $GITHUB_OUTPUT = $(powershell.exe -ExecutionPolicy bypass .\auto-version.ps1)
+          
+      - name: Configure git
+        shell: bash
+        run: |
+          git config --global user.name ${{ github.actor }}
+          git config --global user.email ${{ github.actor }}@users.noreply.github.com
+          git add .
+          git commit -m "[${{steps.version.outputs.value}}]: At-RTOS new release."
+          
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+      
+      - name: Auto Release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{steps.version.outputs.value}}
+          release_name: v${{steps.version.outputs.value}}
+          draft: false
+          prerelease: false
+          

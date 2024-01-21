@@ -1,4 +1,4 @@
-name: At_RTOS_kernal_Sample
+name: kernal_sample_cmake_gcc_native
 on: [push, pull_request]
 
 jobs:
