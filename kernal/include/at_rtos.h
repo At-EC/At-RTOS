@@ -16,10 +16,51 @@ extern "C" {
 #include "unique.h"
 #include "configuration.h"
 
+/* The interface of the thread stack allocation. */
 #define ATOS_STACK_DEFINE(name, size)           static u32_t name[((u32_t)(size) / sizeof(u32_t))] = {0x0u}; \
-S_ASSERT(((size) >= STACK_SIZE_MINIMUM) , "The stack size must be higher than STACK_SIZE_MINIMUM")
+S_ASSERT(((size) >= STACK_SIZE_MINIMUM) , "The thread stack size must be higher than STACK_SIZE_MINIMUM")
+
+/* The interface of the thread priority allocation. */
+#define ATOS_PRIORITY_DEFINE(name, priority)    u8_t name = (priority); \
+S_ASSERT((((priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((priority) <= OS_PRIORITY_USER_THREAD_LOWEST_LEVEL)) , "The thread priority is out of the system design")
 
 #include "thread.h"
+
+/**
+ * @brief Initialize a thread, and put it to pending list that are ready to run.
+ *
+ * @param pEntryFun The pointer of the thread entry function. Thread function must be designed to never return.
+ * @param pStackAddr The pointer of the thread stack address. The stack memory must be predefined and allocated in your system.
+ * @param stackSize The size of the the stack is base on your specified variable.
+ * @param priority The thread priority specified the thread's priority when the AtOS do kernal schedule.
+ * @param pName The thread name.
+ *
+ * @return The value of thread unique id.
+ **
+ * demo usage:
+ *
+ * ATOS_STACK_DEFINE(sample_stk, 512);
+ *
+ * void thread_sample_function(void)
+ * {
+ *     while(1)
+ *     {
+ *
+ *     }
+ * }
+ *
+ * int main(void)
+ * {
+ *     ATOS_PRIORITY_DEFINE(sample_pri, 5);
+ *     os_thread_id_t sample_id = thread_init(thread_sample_function, sample_stk, 512, sample_pri, "SAMPLE");
+ *     if (os_id_is_invalid(sample_id))
+ *     {
+ *         printf("Thread %d init failed\n", sample_id.val);
+ *     }
+ *     ...
+ * }
+ *
+ */
 static inline os_thread_id_t thread_init(pThread_entryFunc_t pEntryFun, u32_t *pStackAddr, u32_t stackSize, u8_t priority, const char_t *pName)
 {
     os_thread_id_t id = {0u};
@@ -31,26 +72,93 @@ static inline os_thread_id_t thread_init(pThread_entryFunc_t pEntryFun, u32_t *p
     return id;
 }
 
+/**
+ * @brief Put the current running thread into sleep mode with timeout condition.
+ *
+ * @param timeout_ms The time user defined.
+ *
+ * @return The result of thread sleep operation.
+ **
+ * demo usage:
+ *
+ * void thread_sample_function(void)
+ * {
+ *     while(1)
+ *     {
+ *          thread_sleep(1000); // Put the thread to sleep mode 1 sec.
+ *     }
+ * }
+ */
 static inline u32p_t thread_sleep(u32_t ms)
 {
     return (u32p_t)_impl_thread_sleep(ms);
 }
 
+/**
+ * @brief Resume a thread to run.
+ *
+ * @param id The thread unique id.
+ *
+ * @return The result of thread resume operation.
+ **
+ * demo usage:
+ *
+ *    thread_resume(sample_id); // The variable sample_id created in above thread init demo.
+ */
 static inline u32p_t thread_resume(os_thread_id_t id)
 {
     return (u32p_t)_impl_thread_resume(id.val);
 }
 
+/**
+ * @brief Suspend a thread to permit another to run.
+ *
+ * @param id The thread unique id.
+ *
+ * @return The result of thread suspend operation.
+ **
+ * demo usage:
+ *
+ *    thread_suspend(sample_id); // The variable sample_id created in above thread init demo.
+ */
 static inline u32p_t thread_suspend(os_thread_id_t id)
 {
     return (u32p_t)_impl_thread_suspend(id.val);
 }
 
+/**
+ * @brief Yield current thread to allow other thread to run.
+ *
+ * @param id The thread unique id.
+ *
+ * @return The result of thread yield operation.
+ **
+ * demo usage:
+ *
+ * void thread_sample_function(void)
+ * {
+ *     while(1)
+ *     {
+ *          thread_yield(); // Put current thread to sleep mode manually.
+ *     }
+ * }
+ */
 static inline u32p_t thread_yield(void)
 {
     return (u32p_t)_impl_thread_yield();
 }
 
+/**
+ * @brief Delete a sleep mode thread, and erase the stack data, and that can't be recovered.
+ *
+ * @param id The thread unique id.
+ *
+ * @return The result of thread delete operation.
+ **
+ * demo usage:
+ *
+ *    thread_delete(sample_id); // The variable sample_id created in above thread init demo.
+ */
 static inline u32p_t thread_delete(os_thread_id_t id)
 {
     return (u32p_t)_impl_thread_delete(id.val);
