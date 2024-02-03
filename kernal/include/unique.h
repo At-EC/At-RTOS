@@ -35,10 +35,10 @@ struct os_time
 
 typedef struct os_id os_thread_id_t;
 typedef struct os_id os_timer_id_t;
-typedef struct os_id os_semaphore_id_t;
+typedef struct os_id os_sem_id_t;
 typedef struct os_id os_mutex_id_t;
-typedef struct os_id os_event_id_t;
-typedef struct os_id os_queue_id_t;
+typedef struct os_id os_evt_id_t;
+typedef struct os_id os_msgq_id_t;
 
 typedef struct os_priority os_priority_t;
 typedef struct os_time os_time_t;
@@ -48,6 +48,8 @@ typedef struct os_time os_time_t;
 #define OS_TIME_INVALID_VAL                         (0xFFFFFFFFu)
 #define OS_TIME_FOREVER_VAL                         (0xFFFFFFFEu)
 #define OS_TIME_NOWAIT_VAL                          (0x0u)
+#define OS_WAIT_FOREVER                             (OS_TIME_FOREVER_VAL)
+#define OS_WAIT_NOSUSPEND                           (OS_TIME_NOWAIT_VAL)
 
 #define OS_PRIOTITY_INVALID_LEVEL                   (0xFFu)
 #define OS_PRIOTITY_LOWEST_LEVEL                    (0xFEu)
@@ -56,8 +58,8 @@ typedef struct os_time os_time_t;
 #define OS_PRIORITY_INVALID                         (OS_PRIOTITY_INVALID_LEVEL)
 #define OS_PRIORITY_KERNAL_THREAD_IDLE_LEVEL        (OS_PRIOTITY_LOWEST_LEVEL)
 #define OS_PRIORITY_KERNAL_THREAD_SCHEDULE_LEVEL    (OS_PRIOTITY_HIGHEST_LEVEL)
-#define OS_PRIORITY_USER_THREAD_LOWEST_LEVEL        (OS_PRIOTITY_LOWEST_LEVEL + 1u)
-#define OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL       (OS_PRIOTITY_HIGHEST_LEVEL - 1u)
+#define OS_PRIORITY_USER_THREAD_LOWEST_LEVEL        (OS_PRIOTITY_LOWEST_LEVEL - 1u)
+#define OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL       (OS_PRIOTITY_HIGHEST_LEVEL + 1u)
 
 #define OS_SEMPHORE_TICKET_BINARY                   (1u)
 
@@ -74,6 +76,7 @@ u32_t   _impl_kernal_member_unified_id_threadToTimer(u32_t unified_id);
 u32_t   _impl_kernal_member_unified_id_timerToThread(u32_t unified_id);
 u32_t   _impl_kernal_member_id_unifiedConvert(u8_t member_id, u32_t unified_id);
 b_t     _impl_kernal_os_id_is_invalid(struct os_id id);
+u32p_t  _impl_kernal_at_rtos_run(void);
 
 #ifdef __cplusplus
 }

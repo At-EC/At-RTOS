@@ -83,9 +83,9 @@ typedef struct
     /* A common struct head to link with other context */
     linker_head_t head;
 
-    u8_t availableCount;
+    u8_t initialCount;
 
-    u8_t limitationCount;
+    u8_t limitCount;
 
     u32_t timeout_ms;
 

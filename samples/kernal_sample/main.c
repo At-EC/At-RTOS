@@ -16,6 +16,7 @@ extern "C" {
 #define SAMPLE_THREAD_STACK_SIZE        (1024u)
 
 ATOS_STACK_DEFINE(g_sample_thread_stack, SAMPLE_THREAD_STACK_SIZE);
+ATOS_PRIORITY_DEFINE(g_sample_thread_priority, 5);
 static os_thread_id_t g_sample_thread_id = {0u};
 
 /*
@@ -35,10 +36,10 @@ int main(void)
     g_sample_thread_id = AtOS.thread_init(sample_entry_thread,       /* The thread entry function  */
                                           g_sample_thread_stack,     /* The address of thread stack  */
                                           SAMPLE_THREAD_STACK_SIZE,  /* The size of thread stack */
-                                          0xFEu,                     /* The priority of the thread: [FE, 1] */
+                                          g_sample_thread_priority,  /* The priority of the thread: [FD, 01] */
                                           "sample");                 /* The name of the thread */
 
-    if (AtOS.os_id_is_invalid(g_sample_thread_id))
+    if (AtOS.id_isInvalid(g_sample_thread_id))
     {
        /* return _PC_CMPT_FAILED; */
     }

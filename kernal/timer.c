@@ -311,7 +311,7 @@ u32_t _impl_timer_os_id_to_number(u32_t id)
 /**
  * @brief Initialize a new timer.
  *
- * @param pCallFun The thread entry function pointer.
+ * @param pCallFun The timer entry function pointer.
  * @param isCycle It indicates the timer if it's cycle repeat.
  * @param timeout_ms The expired time.
  * @param pName The timer's name, it supported NULL pointer.

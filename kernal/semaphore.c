@@ -173,17 +173,17 @@ u32_t _impl_semaphore_os_id_to_number(os_id_t id)
  * @brief Initialize a new semaphore.
  *
  * @param pName The semaphore name.
- * @param availableCount The available count that allows the system take.
- * @param limitationCount The maximum count that it's the semaphore's limitation.
+ * @param initialCount The available count that allows the system take.
+ * @param limitCount The maximum count that it's the semaphore's limitation.
  *
  * @return The semaphore unique id.
  */
-os_id_t _impl_semaphore_init(u8_t availableCount, u8_t limitationCount, const char_t *pName)
+os_id_t _impl_semaphore_init(u8_t initialCount, u8_t limitCount, const char_t *pName)
 {
     arguments_t arguments[] =
     {
-        [0] = {.u8_val = (u8_t)availableCount},
-        [1] = {.u8_val = (u8_t)limitationCount},
+        [0] = {.u8_val = (u8_t)initialCount},
+        [1] = {.u8_val = (u8_t)limitCount},
         [2] = {.pch_val = (const char_t *)pName},
     };
 
@@ -310,8 +310,8 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    u8_t availableCount = (u8_t)(pArgs[0].u8_val);
-    u8_t limitationCount = (u8_t)(pArgs[1].u8_val);
+    u8_t initialCount = (u8_t)(pArgs[0].u8_val);
+    u8_t limitCount = (u8_t)(pArgs[1].u8_val);
     const char_t *pName = (const char_t *)(pArgs[2].pch_val);
 
     u32_t offset = (sizeof(semaphore_context_t)*KERNAL_APPLICATION_SEMAPHORE_INSTANCE);
@@ -326,10 +326,10 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
             pCurSemaphore->head.id = id;
             pCurSemaphore->head.pName = pName;
 
-            pCurSemaphore->availableCount = availableCount;
-            pCurSemaphore->limitationCount = limitationCount;
+            pCurSemaphore->initialCount = initialCount;
+            pCurSemaphore->limitCount = limitCount;
 
-            if (pCurSemaphore->availableCount >= pCurSemaphore->limitationCount)
+            if (pCurSemaphore->initialCount >= pCurSemaphore->limitCount)
             {
                 _semaphore_list_transfer_toUnlock((linker_head_t*)&pCurSemaphore->head);
             }
@@ -383,10 +383,10 @@ static u32_t _semaphore_take_privilege_routine(arguments_t *pArgs)
     else
     {
         /* The semaphore has available count */
-        pCurSemaphore->availableCount--;
+        pCurSemaphore->initialCount--;
 
         /* Check if we can take the next acquired thread into locking */
-        if (pCurSemaphore->availableCount < pCurSemaphore->limitationCount)
+        if (pCurSemaphore->initialCount < pCurSemaphore->limitCount)
         {
             _semaphore_list_transfer_toLock((linker_head_t*)&pCurSemaphore->head);
         }
@@ -415,9 +415,9 @@ static u32_t _semaphore_give_privilege_routine(arguments_t *pArgs)
     semaphore_context_t *pCurSemaphore = (semaphore_context_t *)_semaphore_object_contextGet(id);
     thread_context_t *pSemaphoreHighestBlockingThread = (thread_context_t *)_semaphore_linker_head_fromBlocking(id);
 
-    pCurSemaphore->availableCount++;
+    pCurSemaphore->initialCount++;
 
-    if (pCurSemaphore->availableCount >= _SEMAPHORE_AVAILABLE_COUNT_MAXIMUM)
+    if (pCurSemaphore->initialCount >= _SEMAPHORE_AVAILABLE_COUNT_MAXIMUM)
     {
         postcode = _PC_CMPT_FAILED;
     }
@@ -452,7 +452,7 @@ static u32_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
     thread_context_t *pCurThread = (thread_context_t *)list_iterator_next(&it);
     while (pCurThread)
     {
-        pCurSemaphore->availableCount++;
+        pCurSemaphore->initialCount++;
         postcode = _impl_kernal_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _semaphore_schedule);
         if (PC_IER(postcode))
         {
@@ -511,11 +511,11 @@ static void _semaphore_schedule(os_id_t id)
             {
                 pEntry->result  = PC_SC_SUCCESS;
                 /* If the PC arrive, the semaphore will be available and can be acquired */
-                pCurSemaphore->availableCount--; // The semaphore has available count
+                pCurSemaphore->initialCount--; // The semaphore has available count
             }
 
             /* Check if we can take the next acquired thread into locking */
-            if (pCurSemaphore->availableCount < pCurSemaphore->limitationCount)
+            if (pCurSemaphore->initialCount < pCurSemaphore->limitCount)
             {
                 _semaphore_list_transfer_toLock((linker_head_t*)&pCurSemaphore->head);
             }

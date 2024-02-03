@@ -38,24 +38,24 @@ const at_rtos_api_t AtOS =
     .timer_isBusy = timer_isBusy,
     .timer_system_total_ms = timer_system_total_ms,
 
-    .semaphore_init = semaphore_init,
-    .semaphore_take = semaphore_take,
-    .semaphore_give = semaphore_give,
-    .semaphore_flush = semaphore_flush,
+    .sem_init = sem_init,
+    .sem_take = sem_take,
+    .sem_give = sem_give,
+    .sem_flush = sem_flush,
 
     .mutex_init = mutex_init,
     .mutex_lock = mutex_lock,
     .mutex_unlock = mutex_unlock,
 
-    .event_init = event_init,
-    .event_set = event_set,
-    .event_wait = event_wait,
+    .evt_init = evt_init,
+    .evt_set = evt_set,
+    .evt_wait = evt_wait,
 
-    .queue_init = queue_init,
-    .queue_send = queue_send,
-    .queue_receive = queue_receive,
+    .msgq_init = msgq_init,
+    .msgq_send = msgq_send,
+    .msgq_receive = msgq_receive,
 
-    .os_id_is_invalid = os_id_is_invalid,
+    .id_isInvalid = os_id_is_invalid,
     .kernal_atos_run = kernal_atos_run,
 };
 
@@ -71,7 +71,7 @@ typedef struct
     os_thread_id_t idle_id;
 
     /* kernal schedule semaphore id */
-    os_semaphore_id_t sem_id;
+    os_sem_id_t sem_id;
 }_kernal_thread_resource_t;
 
 /**
@@ -102,7 +102,7 @@ static _kernal_thread_resource_t g_kernal_thread_resource = {
  */
 void _impl_kernal_thread_message_notification(void)
 {
-    u32p_t postcode = semaphore_give(g_kernal_thread_resource.sem_id);
+    u32p_t postcode = sem_give(g_kernal_thread_resource.sem_id);
     if (PC_IER(postcode))
     {
         /* TODO */
@@ -114,7 +114,7 @@ void _impl_kernal_thread_message_notification(void)
  */
 u32_t _impl_kernal_thread_message_arrived(void)
 {
-    return semaphore_take(g_kernal_thread_resource.sem_id, OS_TIME_FOREVER_VAL);
+    return sem_take(g_kernal_thread_resource.sem_id, OS_TIME_FOREVER_VAL);
 }
 
 /**
@@ -179,8 +179,8 @@ void _impl_kernal_thread_init(void)
                 .pName = g_kernal_thread_resource.schedule_id.pName,
                 .linker = LINKER_NULL,
             },
-            .availableCount = 0u,
-            .limitationCount = OS_SEMPHORE_TICKET_BINARY,
+            .initialCount = 0u,
+            .limitCount = OS_SEMPHORE_TICKET_BINARY,
         },
     };
 
