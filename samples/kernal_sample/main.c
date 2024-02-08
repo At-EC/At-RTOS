@@ -15,9 +15,9 @@ extern "C" {
 #define _PC_CMPT_FAILED                 PC_FAILED(PC_CMPT_KERNAL)
 #define SAMPLE_THREAD_STACK_SIZE        (1024u)
 
-ATOS_STACK_DEFINE(g_sample_thread_stack, SAMPLE_THREAD_STACK_SIZE);
-ATOS_PRIORITY_DEFINE(g_sample_thread_priority, 5);
-static os_thread_id_t g_sample_thread_id = {0u};
+ATOS_THREAD_DEFINE(sample_thread, SAMPLE_THREAD_STACK_SIZE, 5);
+
+static os_thread_id_t g_sample_thread_id;
 
 /*
  * @brief The kernal sample entry function.
@@ -33,11 +33,7 @@ static void sample_entry_thread(void)
 
 int main(void)
 {
-    g_sample_thread_id = AtOS.thread_init(sample_entry_thread,       /* The thread entry function  */
-                                          g_sample_thread_stack,     /* The address of thread stack  */
-                                          SAMPLE_THREAD_STACK_SIZE,  /* The size of thread stack */
-                                          g_sample_thread_priority,  /* The priority of the thread: [FD, 01] */
-                                          "sample");                 /* The name of the thread */
+    g_sample_thread_id = AtOS.thread_init(sample_thread, sample_entry_thread);
 
     if (AtOS.id_isInvalid(g_sample_thread_id))
     {
@@ -45,7 +41,7 @@ int main(void)
     }
 
     /* At_RTOS kernal running starts */
-    AtOS.kernal_atos_run();
+    AtOS.at_rtos_run();
     D_ASSERT(0);
 
     while(1) {};

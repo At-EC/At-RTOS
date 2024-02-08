@@ -14,11 +14,11 @@
 extern "C" {
 #endif
 
-/* Local defined the kernal thread stack */
-ATOS_STACK_DEFINE(g_kernal_schedule_stack, KERNAL_SCHEDULE_THREAD_STACK_SIZE);
-ATOS_STACK_DEFINE(g_kernal_idle_stack, KERNAL_IDLE_THREAD_STACK_SIZE);
-
 #define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_KERNAL)
+
+/* Local defined the kernal thread stack */
+static u32_t _kernal_schedule[((u32_t)(KERNAL_SCHEDULE_THREAD_STACK_SIZE) / sizeof(u32_t))] = {0u};
+static u32_t _kernal_idle[((u32_t)(KERNAL_IDLE_THREAD_STACK_SIZE) / sizeof(u32_t))] = {0u};
 
 /**
  * Global At_RTOS application interface init.
@@ -56,7 +56,7 @@ const at_rtos_api_t AtOS =
     .msgq_receive = msgq_receive,
 
     .id_isInvalid = os_id_is_invalid,
-    .kernal_atos_run = kernal_atos_run,
+    .at_rtos_run = kernal_atos_run,
 };
 
 /**
@@ -137,9 +137,9 @@ void _impl_kernal_thread_init(void)
                 .level = OS_PRIORITY_KERNAL_THREAD_SCHEDULE_LEVEL,
             },
             .pEntryFunc = _impl_kernal_atos_schedule_thread,
-            .pStackAddr = g_kernal_schedule_stack,
+            .pStackAddr = (u32_t*)&_kernal_schedule[0],
             .stackSize = KERNAL_SCHEDULE_THREAD_STACK_SIZE,
-            .PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(_impl_kernal_atos_schedule_thread, g_kernal_schedule_stack, KERNAL_SCHEDULE_THREAD_STACK_SIZE),
+            .PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(_impl_kernal_atos_schedule_thread, (u32_t*)&_kernal_schedule[0], KERNAL_SCHEDULE_THREAD_STACK_SIZE),
 
         },
 
@@ -154,9 +154,9 @@ void _impl_kernal_thread_init(void)
                 .level = OS_PRIORITY_KERNAL_THREAD_IDLE_LEVEL,
             },
             .pEntryFunc = _impl_kernal_atos_idle_thread,
-            .pStackAddr = g_kernal_idle_stack,
+            .pStackAddr = (u32_t*)&_kernal_idle[0],
             .stackSize = KERNAL_IDLE_THREAD_STACK_SIZE,
-            .PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(_impl_kernal_atos_idle_thread, g_kernal_idle_stack, KERNAL_IDLE_THREAD_STACK_SIZE),
+            .PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(_impl_kernal_atos_idle_thread, (u32_t*)&_kernal_idle[0], KERNAL_IDLE_THREAD_STACK_SIZE),
         },
     };
 

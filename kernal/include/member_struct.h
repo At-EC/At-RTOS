@@ -352,6 +352,16 @@ typedef struct
     };
 }arguments_t;
 
+typedef struct
+{
+    union
+    {
+        u32_t size;
+        u8_t priority;
+        const char_t *pName;
+    };
+}os_thread_symbol_t;
+
 /* End of section using anonymous unions */
 #if defined (__CC_ARM)
     #pragma pop

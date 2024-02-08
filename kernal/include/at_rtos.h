@@ -16,13 +16,14 @@ extern "C" {
 #include "unique.h"
 #include "configuration.h"
 
-/* The interface of the thread stack allocation. */
-#define ATOS_STACK_DEFINE(name, size)           static u32_t name[((u32_t)(size) / sizeof(u32_t))] = {0x0u}; \
-S_ASSERT(((size) >= STACK_SIZE_MINIMUM) , "The thread stack size must be higher than STACK_SIZE_MINIMUM")
-
-/* The interface of the thread priority allocation. */
-#define ATOS_PRIORITY_DEFINE(name, priority)    u8_t name = (priority); \
-S_ASSERT((((priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((priority) <= OS_PRIORITY_USER_THREAD_LOWEST_LEVEL)) , "The thread priority is out of the system design")
+#define ATOS_THREAD_DEFINE(thread_name, stack_size, thread_priority)    static os_thread_symbol_t thread_name[((u32_t)(stack_size) / sizeof(u32_t))] = { \
+    [0] = {.size = stack_size},                                                                                                                           \
+    [1] = {.priority = thread_priority},                                                                                                                  \
+    [2] = {.pName = #thread_name},                                                                                                                         \
+};                                                                                                                                                        \
+S_ASSERT(((stack_size) >= STACK_SIZE_MINIMUM) , "The thread stack size must be higher than STACK_SIZE_MINIMUM");                                          \
+S_ASSERT((((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thread_priority) <= OS_PRIORITY_USER_THREAD_LOWEST_LEVEL)) ,                  \
+         "The thread priority is out of the system design")
 
 #include "thread.h"
 
@@ -39,7 +40,7 @@ S_ASSERT((((priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((priority) <
  **
  * demo usage:
  *
- * ATOS_STACK_DEFINE(sample_stk, 512);
+ *ATOS_THREAD_DEFINE(sample_thread, 512, 5);
  *
  * void thread_sample_function(void)
  * {
@@ -51,7 +52,7 @@ S_ASSERT((((priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((priority) <
  * int main(void)
  * {
  *     ATOS_PRIORITY_DEFINE(sample_pri, 5);
- *     os_thread_id_t sample_id = thread_init(thread_sample_function, sample_stk, 512, sample_pri, "SAMPLE");
+ *     os_thread_id_t sample_id = thread_init(sample_thread, thread_sample_function);
  *     if (os_id_is_invalid(sample_id))
  *     {
  *         printf("Thread %s init failed\n", sample_id.pName);
@@ -60,11 +61,15 @@ S_ASSERT((((priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((priority) <
  * }
  *
  */
-static inline os_thread_id_t thread_init(pThread_entryFunc_t pEntryFun, u32_t *pStackAddr, u32_t stackSize, u8_t priority, const char_t *pName)
+static inline os_thread_id_t thread_init(os_thread_symbol_t* pThread_symbol, pThread_entryFunc_t pEntryFun)
 {
     os_thread_id_t id = {0u};
+    u32_t* pStackAddress = (u32_t*)pThread_symbol;
+    u32_t stackSize = (u32_t)pThread_symbol[0].size;
+    u8_t priority = (u8_t)pThread_symbol[1].priority;
+    const char_t* pName = (const char_t*)pThread_symbol[2].pName;
 
-    id.val = _impl_thread_init(pEntryFun, pStackAddr, stackSize, priority, pName);
+    id.val = _impl_thread_init(pEntryFun, pStackAddress, stackSize, priority, pName);
     id.number = _impl_thread_os_id_to_number(id.val);
     id.pName = pName;
 
@@ -730,7 +735,7 @@ static inline u32p_t kernal_atos_run(void)
 
 typedef struct
 {
-    os_thread_id_t (*thread_init)(pThread_entryFunc_t, u32_t *, u32_t, u8_t, const char_t *);
+    os_thread_id_t (*thread_init)(os_thread_symbol_t*, pThread_entryFunc_t);
     u32p_t         (*thread_sleep)(u32_t);
     u32p_t         (*thread_resume)(os_thread_id_t);
     u32p_t         (*thread_suspend)(os_thread_id_t);
@@ -761,7 +766,7 @@ typedef struct
     u32p_t        (*msgq_receive)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
 
     b_t           (*id_isInvalid)(struct os_id);
-    u32p_t        (*kernal_atos_run)(void);
+    u32p_t        (*at_rtos_run)(void);
 }at_rtos_api_t;
 
 extern const at_rtos_api_t AtOS;
