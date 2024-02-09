@@ -39,6 +39,7 @@ S_ASSERT((((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thre
  * @return The value of thread unique id.
  **
  * demo usage:
+ *#include "at_rtos.h"
  *
  *ATOS_THREAD_DEFINE(sample_thread, 512, 5);
  *
@@ -46,12 +47,12 @@ S_ASSERT((((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thre
  * {
  *     while(1)
  *     {
+ *         AtOS.thread_sleep(1000u);
  *     }
  * }
  *
  * int main(void)
  * {
- *     ATOS_PRIORITY_DEFINE(sample_pri, 5);
  *     os_thread_id_t sample_id = thread_init(sample_thread, thread_sample_function);
  *     if (os_id_is_invalid(sample_id))
  *     {

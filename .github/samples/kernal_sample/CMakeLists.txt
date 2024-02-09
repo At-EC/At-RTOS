@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(kernal_sample
     LANGUAGES C)
 
-set(At_RTOS_PATH "../../")
+set(At_RTOS_PATH "../../../")
 
 include(${At_RTOS_PATH}/CMakeLists.txt)
 

@@ -1,5 +1,5 @@
 $VersionFile = "atos_version.h"
-$VersionPath = "../kernal/include"
+$VersionPath = "../../kernal/include"
 $FileContent = '/**
  * Copyright (c) Riven Zheng (zhengheiot@gmail.com).
  *
