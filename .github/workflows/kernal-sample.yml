@@ -20,7 +20,7 @@ jobs:
 
       - name: Build Kernal Sample CMake
         shell: bash
-        working-directory: samples/kernal_sample
+        working-directory: .github/samples/kernal_sample
         run: |
           cmake -S . -B build
           cmake --build build

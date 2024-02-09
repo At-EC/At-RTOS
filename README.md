@@ -26,6 +26,71 @@ If this project was useful to you, give it a ⭐️ and I'll keep improving it. 
 * **Tiny footprint:** It's as low as 1KB ROM/few bytes of RAM.
 * **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack, so you can develop new features in At-RTOS without rewriting existing code.
 
+## Kernal Structure
+
+```shell
+# At-RTOS source code tree
+At-RTOS
+├── arch
+│   ├── arch32
+│   │   └── arm
+│   │       └── cmsis
+│   │          └── include
+│   ├── arch.h
+│   └── CMakeLists.txt
+├── clock
+│   ├── include
+│   │   └── clock_tick.h
+│   ├── clock_systick.c
+│   └── CMakeLists.txt
+├── port
+│   ├── include
+│   │   └── port.h
+│   ├── port_keil.c
+│   └── CMakeLists.txt
+├── include
+│   ├── atos_configuration.h
+│   └── CMakeLists.txt
+├── kernal
+│   ├── include
+│   │   ├── at_rtos.h
+│   │   ├── atos_version.h
+│   │   ├── basic.h
+│   │   ├── compiler.h
+│   │   ├── configuration.h
+│   │   ├── event.h
+│   │   ├── idle.h
+│   │   ├── kernal.h
+│   │   ├── kernal_thread.h
+│   │   ├── linker.h
+│   │   ├── list.h
+│   │   ├── member_struct.h
+│   │   ├── mutex.h
+│   │   ├── postcode.h
+│   │   ├── queue.h
+│   │   ├── semaphore.h
+│   │   ├── thread.h
+│   │   ├── timer.h
+│   │   ├── trace.h
+│   │   ├── type.h
+│   │   └── unique.h
+│   ├── basic.c
+│   ├── event.c
+│   ├── kernal.c
+│   ├── kernal_thread.c
+│   ├── linker.c
+│   ├── list.c
+│   ├── mutex.c
+│   ├── queue.c
+│   ├── semaphore.c
+│   ├── thread.c
+│   ├── timer.c
+│   ├── trace.c
+│   └── CMakeLists.txt
+├── kernal_idle.c
+└── CMakeLists.txt
+```
+
 ## What's New
 
 [v1.0.0] Welcome to At-RTOS. v1.0.0 was released now. A basic RTOS feature was implemented in the kernal system, Pls enjoy it (:

@@ -18,7 +18,7 @@ jobs:
       - name: Execute Version Script
         id: version
         shell: powershell
-        working-directory: script
+        working-directory: .github/script
         run: |
          $message = powershell.exe -ExecutionPolicy bypass .\auto-version.ps1
          echo "value=$message" >> "$env:GITHUB_OUTPUT"
