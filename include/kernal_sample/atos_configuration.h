@@ -12,7 +12,29 @@
 extern "C" {
 #endif
 
+/**
+ * If you are use ARM Cortex M seiral architecture, the Cortex-M Core must be specificed as the following list.
+ * ARCH_ARM_CORTEX_CM0
+ * ARCH_ARM_CORTEX_CM0plus
+ * ARCH_ARM_CORTEX_CM3
+ * ARCH_ARM_CORTEX_CM4
+ * ARCH_ARM_CORTEX_CM23
+ * ARCH_ARM_CORTEX_CM33
+ * ARCH_ARM_CORTEX_CM7
+ **/
 #define KERNAL_SAMPLE
+
+/**
+ * If the Cortex-M Core has FPU capabilities, please add the following declaration.
+ * #define ARCH_FPU_PRESENT
+ **/
+// #define ARCH_FPU_PRESENT
+
+/**
+ * If the Cortex-M Core has MPU capabilities, please add the following declaration.
+ * #define ARCH_MPU_PRESENT
+ **/
+// #define ARCH_MPU_PRESENT
 
 /**
  * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
@@ -36,49 +58,49 @@ extern "C" {
  * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual thread instance number that you created.
  **/
-#define THREAD_INSTANCE_SUPPORTED_NUMBER          (3u)
+#define THREAD_INSTANCE_SUPPORTED_NUMBER          (20u)
 
 /**
  * This symbol defined the semaphore instance number that your application is using.
  * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual semaphore instance number that you created.
  **/
-#define SEMAPHORE_INSTANCE_SUPPORTED_NUMBER       (3u)
+#define SEMAPHORE_INSTANCE_SUPPORTED_NUMBER       (10u)
 
 /**
  * This symbol defined the event instance number that your application is using.
  * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual event instance number that you created.
  **/
-#define EVENT_INSTANCE_SUPPORTED_NUMBER           (3u)
+#define EVENT_INSTANCE_SUPPORTED_NUMBER           (10u)
 
 /**
  * This symbol defined the mutex instance number that your application is using.
  * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual mutex instance number that you created.
  **/
-#define MUTEX_INSTANCE_SUPPORTED_NUMBER           (3u)
+#define MUTEX_INSTANCE_SUPPORTED_NUMBER           (10u)
 
 /**
  * This symbol defined the queue instance number that your application is using.
  * The defaule value is set to 5. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual queue instance number that you created.
  **/
-#define QUEUE_INSTANCE_SUPPORTED_NUMBER           (3u)
+#define QUEUE_INSTANCE_SUPPORTED_NUMBER           (10u)
 
 /**
  * This symbol defined the timer instance number that your application is using.
  * The defaule value is set to 5. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual timer instance number that you created.
  **/
-#define TIMER_INSTANCE_SUPPORTED_NUMBER           (3u)
+#define TIMER_INSTANCE_SUPPORTED_NUMBER           (10u)
 
 /**
  * This symbol defined your thread running mode, if the thread runs at the privileged mode.
  * The defaule value is set to 0. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the security level that you want.
  **/
-#define THREAD_PSP_WITH_PRIVILEGED                (0u)
+#define THREAD_PSP_WITH_PRIVILEGED                (10u)
 
 #ifdef __cplusplus
 }

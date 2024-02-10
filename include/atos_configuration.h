@@ -13,6 +13,30 @@ extern "C" {
 #endif
 
 /**
+ * If you are use ARM Cortex M seiral architecture, the Cortex-M Core must be specificed as the following list.
+ * ARCH_ARM_CORTEX_CM0
+ * ARCH_ARM_CORTEX_CM0plus
+ * ARCH_ARM_CORTEX_CM3
+ * ARCH_ARM_CORTEX_CM4
+ * ARCH_ARM_CORTEX_CM23
+ * ARCH_ARM_CORTEX_CM33
+ * ARCH_ARM_CORTEX_CM7
+ **/
+#define ARCH_ARM_CORTEX_CM4
+
+/**
+ * If the Cortex-M Core has FPU capabilities, please add the following declaration.
+ * #define ARCH_FPU_PRESENT
+ **/
+// #define ARCH_FPU_PRESENT
+
+/**
+ * If the Cortex-M Core has MPU capabilities, please add the following declaration.
+ * #define ARCH_MPU_PRESENT
+ **/
+// #define ARCH_MPU_PRESENT
+
+/**
  * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
  * In most cases, PORTAL_SYSTEM_CORE_CLOCK_MHZ must be set to the frequency of the clock
  * that drives the peripheral used to generate the kernels periodic tick interrupt.
@@ -76,7 +100,7 @@ extern "C" {
  * The defaule value is set to 0. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the security level that you want.
  **/
-#define THREAD_PSP_WITH_PRIVILEGED                (0u)
+#define THREAD_PSP_WITH_PRIVILEGED                (3u)
 
 #ifdef __cplusplus
 }

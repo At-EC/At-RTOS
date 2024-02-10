@@ -24,16 +24,14 @@ I hope the At-RTOS could be a popular community-based embedded controller's real
 * **Tiny footprint:** It's as low as 1KB ROM/few bytes of RAM.
 * **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack, so you can develop new features in At-RTOS without rewriting existing code.
 
-# Resources
-
 ## Supported Architectures
 
 At-RTOS supports many architectures, and has covered the major architectures in current kernal system. It supports the following architectures, and it lists the chip that was verified.
 
-- **ARM Cortex-M3 (armv7m)**: `TODO`
-- **ARM Cortex-M4 (armv7em)**: `GD32F307VET6`
-- **ARM Cortex-M23 (armv7em_f4sh)**: `TODO`
-- **ARM Cortex-M33 (armv7em_f5sh and armv7em_f5dh)**: `TODO`
+- **ARM Cortex-M3 (ARCH_ARM_CORTEX_CM3)**: `TODO`
+- **ARM Cortex-M4 (ARCH_ARM_CORTEX_CM4)**: `GD32F307VET6`
+- **ARM Cortex-M23 (ARCH_ARM_CORTEX_CM23)**: `TODO`
+- **ARM Cortex-M33 (ARCH_ARM_CORTEX_CM33)**: `TODO`
 
 There is planned support for the ARM Cortex M3 and M23 architectures though no chips are currently supported in my hand, If you perform it in your system, I'll thanks for your PRs to update the chip that verified into lists.
 
@@ -41,9 +39,9 @@ There is planned support for the ARM Cortex M3 and M23 architectures though no c
 
 The main IDE/compilers supported by At-RTOS are:
 
-- MDK KEIL: `PASS`
+- MDK KEIL: `Supported`
 - IAR: `TODO`
-- Native GCC: `PASS`
+- Native GCC: `Supported`
 - ARM GCC: `TODO`
 
 ## Code Structure
@@ -90,7 +88,7 @@ At-RTOS
 - **include :** It used to contain the At-RTOS kernal header file such as the At-RTOS user configurations.
 - **kernal :** This folder was implemented for the At-RTOS kernal files.
 
-## ARM Cortex M architecture
+## ARM Cortex M Seiral Architecture
 
 At-RTOS was designed specifically to take advantage of the powerful hardware features introduced with the ARM Cortex M architecture. The following HW resources were used in the At-RTOS kernal.
 
@@ -104,12 +102,35 @@ At-RTOS was designed specifically to take advantage of the powerful hardware fea
 
 # Getting Started
 
-The at_rtos.h is an interface of At-RTOS kernal. You can check the interface usage in this file to perform it in your embedded controller system.
-
 ## Configuration
 
 At-RTOS ported a template At-RTOS configuration header file `<root_path>/include/atos_configuration.h`. Your board support package must provide the following variable symbols to instead of this one.
+
 ```c
+/**
+ * If you are use ARM Cortex M seiral architecture, the Cortex-M Core architecture must be declared as the following list.
+ * ARCH_ARM_CORTEX_CM0
+ * ARCH_ARM_CORTEX_CM0plus
+ * ARCH_ARM_CORTEX_CM3
+ * ARCH_ARM_CORTEX_CM4
+ * ARCH_ARM_CORTEX_CM23
+ * ARCH_ARM_CORTEX_CM33
+ * ARCH_ARM_CORTEX_CM7
+ **/
+#define ARCH_ARM_CORTEX_CM4
+
+/**
+ * If the Cortex-M Core has FPU capabilities, please add the following declaration.
+ * #define ARCH_FPU_PRESENT
+ **/
+#define ARCH_FPU_PRESENT
+
+/**
+ * If the Cortex-M Core has MPU capabilities, please add the following declaration.
+ * #define ARCH_MPU_PRESENT
+ **/
+#define ARCH_MPU_PRESENT
+
 /**
  * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
  * In most cases, PORTAL_SYSTEM_CORE_CLOCK_MHZ must be set to the frequency of the clock
@@ -118,6 +139,7 @@ At-RTOS ported a template At-RTOS configuration header file `<root_path>/include
  */
 #define PORTAL_SYSTEM_CORE_CLOCK_MHZ              (120u)
 ```
+
 Your application will certainly need a different value so set the kernal component instance number correctly. This is very often, but not always. It's according to your system design.
 The symbols in the configuration header file look like this `<kernal component>_INSTANCE_SUPPORTED_NUMBER`, and the kernal component is shown as following table:
 - Thread
@@ -130,9 +152,11 @@ The symbols in the configuration header file look like this `<kernal component>_
 
 The more details you can see the descriptions in the file `<root_path>/include/atos_configuration.h`.
 
-## Interface Usage
+## Interface
 
-Create Your First Thread is shown as follow:
+The at_rtos.h is an interface of At-RTOS kernal. You can check the interface usage in this file to perform it in your embedded controller system.
+
+The following sample codes illustrates how to create your first thread:
 ```c
 /* Include the At-RTOS interface's header file. */
 #include "at_rtos.h"
@@ -143,7 +167,7 @@ ATOS_THREAD_DEFINE(first_thread, 1024, 7); // Set the thread stack size to 1024 
 /* User thread's entry function. */
 static void first_thread_entry(void)
 {
-    while (1)
+    while(1)
     {
         AtOS.thread_sleep(1000u);
     }

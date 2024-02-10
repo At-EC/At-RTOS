@@ -539,7 +539,7 @@ u32_t _impl_kernal_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddres
     ((stack_snapshot_t *)psp_frame)->R1     = 0x01010101u;              /* R1   */
     ((stack_snapshot_t *)psp_frame)->R0     = 0x0B0B0B0Bu;              /* R0   */
 
-#if defined ARCH_CORTEX_M0
+#if defined ARCH_ARM_CORTEX_CM0
     ((stack_snapshot_t *)psp_frame)->cm0.R11    = 0x11111111u;              /* R11  */
     ((stack_snapshot_t *)psp_frame)->cm0.R10    = 0x10101010u;              /* R10  */
     ((stack_snapshot_t *)psp_frame)->cm0.R9     = 0x09090909u;              /* R9   */

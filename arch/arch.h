@@ -28,7 +28,11 @@ typedef enum IRQn {
     SysTick_IRQn = -1,           /*!< 15 Cortex-Mx System Tick Interrupt               */
 } IRQn_Type;
 
-#ifndef __MPU_PRESENT
+#if defined ARCH_FPU_PRESENT
+    #define __FPU_PRESENT               1
+#endif
+
+#ifdef __MPU_PRESENT
     #define __MPU_PRESENT               1
 #endif
 
@@ -37,138 +41,55 @@ typedef enum IRQn {
 #endif
 
 #ifndef KERNAL_SAMPLE
-	#define KERNAL_SAMPLE_BUILD         0
+    #define KERNAL_SAMPLE_BUILD         0
 #endif
 
-#if defined __v7em_f5ss ||  \
-    defined __v7em_f5sh ||  \
-    defined __v7em_f5ds ||  \
-    defined __v7em_f5dh
-
-    #ifndef __ICACHE_PRESENT
-        #define __ICACHE_PRESENT        0
-    #endif
-
-    #ifndef __DCACHE_PRESENT
-        #define __DCACHE_PRESENT        0
-    #endif
-
-    #ifndef __DTCM_PRESENT
-        #define __DTCM_PRESENT          0
-    #endif
-
-    #ifndef __CM7_REV
-        #define __CM7_REV               1
-    #endif
-
-    #ifndef __Vendor_SysTickConfig
-        #define __Vendor_SysTickConfig  0
-    #endif
-#endif
-
-#if defined __v7m
-    #define ARCH "v7m"
-
-    #define __FPU_PRESENT 0
-
-    #if !defined ARM_MATH_CM3
-        #define ARM_MATH_CM3 1
-    #endif
+#ifndef __FPU_PRESENT
+    #define __FPU_PRESENT               0
     #undef __FPU_USED
+#endif
+
+#if defined ARCH_ARM_CORTEX_CM0
+    #include "arch32/arm/cmsis/include/core_cm0.h"
+
+#elif defined ARCH_ARM_CORTEX_CM0plus
+    #include "arch32/arm/cmsis/include/core_cm0plus.h"
+
+#elif defined ARCH_ARM_CORTEX_CM3
     #include "arch32/arm/cmsis/include/core_cm3.h"
 
-#elif defined __v7em
-
-    #define ARCH "v7em"
-    #define __FPU_PRESENT 0
-    #if !defined ARM_MATH_CM4
-        #define ARM_MATH_CM4 1
-    #endif
-    #undef __FPU_USED
+#elif defined ARCH_ARM_CORTEX_CM4
     #include "arch32/arm/cmsis/include/core_cm4.h"
 
-#elif defined __v7em_f4ss
-    #define ARCH "v7em_f4ss"
+#elif defined ARCH_ARM_CORTEX_CM23
+    #include "arch32/arm/cmsis/include/core_cm23.h"
 
-    #define __FPU_PRESENT 1
-    #if !defined ARM_MATH_CM4
-        #define ARM_MATH_CM4 1
-    #endif
-    #undef __FPU_USED
-    #include "arch32/arm/cmsis/include/core_cm4.h"
+#elif defined ARCH_ARM_CORTEX_CM33
+    #include "arch32/arm/cmsis/include/core_cm33.h"
 
-#elif defined __v7em_f4sh
-    #define ARCH "v7em_f4sh"
-
-    #define __FPU_PRESENT 1
-    #if !defined ARM_MATH_CM4
-        #define ARM_MATH_CM4 1
-    #endif
-    #undef __FPU_USED
-    #include "arch32/arm/cmsis/include/core_cm4.h"
-
-#elif defined __v7em_f5ss
-    #define ARCH "v7em_f5ss"
-
-    #define __CHECK_DEVICE_DEFINES
-    #define __FPU_PRESENT 1
-    #if !defined ARM_MATH_CM7
-        #define ARM_MATH_CM7 1
-    #endif
-    #undef __FPU_USED
-    #include "arch32/arm/cmsis/include/core_cm7.h"
-
-#elif defined __v7em_f5sh
-    #define ARCH "v7em_f5sh"
-
-    #define __CHECK_DEVICE_DEFINES
-    #define __FPU_PRESENT 1
-    #if !defined ARM_MATH_CM7
-        #define ARM_MATH_CM7 1
-    #endif
-    #undef __FPU_USED
-    #include "arch32/arm/cmsis/include/core_cm7.h"
-
-#elif defined __v7em_f5ds
-    #define ARCH "v7em_f5ds"
-
-    #define __CHECK_DEVICE_DEFINES
-    #define __FPU_PRESENT 1
-    #if !defined ARM_MATH_CM7
-        #define ARM_MATH_CM7 1
-    #endif
-    #undef __FPU_USED
-    #include "arch32/arm/cmsis/include/core_cm7.h"
-
-#elif defined __v7em_f5dh
-    #define ARCH "v7em_f5dh"
-
-    #define __CHECK_DEVICE_DEFINES
-    #define __FPU_PRESENT 1
-    #define ARM_MATH_CM7 1
-    #undef __FPU_USED
+#elif defined ARCH_ARM_CORTEX_CM7
     #include "arch32/arm/cmsis/include/core_cm7.h"
 
 #elif defined KERNAL_SAMPLE
-	#undef KERNAL_SAMPLE_BUILD
-	#define KERNAL_SAMPLE_BUILD 1
+    #undef KERNAL_SAMPLE_BUILD
+    #define KERNAL_SAMPLE_BUILD 1
 #else
     #error "No ARM Arch is defined"
 #endif
 
 #if !defined KERNAL_SAMPLE
-	#define ARCH_ENTER_CRITICAL_SECTION()   vu32_t PRIMASK_Bit = __get_PRIMASK();        \
-											  __disable_irq();                           \
-											  __DSB();                                   \
-											  __ISB();
+    #define ARCH_ENTER_CRITICAL_SECTION()   vu32_t PRIMASK_Bit = __get_PRIMASK();        \
+                                              __disable_irq();                           \
+                                              __DSB();                                   \
+                                              __ISB();
 
-	#define ARCH_EXIT_CRITICAL_SECTION()    __set_PRIMASK(PRIMASK_Bit);                  \
-											  __DSB();                                   \
-											  __ISB();
+    #define ARCH_EXIT_CRITICAL_SECTION()    __set_PRIMASK(PRIMASK_Bit);                  \
+                                              __DSB();                                   \
+                                              __ISB();
 
 #else
-	#define ARCH_ENTER_CRITICAL_SECTION()
-	#define ARCH_EXIT_CRITICAL_SECTION()
+    #define ARCH_ENTER_CRITICAL_SECTION()
+    #define ARCH_EXIT_CRITICAL_SECTION()
 #endif
 
 #ifdef __cplusplus
