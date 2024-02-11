@@ -73,12 +73,11 @@ At-RTOS
 ├── kernal
 │   ├── include
 │   │   ├── at_rtos.h
-│   │   ├── atos_version.h
 │   │   └── *.h
 │   ├── kernal.c
 │   ├── *.c
 │   └── CMakeLists.txt
-├── kernal_idle.c
+├── kernal_version.c
 └── CMakeLists.txt
 ```
 

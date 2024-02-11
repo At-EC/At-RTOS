@@ -21,7 +21,6 @@ target_sources(atos_kernal
     ${CMAKE_CURRENT_LIST_DIR}/include/compiler.h
     ${CMAKE_CURRENT_LIST_DIR}/include/configuration.h
     ${CMAKE_CURRENT_LIST_DIR}/include/event.h
-    ${CMAKE_CURRENT_LIST_DIR}/include/idle.h
     ${CMAKE_CURRENT_LIST_DIR}/include/kernal.h
     ${CMAKE_CURRENT_LIST_DIR}/include/linker.h
     ${CMAKE_CURRENT_LIST_DIR}/include/list.h
@@ -36,7 +35,6 @@ target_sources(atos_kernal
     ${CMAKE_CURRENT_LIST_DIR}/include/type.h
     ${CMAKE_CURRENT_LIST_DIR}/include/unique.h
     ${CMAKE_CURRENT_LIST_DIR}/include/kernal_thread.h
-    ${CMAKE_CURRENT_LIST_DIR}/include/atos_version.h
 )
 
 target_include_directories(atos_kernal

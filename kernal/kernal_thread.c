@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 #include "at_rtos.h"
-#include "idle.h"
 #include "unique.h"
 #include "kernal.h"
 #include "kernal_thread.h"

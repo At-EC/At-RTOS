@@ -8,7 +8,6 @@
 #include "kernal.h"
 #include "compiler.h"
 #include "clock_tick.h"
-#include "idle.h"
 #include "unique.h"
 #include "kernal_thread.h"
 
@@ -744,6 +743,17 @@ void _impl_kernal_atos_schedule_thread(void)
         {
             _impl_timer_reamining_elapsed_handler();
         }
+    }
+}
+
+/**
+ * @brief The idle thread entry function.
+ */
+void _impl_kernal_atos_idle_thread(void)
+{
+    while(1)
+    {
+        /* TODO: Power Management */
     }
 }
 
