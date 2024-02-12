@@ -141,11 +141,11 @@ os_id_t _impl_event_init(u32_t edge, pEvent_callbackFunc_t pCallFun, const char_
     arguments_t arguments[] =
     {
         [0] = {.u32_val = (u32_t)edge},
-        [1] = {.ptr_val = (pEvent_callbackFunc_t)pCallFun},
+        [1] = {.ptr_val = (const void*)pCallFun},
         [2] = {.pch_val = (const char_t *)pName},
     };
 
-    return _impl_kernal_privilege_invoke(_event_init_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_event_init_privilege_routine, arguments);
 }
 
 /**
@@ -174,7 +174,7 @@ u32p_t _impl_event_set(os_id_t id, u32_t event)
         [1] = {.u32_val = (u32_t)event},
     };
 
-    return _impl_kernal_privilege_invoke(_event_set_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_event_set_privilege_routine, arguments);
 }
 
 /**
@@ -219,7 +219,7 @@ u32p_t _impl_event_wait(os_id_t id, u32_t *pEvent, u32_t trigger, u32_t listen, 
         [4] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    u32p_t postcode = _impl_kernal_privilege_invoke(_event_wait_privilege_routine, arguments);
+    u32p_t postcode = _impl_kernal_privilege_invoke((const void*)_event_wait_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
 

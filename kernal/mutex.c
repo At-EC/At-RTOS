@@ -168,7 +168,7 @@ os_id_t _impl_mutex_init(const char_t *pName)
         [0] = {.pch_val = (const char_t *)pName},
     };
 
-    return _impl_kernal_privilege_invoke(_mutex_init_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_mutex_init_privilege_routine, arguments);
 }
 
 /**
@@ -200,7 +200,7 @@ u32p_t _impl_mutex_lock(os_id_t id)
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke(_mutex_lock_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_mutex_lock_privilege_routine, arguments);
 
 }
 
@@ -228,7 +228,7 @@ u32p_t _impl_mutex_unlock(os_id_t id)
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke(_mutex_unlock_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_mutex_unlock_privilege_routine, arguments);
 }
 
 /**

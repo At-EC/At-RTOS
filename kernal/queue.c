@@ -172,7 +172,7 @@ os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t e
         [3] = {.pch_val = (const char_t *)pName},
     };
 
-    return _impl_kernal_privilege_invoke(_queue_init_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_queue_init_privilege_routine, arguments);
 }
 
 /**
@@ -253,7 +253,7 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u
         [3] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    u32p_t postcode = _impl_kernal_privilege_invoke(_queue_send_privilege_routine, arguments);
+    u32p_t postcode = _impl_kernal_privilege_invoke((const void*)_queue_send_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
     if (postcode == PC_SC_UNAVAILABLE)
@@ -314,7 +314,7 @@ u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
         [3] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    u32p_t postcode = _impl_kernal_privilege_invoke(_queue_receive_privilege_routine, arguments);
+    u32p_t postcode = _impl_kernal_privilege_invoke((const void*)_queue_receive_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
 

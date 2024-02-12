@@ -31,11 +31,13 @@ typedef u32_t (*pPrivilege_callFunc_t)(arguments_t *);
 #if defined (__CC_ARM)
     __svc(SVC_KERNAL_INVOKE_NUMBER) u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
     __ASM void _impl_port_run_theFirstThread(u32_t sp);
-#elif defined (__ICCARM)
-    /* TODO */
+#elif defined (__ICCARM__)
+    #pragma swi_number = SVC_KERNAL_INVOKE_NUMBER
+    __swi u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
+    void _impl_port_run_theFirstThread(u32_t sp);
 #elif defined (__GUNC__)
     /* TODO */
-#elif defined (__TMS470)
+#elif defined (__TMS470__)
     /* TODO */
 #elif defined (__TASKING__)
     /* TODO */

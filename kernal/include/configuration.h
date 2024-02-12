@@ -79,9 +79,9 @@ extern "C" {
 #endif
 
 #if !defined __CC_ARM &&  \
-    !defined __ICCARM &&  \
+    !defined __ICCARM__ &&  \
     !defined __GUNC__ &&  \
-    !defined __TMS470 &&  \
+    !defined __TMS470__ &&  \
     !defined __TASKING__ &&  \
     !defined KERNAL_SAMPLE
 

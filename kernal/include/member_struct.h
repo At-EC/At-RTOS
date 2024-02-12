@@ -21,11 +21,11 @@ extern "C" {
 #if defined (__CC_ARM)
     #pragma push
     #pragma anon_unions
-#elif defined (__ICCARM)
+#elif defined (__ICCARM__)
     #pragma language=extended
 #elif defined (__GUNC__)
     /* anonymous unions are enabled by default */
-#elif defined (__TMS470)
+#elif defined (__TMS470__)
     /* anonymous unions are enabled by default */
 #elif defined (__TASKING__)
     #pragma warning 586
@@ -365,11 +365,11 @@ typedef struct
 /* End of section using anonymous unions */
 #if defined (__CC_ARM)
     #pragma pop
-#elif defined (__ICCARM)
+#elif defined (__ICCARM__)
         /* leave anonymous unions enabled */
 #elif defined (__GUNC__)
         /* anonymous unions are enabled by default */
-#elif defined (__TMS470)
+#elif defined (__TMS470__)
         /* anonymous unions are enabled by default */
 #elif defined (__TASKING__)
     #pragma warning restore

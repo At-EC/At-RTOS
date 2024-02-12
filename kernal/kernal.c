@@ -764,7 +764,7 @@ u32p_t _impl_kernal_at_rtos_run(void)
 {
     if (!_impl_kernal_rtos_isRun())
     {
-        return _impl_kernal_privilege_invoke(_kernal_start_privilege_routine, NULL);
+        return _impl_kernal_privilege_invoke((const void*)_kernal_start_privilege_routine, NULL);
     }
     return _PC_CMPT_FAILED;
 }

@@ -328,7 +328,7 @@ os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t time
         [3] = {.pch_val = (const void*)pName},
     };
 
-    return _impl_kernal_privilege_invoke(_timer_init_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_timer_init_privilege_routine, arguments);
 }
 
 /**
@@ -426,7 +426,7 @@ u32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
         [2] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    return _impl_kernal_privilege_invoke(_timer_start_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_timer_start_privilege_routine, arguments);
 }
 
 /**
@@ -453,7 +453,7 @@ u32p_t _impl_timer_stop(os_id_t id)
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke(_timer_stop_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_timer_stop_privilege_routine, arguments);
 }
 
 /**
@@ -493,7 +493,7 @@ b_t _impl_timer_status_isBusy(os_id_t id)
  */
 u32_t _impl_timer_total_system_get(void)
 {
-    return _impl_kernal_privilege_invoke(_timer_total_system_get_privilege_routine, NULL);
+    return _impl_kernal_privilege_invoke((const void*)_timer_total_system_get_privilege_routine, NULL);
 }
 
 /**
@@ -503,7 +503,7 @@ u32_t _impl_timer_total_system_get(void)
  */
 u32p_t _impl_kernal_timer_schedule_request(void)
 {
-    return _impl_kernal_privilege_invoke(_kernal_timer_schedule_request_privilege_routine, NULL);
+    return _impl_kernal_privilege_invoke((const void*)_kernal_timer_schedule_request_privilege_routine, NULL);
 }
 
 /**

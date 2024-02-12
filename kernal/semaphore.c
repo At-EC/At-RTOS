@@ -187,7 +187,7 @@ os_id_t _impl_semaphore_init(u8_t initialCount, u8_t limitCount, const char_t *p
         [2] = {.pch_val = (const char_t *)pName},
     };
 
-    return _impl_kernal_privilege_invoke(_semaphore_init_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_semaphore_init_privilege_routine, arguments);
 }
 
 /**
@@ -225,7 +225,7 @@ u32p_t _impl_semaphore_take(os_id_t id, u32_t timeout_ms)
         [1] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    u32p_t postcode = _impl_kernal_privilege_invoke(_semaphore_take_privilege_routine, arguments);
+    u32p_t postcode = _impl_kernal_privilege_invoke((const void*)_semaphore_take_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
 
@@ -269,7 +269,7 @@ u32_t _impl_semaphore_give(os_id_t id)
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke(_semaphore_give_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_semaphore_give_privilege_routine, arguments);
 }
 
 /**
@@ -296,7 +296,7 @@ u32_t _impl_semaphore_flush(os_id_t id)
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke(_semaphore_flush_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_semaphore_flush_privilege_routine, arguments);
 }
 
 /**

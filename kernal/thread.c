@@ -221,7 +221,7 @@ u32_t _impl_thread_os_id_to_number(os_id_t id)
  *
  * @return The value of thread unique id.
  */
-os_id_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t size, u8_t priority, const char_t *pName)
+os_id_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t size, u16_t priority, const char_t *pName)
 {
     if (!pEntryFun)
     {
@@ -257,7 +257,7 @@ os_id_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t 
         [4] = {.pch_val = (const void *)pName},
     };
 
-    return _impl_kernal_privilege_invoke(_thread_init_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_thread_init_privilege_routine, arguments);
 }
 
 /**
@@ -284,7 +284,7 @@ u32p_t _impl_thread_resume(os_id_t id)
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke(_thread_resume_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_thread_resume_privilege_routine, arguments);
 }
 
 /**
@@ -311,7 +311,7 @@ u32p_t _impl_thread_suspend(os_id_t id)
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke(_thread_suspend_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_thread_suspend_privilege_routine, arguments);
 }
 
 /**
@@ -328,7 +328,7 @@ u32p_t _impl_thread_yield(void)
         return _PC_CMPT_FAILED;
     }
 
-    return _impl_kernal_privilege_invoke(_thread_yield_privilege_routine, NULL);
+    return _impl_kernal_privilege_invoke((const void*)_thread_yield_privilege_routine, NULL);
 }
 
 /**
@@ -355,7 +355,7 @@ u32p_t _impl_thread_delete(os_id_t id)
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke(_thread_delete_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_thread_delete_privilege_routine, arguments);
 }
 
 /**
@@ -382,7 +382,7 @@ u32p_t _impl_thread_sleep(u32_t timeout_ms)
         [0] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    return _impl_kernal_privilege_invoke(_thread_sleep_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void*)_thread_sleep_privilege_routine, arguments);
 }
 
 /**

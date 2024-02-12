@@ -28,10 +28,10 @@ I hope the At-RTOS could be a popular community-based embedded controller's real
 
 At-RTOS supports many architectures, and has covered the major architectures in current kernal system. It supports the following architectures, and it lists the chip that was verified.
 
-- **ARM Cortex-M3 (ARCH_ARM_CORTEX_CM3)**: `TODO`
-- **ARM Cortex-M4 (ARCH_ARM_CORTEX_CM4)**: `GD32F307VET6`
-- **ARM Cortex-M23 (ARCH_ARM_CORTEX_CM23)**: `TODO`
-- **ARM Cortex-M33 (ARCH_ARM_CORTEX_CM33)**: `TODO`
+- **ARCH_ARM_CORTEX_CM3**: `TODO`
+- **ARCH_ARM_CORTEX_CM4**: `GD32F307VET6`
+- **ARCH_ARM_CORTEX_CM23**: `TODO`
+- **ARCH_ARM_CORTEX_CM33**: `TODO`
 
 There is planned support for the ARM Cortex M3 and M23 architectures though no chips are currently supported in my hand, If you perform it in your system, I'll thanks for your PRs to update the chip that verified into lists.
 
@@ -40,7 +40,7 @@ There is planned support for the ARM Cortex M3 and M23 architectures though no c
 The main IDE/compilers supported by At-RTOS are:
 
 - MDK KEIL: `Supported`
-- IAR: `TODO`
+- IAR: `Supported`
 - Native GCC: `Supported`
 - ARM GCC: `TODO`
 
