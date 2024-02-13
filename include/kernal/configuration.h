@@ -83,14 +83,10 @@ extern "C" {
     !defined __GUNC__ &&  \
     !defined __TMS470__ &&  \
     !defined __TASKING__ &&  \
-    !defined KERNAL_SAMPLE
+    !defined ARCH_NATIVE_GCC
 
     #warning Not supported compiler type
 
-#endif
-
-#if !defined KERNAL_SAMPLE
-    #define __v7em
 #endif
 
 #ifdef __cplusplus

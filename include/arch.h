@@ -40,44 +40,39 @@ typedef enum IRQn {
     #define __NVIC_PRIO_BITS            8
 #endif
 
-#ifndef KERNAL_SAMPLE
-    #define KERNAL_SAMPLE_BUILD         0
-#endif
-
 #ifndef __FPU_PRESENT
     #define __FPU_PRESENT               0
     #undef __FPU_USED
 #endif
 
 #if defined ARCH_ARM_CORTEX_CM0
-    #include "arch32/arm/cmsis/include/core_cm0.h"
+    #include "../arch/arch32/arm/cmsis/include/core_cm0.h"
 
 #elif defined ARCH_ARM_CORTEX_CM0plus
-    #include "arch32/arm/cmsis/include/core_cm0plus.h"
+    #include "../arch/arch32/arm/cmsis/include/core_cm0plus.h"
 
 #elif defined ARCH_ARM_CORTEX_CM3
-    #include "arch32/arm/cmsis/include/core_cm3.h"
+    #include "../arch/arch32/arm/cmsis/include/core_cm3.h"
 
 #elif defined ARCH_ARM_CORTEX_CM4
-    #include "arch32/arm/cmsis/include/core_cm4.h"
+    #include "../arch/arch32/arm/cmsis/include/core_cm4.h"
 
 #elif defined ARCH_ARM_CORTEX_CM23
-    #include "arch32/arm/cmsis/include/core_cm23.h"
+    #include "../arch/arch32/arm/cmsis/include/core_cm23.h"
 
 #elif defined ARCH_ARM_CORTEX_CM33
-    #include "arch32/arm/cmsis/include/core_cm33.h"
+    #include "../arch/arch32/arm/cmsis/include/core_cm33.h"
 
 #elif defined ARCH_ARM_CORTEX_CM7
-    #include "arch32/arm/cmsis/include/core_cm7.h"
+    #include "../arch/arch32/arm/cmsis/include/core_cm7.h"
 
-#elif defined KERNAL_SAMPLE
-    #undef KERNAL_SAMPLE_BUILD
-    #define KERNAL_SAMPLE_BUILD 1
+#elif defined ARCH_NATIVE_GCC
+    // Nothing to do
 #else
     #error "No ARM Arch is defined"
 #endif
 
-#if !defined KERNAL_SAMPLE
+#if !defined ARCH_NATIVE_GCC
     #define ARCH_ENTER_CRITICAL_SECTION()   vu32_t PRIMASK_Bit = __get_PRIMASK();        \
                                               __disable_irq();                           \
                                               __DSB();                                   \

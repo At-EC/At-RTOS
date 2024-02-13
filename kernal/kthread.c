@@ -7,7 +7,7 @@
 #include "at_rtos.h"
 #include "unique.h"
 #include "kernal.h"
-#include "kernal_thread.h"
+#include "kthread.h"
 
 #ifdef __cplusplus
 extern "C" {

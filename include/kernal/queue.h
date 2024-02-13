@@ -8,7 +8,7 @@
 #ifndef _QUEUE_H_
 #define _QUEUE_H_
 
-#include "member_struct.h"
+#include "kstruct.h"
 
 #ifdef __cplusplus
 extern "C" {

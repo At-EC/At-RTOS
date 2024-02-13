@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#ifndef _MEMBER_STRUCT_H_
-#define _MEMBER_STRUCT_H_
+#ifndef _KSTRUCT_H_
+#define _KSTRUCT_H_
 
 #include "type.h"
 #include "linker.h"
@@ -29,7 +29,7 @@ extern "C" {
     /* anonymous unions are enabled by default */
 #elif defined (__TASKING__)
     #pragma warning 586
-#elif defined (KERNAL_SAMPLE)
+#elif defined (ARCH_NATIVE_GCC)
     /* Nothing to do */
 #else
     #warning Not supported compiler type
@@ -373,7 +373,7 @@ typedef struct
         /* anonymous unions are enabled by default */
 #elif defined (__TASKING__)
     #pragma warning restore
-#elif defined (KERNAL_SAMPLE)
+#elif defined (ARCH_NATIVE_GCC)
     /* Nothing to do */
 #else
     #warning Not supported compiler type
@@ -383,4 +383,4 @@ typedef struct
 }
 #endif
 
-#endif /* _MEMBER_STRUCT_H_ */
+#endif /* _KSTRUCT_H_ */

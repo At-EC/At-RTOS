@@ -41,7 +41,7 @@ typedef u32_t (*pPrivilege_callFunc_t)(arguments_t *);
     /* TODO */
 #elif defined (__TASKING__)
     /* TODO */
-#elif defined (KERNAL_SAMPLE)
+#elif defined (ARCH_NATIVE_GCC)
     u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
     void _impl_port_run_theFirstThread(u32_t sp);
 #else

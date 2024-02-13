@@ -14,6 +14,7 @@ extern "C" {
 
 /**
  * If you are use ARM Cortex M seiral architecture, the Cortex-M Core must be specificed as the following list.
+ * ARCH_NATIVE_GCC
  * ARCH_ARM_CORTEX_CM0
  * ARCH_ARM_CORTEX_CM0plus
  * ARCH_ARM_CORTEX_CM3
@@ -22,7 +23,7 @@ extern "C" {
  * ARCH_ARM_CORTEX_CM33
  * ARCH_ARM_CORTEX_CM7
  **/
-#define KERNAL_SAMPLE
+#define ARCH_NATIVE_GCC
 
 /**
  * If the Cortex-M Core has FPU capabilities, please add the following declaration.

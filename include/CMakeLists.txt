@@ -1,11 +1,29 @@
-include_directories(atos_kernal PRIVATE ${CMAKE_CURRENT_LIST_DIR}/kernal_sample)
+add_library(kernal_include INTERFACE)
 
-target_sources(atos_kernal
-    PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}/kernal_sample/atos_configuration.h
-)
+include_directories(${KERNAL_PATH}/include)
+include_directories(${KERNAL_PATH}/include/kernal)
 
-target_include_directories(atos_kernal
-    INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}
+target_sources(kernal_include
+	PUBLIC
+	${KERNAL_PATH}/include/arch.h
+	
+    ${KERNAL_PATH}/include/kernal/at_rtos.h
+    ${KERNAL_PATH}/include/kernal/basic.h
+    ${KERNAL_PATH}/include/kernal/compiler.h
+    ${KERNAL_PATH}/include/kernal/configuration.h
+    ${KERNAL_PATH}/include/kernal/event.h
+    ${KERNAL_PATH}/include/kernal/kernal.h
+    ${KERNAL_PATH}/include/kernal/linker.h
+    ${KERNAL_PATH}/include/kernal/list.h
+    ${KERNAL_PATH}/include/kernal/kstruct.h
+    ${KERNAL_PATH}/include/kernal/mutex.h
+    ${KERNAL_PATH}/include/kernal/postcode.h
+    ${KERNAL_PATH}/include/kernal/queue.h
+    ${KERNAL_PATH}/include/kernal/semaphore.h
+    ${KERNAL_PATH}/include/kernal/thread.h
+    ${KERNAL_PATH}/include/kernal/timer.h
+    ${KERNAL_PATH}/include/kernal/trace.h
+    ${KERNAL_PATH}/include/kernal/type.h
+    ${KERNAL_PATH}/include/kernal/unique.h
+    ${KERNAL_PATH}/include/kernal/kthread.h
 )

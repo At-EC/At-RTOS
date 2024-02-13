@@ -2,8 +2,8 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-  CMake-Sample:
-    name: Kernal CMake Sample with Native GCC
+  CMake-Build:
+    name: Kernal CMake Remote Building
     runs-on: ubuntu-latest
     env:
       COVERAGE_DATA_PATH: coverage-data/coverage.info
@@ -18,9 +18,9 @@ jobs:
           sudo apt-get -y update
           sudo apt-get -y install build-essential
 
-      - name: Build Kernal Sample CMake
+      - name: Build Kernal Native CMake
         shell: bash
-        working-directory: .github/samples/kernal_sample
+        working-directory: .github/remote_build/native_gcc
         run: |
           cmake -S . -B build
           cmake --build build

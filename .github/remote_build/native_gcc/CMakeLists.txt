@@ -1,9 +1,21 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(kernal_sample
-    LANGUAGES C)
+project(build_native_gcc LANGUAGES C)
 
 set(At_RTOS_PATH "../../../")
+set(ATOS_CONFIG_FILE_PATH "${At_RTOS_PATH}/include/template/native_gcc")
+
+add_library(atos_config INTERFACE)
+
+target_include_directories(atos_config
+    INTERFACE
+    ${ATOS_CONFIG_FILE_PATH}
+)
+
+target_sources(atos_config
+	PUBLIC
+    ${ATOS_CONFIG_FILE_PATH}/atos_configuration.h
+)
 
 include(${At_RTOS_PATH}/CMakeLists.txt)
 

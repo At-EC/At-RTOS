@@ -8,7 +8,7 @@
 #ifndef _THREAD_H_
 #define _THREAD_H_
 
-#include "member_struct.h"
+#include "kstruct.h"
 
 #ifdef __cplusplus
 extern "C" {

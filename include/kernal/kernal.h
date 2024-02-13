@@ -8,7 +8,7 @@
 #ifndef _KERNAL_H_
 #define _KERNAL_H_
 
-#include "member_struct.h"
+#include "kstruct.h"
 #include "arch.h"
 #include "unique.h"
 #include "port.h"

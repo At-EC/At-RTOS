@@ -28,12 +28,10 @@ I hope the At-RTOS could be a popular community-based embedded controller's real
 
 At-RTOS supports many architectures, and has covered the major architectures in current kernal system. It supports the following architectures, and it lists the chip that was verified.
 
-- **ARCH_ARM_CORTEX_CM3**: `TODO`
 - **ARCH_ARM_CORTEX_CM4**: `GD32F307VET6`
-- **ARCH_ARM_CORTEX_CM23**: `TODO`
 - **ARCH_ARM_CORTEX_CM33**: `TODO`
 
-There is planned support for the ARM Cortex M3 and M23 architectures though no chips are currently supported in my hand, If you perform it in your system, I'll thanks for your PRs to update the chip that verified into lists.
+There is planned support for the ARM Cortex remaining architectures though no chips are currently supported in my hand, If you perform it in your system, I'll thanks for your PRs to update the chip that verified into lists.
 
 ## Supported IDE and Compiler
 
@@ -55,36 +53,34 @@ At-RTOS
 │   │       └── cmsis
 │   │          └── include
 │   │              └── *.h
-│   ├── arch.h
-│   └── CMakeLists.txt
 ├── clock
-│   ├── include
-│   │   └── clock_tick.h
 │   ├── clock_systick.c
 │   └── CMakeLists.txt
 ├── port
-│   ├── include
-│   │   └── port.h
+│   ├── port.c
 │   ├── port_keil.c
+│   ├── port_iar.s
 │   └── CMakeLists.txt
 ├── include
-│   ├── atos_configuration.h
-│   └── CMakeLists.txt
-├── kernal
-│   ├── include
+│   ├── kernal
 │   │   ├── at_rtos.h
 │   │   └── *.h
+│   ├── arch.h
+│   ├── port.h
+│   ├── clock_tick.h
+│   └── CMakeLists.txt
+├── kernal
 │   ├── kernal.c
 │   ├── *.c
 │   └── CMakeLists.txt
-├── kernal_version.c
+├── kernal_version.h
 └── CMakeLists.txt
 ```
 
 - **arch :** This folder was used to store all the chip architectures supported by the current At-RTOS.
 - **clock :** It was implemented for At-RTOS kernal system tick to support system timers.
 - **port :** It's used to support different compiler such as KEIL, IAR and GCC.
-- **include :** It used to contain the At-RTOS kernal header file such as the At-RTOS user configurations.
+- **include :** It used to contain the At-RTOS kernal header files, Moreover it contained the portable arch, clock and port header files.
 - **kernal :** This folder was implemented for the At-RTOS kernal files.
 
 ## ARM Cortex M Seiral Architecture
@@ -108,6 +104,7 @@ At-RTOS ported a template At-RTOS configuration header file `<root_path>/include
 ```c
 /**
  * If you are use ARM Cortex M seiral architecture, the Cortex-M Core architecture must be declared as the following list.
+ * ARCH_NATIVE_GCC
  * ARCH_ARM_CORTEX_CM0
  * ARCH_ARM_CORTEX_CM0plus
  * ARCH_ARM_CORTEX_CM3

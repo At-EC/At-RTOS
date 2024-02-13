@@ -5,23 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#ifndef _KERNAL_THREAD_H_
-#define _KERNAL_THREAD_H_
+#ifndef _COMPILER_H_
+#define _COMPILER_H_
 
-#include "arch.h"
-#include "type.h"
+#include "configuration.h"
+
+#if !defined ARCH_NATIVE_GCC
+    #include "../arch/arch32/arm/cmsis/include/cmsis_compiler.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void  _impl_kernal_thread_message_notification(void);
-u32_t _impl_kernal_thread_message_arrived(void);
-void  _impl_kernal_thread_init(void);
+/* TODO */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _KERNAL_THREAD_H_ */
-
+#endif /* _COMPILER_H_ */
