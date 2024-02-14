@@ -4,16 +4,15 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "clock_tick.h"
 #include "kernal.h"
 #include "basic.h"
 #include "compiler.h"
 #include "port.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief ARM core systick interrupt handle function.
@@ -91,7 +90,7 @@ void _impl_port_interrupt_init(void)
 u32_t _impl_port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
 {
     _memset((uchar_t*)pAddress, STACT_UNUSED_DATA, size);
-    
+
     u32_t psp_frame = (u32_t)pAddress + size - sizeof(stack_snapshot_t);
 
     psp_frame = STACK_ADDRESS_DOWN(psp_frame);

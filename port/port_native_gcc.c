@@ -98,6 +98,20 @@ void _impl_port_run_theFirstThread(u32_t sp)
     /* TODO */
 }
 
+/**
+ * @brief Initialize a thread stack frame.
+ *
+ * @param pEntryFunction The entry function pointer.
+ * @param pAddress The stack address.
+ * @param size The stack size.
+ *
+ * @return The PSP stack address.
+ */
+u32_t _impl_port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
+{
+    /* TODO */
+}
+
 #ifdef __cplusplus
 }
 #endif

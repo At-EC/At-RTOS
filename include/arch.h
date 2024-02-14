@@ -28,10 +28,10 @@ typedef enum IRQn {
     SysTick_IRQn = -1,           /*!< 15 Cortex-Mx System Tick Interrupt               */
 } IRQn_Type;
 
-#if ( (defined ( __CC_ARM ) && defined ( __TARGET_FPU_VFP ))                      \
-   || (defined ( __CLANG_ARM ) && defined ( __VFP_FP__ ) && !defined(__SOFTFP__)) \
-   || (defined ( __ICCARM__ ) && defined ( __ARMVFP__ ))                          \
-   || (defined ( __GNUC__ ) && defined ( __VFP_FP__ ) && !defined(__SOFTFP__)) )
+#if ( (defined ( __CC_ARM ) && defined ( __TARGET_FPU_VFP ))                         \
+      || (defined ( __CLANG_ARM ) && defined ( __VFP_FP__ ) && !defined(__SOFTFP__)) \
+      || (defined ( __ICCARM__ ) && defined ( __ARMVFP__ ))                          \
+      || (defined ( __GNUC__ ) && defined ( __VFP_FP__ ) && !defined(__SOFTFP__)) )
     #define __FPU_PRESENT   1
 #else
     #define __FPU_PRESENT   0
