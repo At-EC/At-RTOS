@@ -1,4 +1,4 @@
-# [At-RTOS](https://github.com/At-EC/At-RTOS) &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/At-EC/At-RTOS/blob/main/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/At-EC/At-RTOS/tree/main/.github/Welcome_PRs.md) <a href="https://github.com/At-EC/At-RTOS/actions"><img alt="Build" src="https://github.com/At-EC/At-RTOS/workflows/Build/badge.svg"></a> <a href="https://github.com/At-EC/At-RTOS/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/At-EC/At-RTOS?color=success"></a> <a href="https://github.com/At-EC/At-RTOS/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/At-EC/At-RTOS"></a>
+# [At-RTOS](https://github.com/At-EC/At-RTOS) &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/At-EC/At-RTOS/blob/main/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/At-EC/At-RTOS/tree/main/.github/Welcome_PRs.md) <a href="https://github.com/At-EC/At-RTOS/actions"><img alt="Build" src="https://github.com/At-EC/At-RTOS/workflows/Build/badge.svg"></a> <a href="https://github.com/At-EC/At-RTOS/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/At-EC/At-RTOS?color=success"></a> <a href="https://github.com/At-EC/At-RTOS/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/At-EC/At-RTOS"></a> ![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS)
 
 At-RTOS is a user-friendly embedded controller's real-time operating system designed specifically for the ARM Cortex M seiral architecture.
 
@@ -7,8 +7,19 @@ The goal of the project is to explore and try to provide a lot useful interfaces
 I hope the At-RTOS could be a popular community-based embedded controller's real-time operating system in the future. If this project was useful to you, give it a ⭐️ and I'll keep improving it. moreover, you can share your ideas we can together improve it. Welcome PRs!!! 
 
 <p align="center">
+
 <img src="https://socialify.git.ci/At-EC/At-RTOS/image?description=1&descriptionEditable=At-RTOS%20is%20an%20open%20user-friendly%20real-time%20operating%20system.&font=KoHo&forks=1&issues=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Dark" alt="At-RTOS" width="640" height="320" />
+
 </p>
+
+
+## News
+
+![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS)
+- Welcome to At-RTOS. This production version was released which supports a stable RTOS feature was implemented in the kernal system, Pls enjoy it (:
+
+![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/At-EC/At-RTOS/main)
+- The development version in the main branch was implemented which will support new features, but it maybe contain unknown issues.
 
 ## Introduction
 
@@ -173,10 +184,6 @@ int main(void)
     AtOS.at_rtos_run();
 }
 ```
-
-## What's New
-
-[v1.0.0] Welcome to At-RTOS. v1.0.0 was released now. A basic RTOS feature was implemented in the kernal system, Pls enjoy it (:
 
 ## License
 At-RTOS is [MIT licensed](./LICENSE).
