@@ -28,39 +28,70 @@ typedef enum IRQn {
     SysTick_IRQn = -1,           /*!< 15 Cortex-Mx System Tick Interrupt               */
 } IRQn_Type;
 
-#if defined ARCH_FPU_PRESENT
-    #define __FPU_PRESENT               1
+#if ( (defined ( __CC_ARM ) && defined ( __TARGET_FPU_VFP ))                      \
+   || (defined ( __CLANG_ARM ) && defined ( __VFP_FP__ ) && !defined(__SOFTFP__)) \
+   || (defined ( __ICCARM__ ) && defined ( __ARMVFP__ ))                          \
+   || (defined ( __GNUC__ ) && defined ( __VFP_FP__ ) && !defined(__SOFTFP__)) )
+    #define __FPU_PRESENT   1
+#else
+    #define __FPU_PRESENT   0
 #endif
 
-#ifdef __MPU_PRESENT
+/* Default Setting */
+#if defined ( ARCH_MPU_PRESENT )
     #define __MPU_PRESENT               1
 #endif
 
-#ifndef __NVIC_PRIO_BITS
+#if !defined ( __MPU_PRESENT )
+    #define __MPU_PRESENT               1
+#endif
+
+#if !defined  ( __NVIC_PRIO_BITS )
     #define __NVIC_PRIO_BITS            8
 #endif
 
-#ifndef __FPU_PRESENT
+#if !defined  ( __Vendor_SysTickConfig )
+    #define __Vendor_SysTickConfig      0
+#endif
+
+#if !defined  ( __VTOR_PRESENT )
+    #define __VTOR_PRESENT              1
+#endif
+
+#if !defined  (  __FPU_PRESENT )
     #define __FPU_PRESENT               0
     #undef __FPU_USED
 #endif
 
-#if defined ARCH_ARM_CORTEX_CM0
+#if !defined  (  __DSP_PRESENT )
+    #define __DSP_PRESENT               0
+#endif
+
+#if defined ( ARCH_ARM_CORTEX_CM0 )
     #include "../arch/arch32/arm/cmsis/include/core_cm0.h"
 
-#elif defined ARCH_ARM_CORTEX_CM0plus
+#elif defined ( ARCH_ARM_CORTEX_CM0plus )
     #include "../arch/arch32/arm/cmsis/include/core_cm0plus.h"
 
-#elif defined ARCH_ARM_CORTEX_CM3
+#elif defined ( ARCH_ARM_CORTEX_CM3 )
     #include "../arch/arch32/arm/cmsis/include/core_cm3.h"
 
-#elif defined ARCH_ARM_CORTEX_CM4
+#elif defined ( ARCH_ARM_CORTEX_CM4 )
     #include "../arch/arch32/arm/cmsis/include/core_cm4.h"
 
-#elif defined ARCH_ARM_CORTEX_CM23
+#elif defined ( ARCH_ARM_CORTEX_CM23 )
     #include "../arch/arch32/arm/cmsis/include/core_cm23.h"
 
-#elif defined ARCH_ARM_CORTEX_CM33
+#elif defined ( ARCH_ARM_CORTEX_CM33 )
+    // #define __CM33_REV                0x0000U   /*!< Core revision r0p1 */
+    // #define __SAUREGION_PRESENT       1U        /*!< SAU regions present */
+    // #define __MPU_PRESENT             1U        /*!< MPU present */
+    // #define __VTOR_PRESENT            1U        /*!< VTOR present */
+    // #define __NVIC_PRIO_BITS          4U        /*!< Number of Bits used for Priority Levels */
+    // #define __Vendor_SysTickConfig    0U        /*!< Set to 1 if different SysTick Config is used */
+    // #define __FPU_PRESENT             1U        /*!< FPU present */
+    // #define __DSP_PRESENT             1U        /*!< DSP extension present */
+
     #include "../arch/arch32/arm/cmsis/include/core_cm33.h"
 
 #elif defined ARCH_ARM_CORTEX_CM7

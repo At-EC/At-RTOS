@@ -25,18 +25,6 @@ extern "C" {
 #define ARCH_ARM_CORTEX_CM4
 
 /**
- * If the Cortex-M Core has FPU capabilities, please add the following declaration.
- * #define ARCH_FPU_PRESENT
- **/
-// #define ARCH_FPU_PRESENT
-
-/**
- * If the Cortex-M Core has MPU capabilities, please add the following declaration.
- * #define ARCH_MPU_PRESENT
- **/
-// #define ARCH_MPU_PRESENT
-
-/**
  * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
  * In most cases, PORTAL_SYSTEM_CORE_CLOCK_MHZ must be set to the frequency of the clock
  * that drives the peripheral used to generate the kernels periodic tick interrupt.

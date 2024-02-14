@@ -15,7 +15,12 @@ extern "C" {
 #include "compiler.h"
 #include "port.h"
 
-#if defined ( __CC_ARM )
+#if defined ( __TARGET_FPU_VFP )
+    #define FPU_ENABLED  __TARGET_FPU_VFP
+#else
+    #define FPU_ENABLED  0
+#endif
+
 /**
  * @brief ARM core SVC interrupt handle function.
  */
@@ -62,7 +67,7 @@ __ASM void PendSV_Handler(void)
 
     MRS      R2, PSP                                             /* Get current process stack pointer value */
 
-#if defined FPU_ENABLED                                          /* If the Cortex-M is not supported, the ASM instruction will not support VSTMDBEQ */
+#if ( FPU_ENABLED )                                              /* If the Cortex-M is not supported, the ASM instruction will not support VSTMDBEQ */
     TST      LR, #0x10                                           /* Test bit 4 of EXC_RETURN (0: FPU active on exception entry, 1: FPU not active) */
     IT       EQ                                                  /* if (LR[4] == 0) */
     VSTMDBEQ R2!, {S16 - S31}                                    /* Save floating point registers, EQ suffix will save FPU registers {s16 - S31} */
@@ -72,7 +77,7 @@ __ASM void PendSV_Handler(void)
     STMDB    R2!, {R3 - R11}                                     /* Save CONTROL, {R4 - R11} */
     STMDB    R2!, {LR}                                           /* Save EXC_RETURN in saved context */
 #else
-    STMDB    R2!, {R4 - R11}                                    /* Save {R4 - R11} */
+    STMDB    R2!, {R4 - R11}                                     /* Save {R4 - R11} */
 #endif
 
     /**
@@ -81,7 +86,7 @@ __ASM void PendSV_Handler(void)
     STR      R2, [R0]                                            /* *ppCurPSP = CurPSP */
     LDR      R2, [R1]                                            /* NextPSP = *pNextPSP */
 
-#if defined FPU_ENABLED
+#if ( FPU_ENABLED )
     LDMIA    R2!, {LR}                                           /* restore LR */
     LDMIA    R2!, {R3 - R11}                                     /* restore {R3 - R11} */
 
@@ -117,7 +122,7 @@ __ASM void _impl_port_run_theFirstThread(u32_t sp)
     /**
      * initialize R4-R11 from context frame using passed SP
      */
-#if defined FPU_ENABLED
+#if ( FPU_ENABLED )
     LDMIA   R0!, {R2 - R11}                                     /* Context includes EXC_RETURN and CONTROL {R4 - R11} */
 #else
     LDMIA   R0!, {R4 - R11}                                     /* Context {R4 - R11} */
@@ -137,7 +142,6 @@ __ASM void _impl_port_run_theFirstThread(u32_t sp)
 
     ALIGN 4
 }
-#endif
 
 #ifdef __cplusplus
 }

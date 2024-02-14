@@ -79,6 +79,7 @@ extern "C" {
 #endif
 
 #if !defined __CC_ARM &&  \
+    !defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050) && \
     !defined __ICCARM__ &&  \
     !defined __GUNC__ &&  \
     !defined __TMS470__ &&  \

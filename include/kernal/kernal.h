@@ -17,15 +17,6 @@
 extern "C" {
 #endif
 
-/**
- * Define this to support Floating Point Unit available in Cortex-M4/M7
- */
-#if (__FPU_PRESENT)
-    #define FPU_ENABLED
-#else
-    #undef FPU_ENABLED
-#endif
-
 enum {
     KERNAL_SCHEDULE_THREAD_INSTANCE = (0u),
     KERNAL_IDLE_THREAD_INSTANCE,

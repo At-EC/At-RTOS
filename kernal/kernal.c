@@ -482,6 +482,20 @@ u8_t _impl_kernal_member_unified_id_toId(u32_t unified_id)
 }
 
 /**
+ * @brief Initialize a thread stack frame.
+ *
+ * @param pEntryFunction The entry function pointer.
+ * @param pAddress The stack address.
+ * @param size The stack size.
+ *
+ * @return The PSP stack address.
+ */
+u32_t _impl_kernal_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
+{
+    return (u32_t)_impl_port_stack_frame_init(pEntryFunction, pAddress, size);
+}
+
+/**
  * @brief Get the kernal thread pending list head.
  *
  * @return The pending list head.
@@ -509,66 +523,6 @@ os_id_t _impl_kernal_thread_runIdGet(void)
 void* _impl_kernal_thread_runContextGet(void)
 {
     return (void*)_impl_kernal_member_unified_id_toContainerAddress(_impl_kernal_thread_runIdGet());
-}
-
-/**
- * @brief Initialize a thread stack frame.
- *
- * @param pEntryFunction The entry function pointer.
- * @param pAddress The stack address.
- * @param size The stack size.
- *
- * @return The PSP stack address.
- */
-u32_t _impl_kernal_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
-{
-    _memset((uchar_t*)pAddress, STACT_UNUSED_DATA, size);
-
-    u32_t psp_frame = (u32_t)pAddress + size - sizeof(stack_snapshot_t);
-
-    psp_frame = STACK_ADDRESS_DOWN(psp_frame);
-
-    ((stack_snapshot_t *)psp_frame)->xPSR   = SBIT(24);              /* xPSR */
-    ((stack_snapshot_t *)psp_frame)->R15_PC = (u32_t)pEntryFunction;    /* PC   */
-    ((stack_snapshot_t *)psp_frame)->R14_LR = 0xFFFFFFFDu;              /* LR   */
-
-    ((stack_snapshot_t *)psp_frame)->R12    = 0x12121212u;              /* R12  */
-    ((stack_snapshot_t *)psp_frame)->R3     = 0x03030303u;              /* R3   */
-    ((stack_snapshot_t *)psp_frame)->R2     = 0x02020202u;              /* R2   */
-    ((stack_snapshot_t *)psp_frame)->R1     = 0x01010101u;              /* R1   */
-    ((stack_snapshot_t *)psp_frame)->R0     = 0x0B0B0B0Bu;              /* R0   */
-
-#if defined ARCH_ARM_CORTEX_CM0
-    ((stack_snapshot_t *)psp_frame)->cm0.R11    = 0x11111111u;              /* R11  */
-    ((stack_snapshot_t *)psp_frame)->cm0.R10    = 0x10101010u;              /* R10  */
-    ((stack_snapshot_t *)psp_frame)->cm0.R9     = 0x09090909u;              /* R9   */
-    ((stack_snapshot_t *)psp_frame)->cm0.R8     = 0x08080808u;              /* R8   */
-    ((stack_snapshot_t *)psp_frame)->cm0.R7     = 0x07070707u;              /* R7   */
-    ((stack_snapshot_t *)psp_frame)->cm0.R6     = 0x06060606u;              /* R6   */
-    ((stack_snapshot_t *)psp_frame)->cm0.R5     = 0x05050505u;              /* R5   */
-    ((stack_snapshot_t *)psp_frame)->cm0.R4     = 0x04040404u;              /* R4   */
-#else
-    ((stack_snapshot_t *)psp_frame)->cmx.R11    = 0x11111111u;              /* R11  */
-    ((stack_snapshot_t *)psp_frame)->cmx.R10    = 0x10101010u;              /* R10  */
-    ((stack_snapshot_t *)psp_frame)->cmx.R9     = 0x09090909u;              /* R9   */
-    ((stack_snapshot_t *)psp_frame)->cmx.R8     = 0x08080808u;              /* R8   */
-    ((stack_snapshot_t *)psp_frame)->cmx.R7     = 0x07070707u;              /* R7   */
-    ((stack_snapshot_t *)psp_frame)->cmx.R6     = 0x06060606u;              /* R6   */
-    ((stack_snapshot_t *)psp_frame)->cmx.R5     = 0x05050505u;              /* R5   */
-    ((stack_snapshot_t *)psp_frame)->cmx.R4     = 0x04040404u;              /* R4   */
-#endif
-
-#if defined FPU_ENABLED
-    #if (THREAD_PSP_WITH_PRIVILEGED)
-        ((stack_snapshot_t *)psp_frame)->CONTROL = BIT1;                 /* PSP with privileged */
-    #else
-        ((stack_snapshot_t *)psp_frame)->CONTROL = BIT(1) & BIT(0);      /* PSP with Unprivileged */
-    #endif
-
-    ((stack_snapshot_t *)psp_frame)->EXC_RETURN = 0xFFFFFFFDu;           /* EXC_RETURN */
-#endif
-
-    return (u32_t)psp_frame;
 }
 
 /**

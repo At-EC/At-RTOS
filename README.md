@@ -28,8 +28,8 @@ I hope the At-RTOS could be a popular community-based embedded controller's real
 
 At-RTOS supports many architectures, and has covered the major architectures in current kernal system. It supports the following architectures, and it lists the chip that was verified.
 
-- **ARCH_ARM_CORTEX_CM4**: `GD32F307VET6`
-- **ARCH_ARM_CORTEX_CM33**: `TODO`
+- **ARCH_ARM_CORTEX_CM4**: [GD32F307E-START](https://www.gigadevice.com/product/mcu/arm-cortex-m4/gd32f307vet6)
+- **ARCH_ARM_CORTEX_CM33**: [GD32W515P-EVAL](https://www.gigadevice.com/product/mcu/arm-cortex-m33/gd32w515piq6)
 
 There is planned support for the ARM Cortex remaining architectures though no chips are currently supported in my hand, If you perform it in your system, I'll thanks for your PRs to update the chip that verified into lists.
 
@@ -37,10 +37,12 @@ There is planned support for the ARM Cortex remaining architectures though no ch
 
 The main IDE/compilers supported by At-RTOS are:
 
-- MDK KEIL: `Supported`
-- IAR: `Supported`
-- Native GCC: `Supported`
-- ARM GCC: `TODO`
+- MDK KEIL (AC5): `Supported`
+- MDK KEIL (AC6): `TODO`
+- IAR IDE: `Supported`
+- ARMCLANG: `TODO`
+- Native CMAKE GCC: `Supported`
+- ARM CMAKE GCC: `TODO`
 
 ## Code Structure
 
@@ -114,18 +116,6 @@ At-RTOS ported a template At-RTOS configuration header file `<root_path>/include
  * ARCH_ARM_CORTEX_CM7
  **/
 #define ARCH_ARM_CORTEX_CM4
-
-/**
- * If the Cortex-M Core has FPU capabilities, please add the following declaration.
- * #define ARCH_FPU_PRESENT
- **/
-#define ARCH_FPU_PRESENT
-
-/**
- * If the Cortex-M Core has MPU capabilities, please add the following declaration.
- * #define ARCH_MPU_PRESENT
- **/
-#define ARCH_MPU_PRESENT
 
 /**
  * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.

@@ -1,3 +1,9 @@
+        #if defined ( __ARMVFP__ )
+            #define FPU_ENABLED  __ARMVFP__
+        #else
+            #define FPU_ENABLED  0
+        #endif
+        
         SECTION .text : CODE
         
         EXTERN _impl_kernal_privilege_call_inSVC_c
@@ -10,7 +16,7 @@
 ; ARM core trigger the first thread to run.
 _impl_port_run_theFirstThread:
 
-#if defined ( FPU_ENABLED )
+#if ( FPU_ENABLED )
         LDMIA   R0!, {R2 - R11}                                      ; Context includes EXC_RETURN and CONTROL {R4 - R11}
 #else
         LDMIA   R0!, {R4 - R11}                                      ; Context {R4 - R11}
@@ -46,7 +52,7 @@ PendSV_Handler:
 
         MRS      R2, PSP                                             ; Get current process stack pointer value */
 
-#if defined ( FPU_ENABLED )                                          ; If the Cortex-M is not supported, the ASM instruction will not support VSTMDBEQ 
+#if ( FPU_ENABLED )                                          ; If the Cortex-M is not supported, the ASM instruction will not support VSTMDBEQ 
         TST      LR, #0x10                                           ; Test bit 4 of EXC_RETURN (0: FPU active on exception entry, 1: FPU not active)
         IT       EQ                                                  ; if (LR[4] == 0) */
         VSTMDBEQ R2!, {S16 - S31}                                    ; Save floating point registers, EQ suffix will save FPU registers {s16 - S31}
@@ -62,7 +68,7 @@ PendSV_Handler:
         STR      R2, [R0]                                            ; *ppCurPSP = CurPSP
         LDR      R2, [R1]                                            ; NextPSP = *pNextPSP
 
-#if defined FPU_ENABLED
+#if ( FPU_ENABLED )
         LDMIA    R2!, {LR}                                           ; restore LR
         LDMIA    R2!, {R3 - R11}                                     ; restore {R3 - R11}
 

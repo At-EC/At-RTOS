@@ -21,6 +21,8 @@ extern "C" {
 #if defined (__CC_ARM)
     #pragma push
     #pragma anon_unions
+#elif (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+    /* anonymous unions are enabled by default */
 #elif defined (__ICCARM__)
     #pragma language=extended
 #elif defined (__GUNC__)
@@ -306,30 +308,6 @@ typedef struct
     u32_t R7;
 }cm0_t;
 
-typedef struct
-{
-#if defined FPU_ENABLED
-    u32_t EXC_RETURN;   /* LR */
-    u32_t CONTROL;      /* CONTROL */
-#endif
-
-    union
-    {
-        cmx_t cmx;
-        cm0_t cm0;
-    };
-
-    u32_t R0;            /* N-32 */
-    u32_t R1;            /* N-28 */
-    u32_t R2;            /* N-24 */
-    u32_t R3;            /* N-20 */
-    u32_t R12;           /* N-16 */
-
-    u32_t R14_LR;        /* N-12. Link Register */
-    u32_t R15_PC;        /* N-8. Program Counter */
-    u32_t xPSR;          /* N-4. Program status register */
-} stack_snapshot_t;
-
 /**
  * Data structure for svc call function arguments
  */
@@ -365,6 +343,8 @@ typedef struct
 /* End of section using anonymous unions */
 #if defined (__CC_ARM)
     #pragma pop
+#elif (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+    /* anonymous unions are enabled by default */
 #elif defined (__ICCARM__)
         /* leave anonymous unions enabled */
 #elif defined (__GUNC__)
