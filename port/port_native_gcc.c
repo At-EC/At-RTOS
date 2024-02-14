@@ -18,7 +18,7 @@ extern "C" {
 /**
  * @brief ARM core trigger the svc call interrupt.
  */
-u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3)
+u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
 {
     /* TODO */
 }

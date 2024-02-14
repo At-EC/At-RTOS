@@ -38,9 +38,9 @@ There is planned support for the ARM Cortex remaining architectures though no ch
 The main IDE/compilers supported by At-RTOS are:
 
 - MDK KEIL (AC5): `Supported`
-- MDK KEIL (AC6): `TODO`
+- MDK KEIL (AC6): `Supported`
 - IAR IDE: `Supported`
-- ARMCLANG: `TODO`
+- ARMCLANG: `Supported`
 - Native CMAKE GCC: `Supported`
 - ARM CMAKE GCC: `TODO`
 

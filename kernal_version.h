@@ -12,11 +12,11 @@
 extern "C" {
 #endif
 
-#define ATOS_BUILD_TIME                             "2024-02-14,14:50"
-#define ATOS_COMMIT_HEAD_ID                         "179c6827d34e76fca225897333fb74e86b6918e8"
+#define ATOS_BUILD_TIME                             "2024-02-14,20:22"
+#define ATOS_COMMIT_HEAD_ID                         "229946ac0a5ba4d96ce7f5d5115a5c39d4bec342"
 #define ATOS_VERSION_MAJOR_NUMBER                   (0u)
 #define ATOS_VERSION_MINOR_NUMBER                   (3u)
-#define ATOS_VERSION_PATCH_NUMBER                   (3u)
+#define ATOS_VERSION_PATCH_NUMBER                   (4u)
 
 #define ATOS_VERSION_MAJOR_NUMBER_MASK              (0x03FFu)
 #define ATOS_VERSION_MAJOR_NUMBER_POS               (22u)

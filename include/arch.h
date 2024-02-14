@@ -58,14 +58,7 @@ typedef enum IRQn {
     #define __VTOR_PRESENT              1
 #endif
 
-#if !defined  (  __FPU_PRESENT )
-    #define __FPU_PRESENT               0
-    #undef __FPU_USED
-#endif
-
-#if !defined  (  __DSP_PRESENT )
-    #define __DSP_PRESENT               0
-#endif
+#define __DSP_PRESENT                   1
 
 #if defined ( ARCH_ARM_CORTEX_CM0 )
     #include "../arch/arch32/arm/cmsis/include/core_cm0.h"

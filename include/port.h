@@ -73,19 +73,19 @@ typedef struct
 } stack_snapshot_t;
 
 /* End of section using anonymous unions */
-#if defined (__CC_ARM)
+#if defined ( __CC_ARM )
     #pragma pop
-#elif (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+#elif ( __ARMCC_VERSION ) && ( __ARMCC_VERSION >= 6010050 )
     /* anonymous unions are enabled by default */
-#elif defined (__ICCARM__)
+#elif defined ( __ICCARM__ )
         /* leave anonymous unions enabled */
-#elif defined (__GUNC__)
+#elif defined ( __GUNC__ )
         /* anonymous unions are enabled by default */
-#elif defined (__TMS470__)
+#elif defined ( __TMS470__ )
         /* anonymous unions are enabled by default */
-#elif defined (__TASKING__)
+#elif defined ( __TASKING__ )
     #pragma warning restore
-#elif defined (ARCH_NATIVE_GCC)
+#elif defined ( ARCH_NATIVE_GCC )
     /* Nothing to do */
 #else
     #warning Not supported compiler type
@@ -94,26 +94,45 @@ typedef struct
 /**
  * Define the common svc call function interface.
  */
-#if defined (__CC_ARM)
-    __svc(SVC_KERNAL_INVOKE_NUMBER) u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
+#if defined ( __CC_ARM )
+    __svc(SVC_KERNAL_INVOKE_NUMBER) u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
     __ASM void _impl_port_run_theFirstThread(u32_t sp);
-#elif (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+    
+#elif ( __ARMCC_VERSION ) && ( __ARMCC_VERSION >= 6010050 )
+    static inline u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
+    {
+        register u32_t r0 __asm__("r0") = args_0;
+        register u32_t r1 __asm__("r1") = args_1;
+        register u32_t r2 __asm__("r2") = args_2;
+        register u32_t r3 __asm__("r3") = args_3;
+        
+        __asm__ __volatile__("svc %0" ::"i"(SVC_KERNAL_INVOKE_NUMBER), "r"(r0), "r"(r1), "r"(r2), "r"(r3)
+                             : "memory");
+        /* return a operation result from the specific register r0 */
+        u32_t ret;
+        __asm__ volatile("mov %0, r0" : "=r"(ret));
+        return ret;
+    } 
+    void _impl_port_run_theFirstThread(u32_t sp);
+    
+#elif defined ( __ICCARM__ )
     #pragma swi_number = SVC_KERNAL_INVOKE_NUMBER
-    __swi u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
+    __swi u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
     void _impl_port_run_theFirstThread(u32_t sp);
-#elif defined (__ICCARM__)
-    #pragma swi_number = SVC_KERNAL_INVOKE_NUMBER
-    __swi u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
+    
+#elif defined ( __GUNC__ )
+    /* TODO */
+    
+#elif defined ( __TMS470__ )
+    /* TODO */
+    
+#elif defined ( __TASKING__ )
+    /* TODO */
+    
+#elif defined ( ARCH_NATIVE_GCC )
+    u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
     void _impl_port_run_theFirstThread(u32_t sp);
-#elif defined (__GUNC__)
-    /* TODO */
-#elif defined (__TMS470__)
-    /* TODO */
-#elif defined (__TASKING__)
-    /* TODO */
-#elif defined (ARCH_NATIVE_GCC)
-    u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t arg_3);
-    void _impl_port_run_theFirstThread(u32_t sp);
+    
 #else
     #warning Not supported compiler type
 #endif

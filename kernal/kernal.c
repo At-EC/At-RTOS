@@ -242,7 +242,7 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
 
     EXIT_CRITICAL_SECTION();
 
-    _impl_port_run_theFirstThread(*_kernal_thread_PSP_Get(g_kernal_resource.current));
+    _impl_port_run_theFirstThread(*(_kernal_thread_PSP_Get(g_kernal_resource.current)));
 
     // nothing arrive
     return _PC_CMPT_FAILED;
@@ -471,9 +471,8 @@ u8_t _impl_kernal_member_unified_id_toId(u32_t unified_id)
 {
     u8_t member_id = KERNAL_MEMBER_THREAD;
 
-    while((member_id < KERNAL_MEMBER_NUMBER) &&
-           (unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) ||
-           (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id)))
+    while((member_id < KERNAL_MEMBER_NUMBER) && 
+          ((unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) || (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id))))
     {
         member_id++;
     }
