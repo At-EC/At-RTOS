@@ -1,4 +1,6 @@
 {
-  "name": "At-RTOS",
-  "version": "0.3.5"
+    "name":  "At-RTOS",
+    "version":  "0.3.6",
+    "timestamp":  "2024-02-15,11:24",
+    "commit_id":  "b8344c54828813787ac4cafa0a177ff7c0741797"
 }

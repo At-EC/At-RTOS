@@ -34,6 +34,7 @@ extern "C" {
 #endif'
 
 $TargetFile = 'kernal_version.h'
+$PackageFile = 'package.json'
 
 <#
 .PARAMETER Environment
@@ -154,4 +155,14 @@ function BuildScript
 	
 	$FirmwareRelease = $Major + "." + $Minor + "." + $Patch
 	Write-Host $FirmwareRelease
+	
+	$packageContent = Get-Content -Raw  -Path $PackageFile | ConvertFrom-Json
+	
+	$packageContent.version = $FirmwareRelease
+	$packageContent.timestamp = $timestamp
+	$packageContent.commit_id = $ReadCommitId
+	
+	$packageString = $packageContent | ConvertTo-Json -Depth 10
+	
+	$packageString | Set-Content -Path $PackageFile
 }
