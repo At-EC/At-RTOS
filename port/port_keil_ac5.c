@@ -15,8 +15,8 @@ extern "C" {
 #include "compiler.h"
 #include "port.h"
 
-#if defined ( __TARGET_FPU_VFP )
-    #define FPU_ENABLED  __TARGET_FPU_VFP
+#if defined ( __FPU_PRESENT )
+    #define FPU_ENABLED  __FPU_PRESENT
 #else
     #define FPU_ENABLED  0
 #endif

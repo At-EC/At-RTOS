@@ -22,7 +22,37 @@ extern "C" {
  * ARCH_ARM_CORTEX_CM33
  * ARCH_ARM_CORTEX_CM7
  **/
-#define ARCH_ARM_CORTEX_CM4
+#define ARCH_ARM_CORTEX_CM33
+
+/* Configuration of the Cortex-M Processor and Core Peripherals.
+ * You should check the chip header file or datasheet to check the following declaration symbol that support ARM Cortex-M Processor and Core Peripherals, and put it here. 
+ * It looks like this.
+ *
+ * #define __SAUREGION_PRESENT                          (1u) // SAU regions present
+ * #define __MPU_PRESENT                                (1u) // MPU present
+ * #define __VTOR_PRESENT                               (1u) // VTOR present
+ * #define __NVIC_PRIO_BITS                             (4u) // Number of Bits used for Priority Levels
+ * #define __Vendor_SysTickConfig                       (0u) // Set to 1 if different SysTick Config is used
+ * #define __FPU_PRESENT                                (1u) // FPU present
+ * #define __DSP_PRESENT                                (1u) // DSP extension present
+ *
+ * Or you can manually defined it according to your using ARM Cortex M seiral chip here with the following declaration symbol.
+ *
+ * #define ARCH_SAUREGION_PRESENT                        (1u) // SAU regions present
+ * #define ARCH_MPU_PRESENT                              (1u) // MPU present
+ * #define ARCH_VTOR_PRESENT                             (1u) // VTOR present
+ * #define ARCH_NVIC_PRIO_BITS                           (4u) // Number of Bits used for Priority Levels
+ * #define ARCH_Vendor_SysTickConfig                     (0u) // Set to 1 if different SysTick Config is used
+ * #define ARCH_FPU_PRESENT                              (1u) // FPU present
+ * #define ARCH_DSP_PRESENT                              (1u) // DSP extension present
+ */
+#define ARCH_SAUREGION_PRESENT                        (1u) // SAU regions present
+#define ARCH_MPU_PRESENT                              (1u) // MPU present
+#define ARCH_VTOR_PRESENT                             (1u) // VTOR present
+#define ARCH_NVIC_PRIO_BITS                           (4u) // Number of Bits used for Priority Levels
+#define ARCH_Vendor_SysTickConfig                     (0u) // Set to 1 if different SysTick Config is used
+#define ARCH_FPU_PRESENT                              (1u) // FPU present
+#define ARCH_DSP_PRESENT                              (1u) // DSP extension present
 
 /**
  * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
@@ -31,7 +61,7 @@ extern "C" {
  * The default value is set to 120mhz. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, equal to the main system clock frequency.
  **/
-#define PORTAL_SYSTEM_CORE_CLOCK_MHZ              (120u)
+#define PORTAL_SYSTEM_CORE_CLOCK_MHZ              (180u)
 
 /**
  * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
@@ -46,49 +76,49 @@ extern "C" {
  * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual thread instance number that you created.
  **/
-#define THREAD_INSTANCE_SUPPORTED_NUMBER          (3u)
+#define THREAD_INSTANCE_SUPPORTED_NUMBER          (20u)
 
 /**
  * This symbol defined the semaphore instance number that your application is using.
  * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual semaphore instance number that you created.
  **/
-#define SEMAPHORE_INSTANCE_SUPPORTED_NUMBER       (3u)
+#define SEMAPHORE_INSTANCE_SUPPORTED_NUMBER       (10u)
 
 /**
  * This symbol defined the event instance number that your application is using.
  * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual event instance number that you created.
  **/
-#define EVENT_INSTANCE_SUPPORTED_NUMBER           (3u)
+#define EVENT_INSTANCE_SUPPORTED_NUMBER           (10u)
 
 /**
  * This symbol defined the mutex instance number that your application is using.
  * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual mutex instance number that you created.
  **/
-#define MUTEX_INSTANCE_SUPPORTED_NUMBER           (3u)
+#define MUTEX_INSTANCE_SUPPORTED_NUMBER           (10u)
 
 /**
  * This symbol defined the queue instance number that your application is using.
  * The defaule value is set to 5. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual queue instance number that you created.
  **/
-#define QUEUE_INSTANCE_SUPPORTED_NUMBER           (3u)
+#define QUEUE_INSTANCE_SUPPORTED_NUMBER           (10u)
 
 /**
  * This symbol defined the timer instance number that your application is using.
  * The defaule value is set to 5. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual timer instance number that you created.
  **/
-#define TIMER_INSTANCE_SUPPORTED_NUMBER           (3u)
+#define TIMER_INSTANCE_SUPPORTED_NUMBER           (10u)
 
 /**
  * This symbol defined your thread running mode, if the thread runs at the privileged mode.
  * The defaule value is set to 0. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the security level that you want.
  **/
-#define THREAD_PSP_WITH_PRIVILEGED                (3u)
+#define THREAD_PSP_WITH_PRIVILEGED                (10u)
 
 #ifdef __cplusplus
 }
