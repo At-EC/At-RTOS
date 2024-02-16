@@ -78,8 +78,9 @@ extern "C" {
     #define KERNAL_THREAD_STACK_SIZE                  (1024u)
 #endif
 
-/* Configuration of the Cortex-M Processor and Core Peripherals.
- * You should check the chip header file or datasheet to check the following declaration symbol that support ARM Cortex-M Processor and Core Peripherals, and put it here. 
+/**
+ * Configuration of the Cortex-M Processor and Core Peripherals.
+ * You should check the chip header file or datasheet to check the following declaration symbol that support ARM Cortex-M Processor and Core Peripherals, and put it here.
  * It looks like this.
  *
  * #define __SAUREGION_PRESENT                          (1u) // SAU regions present
@@ -101,17 +102,24 @@ extern "C" {
  * #define ARCH_DSP_PRESENT                              (1u) // DSP extension present
  *
  * There is no default setting, which must be set in the atos_configuration.h file.
- */
+**/
 
-#if !defined __CC_ARM &&  \
+#if !defined __CC_ARM &&                                          \
     !defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050) && \
-    !defined __ICCARM__ &&  \
-    !defined __GUNC__ &&  \
-    !defined __TMS470__ &&  \
-    !defined __TASKING__ &&  \
+    !defined __ICCARM__ &&                                        \
+    !defined __GUNC__ &&                                          \
+    !defined __TMS470__ &&                                        \
+    !defined __TASKING__ &&                                       \
     !defined ARCH_NATIVE_GCC
 
     #warning Not supported compiler type
+#endif
+
+/**
+ * It defined the extern AtOS symbol word to specify the OS API interface for convenience use.
+**/
+#ifndef OS_INTERFACE_EXTERN_USE_ENABLE
+    #define OS_INTERFACE_EXTERN_USE_ENABLE              (ENABLED)
 #endif
 
 #ifdef __cplusplus

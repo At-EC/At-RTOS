@@ -734,43 +734,45 @@ static inline u32p_t kernal_atos_run(void)
     return _impl_kernal_at_rtos_run();
 }
 
-typedef struct
-{
-    os_thread_id_t (*thread_init)(os_thread_symbol_t*, pThread_entryFunc_t);
-    u32p_t         (*thread_sleep)(u32_t);
-    u32p_t         (*thread_resume)(os_thread_id_t);
-    u32p_t         (*thread_suspend)(os_thread_id_t);
-    u32p_t         (*thread_yield)(void);
-    u32p_t         (*thread_delete)(os_thread_id_t);
+#if ( OS_INTERFACE_EXTERN_USE_ENABLE )
+    typedef struct
+    {
+        os_thread_id_t (*thread_init)(os_thread_symbol_t*, pThread_entryFunc_t);
+        u32p_t         (*thread_sleep)(u32_t);
+        u32p_t         (*thread_resume)(os_thread_id_t);
+        u32p_t         (*thread_suspend)(os_thread_id_t);
+        u32p_t         (*thread_yield)(void);
+        u32p_t         (*thread_delete)(os_thread_id_t);
 
-    os_timer_id_t  (*timer_init)(pTimer_callbackFunc_t, b_t, u32_t, const char_t *);
-    u32p_t         (*timer_start)(os_timer_id_t, b_t, u32_t);
-    u32p_t         (*timer_stop)(os_timer_id_t);
-    u32p_t         (*timer_isBusy)(os_timer_id_t);
-    u32_t          (*timer_system_total_ms)(void);
+        os_timer_id_t  (*timer_init)(pTimer_callbackFunc_t, b_t, u32_t, const char_t *);
+        u32p_t         (*timer_start)(os_timer_id_t, b_t, u32_t);
+        u32p_t         (*timer_stop)(os_timer_id_t);
+        u32p_t         (*timer_isBusy)(os_timer_id_t);
+        u32_t          (*timer_system_total_ms)(void);
 
-    os_sem_id_t    (*sem_init)(u8_t, u8_t, const char_t *);
-    u32p_t         (*sem_take)(os_sem_id_t, u32_t);
-    u32p_t         (*sem_give)(os_sem_id_t);
-    u32p_t         (*sem_flush)(os_sem_id_t);
+        os_sem_id_t    (*sem_init)(u8_t, u8_t, const char_t *);
+        u32p_t         (*sem_take)(os_sem_id_t, u32_t);
+        u32p_t         (*sem_give)(os_sem_id_t);
+        u32p_t         (*sem_flush)(os_sem_id_t);
 
-    os_mutex_id_t (*mutex_init)(const char_t *);
-    u32p_t        (*mutex_lock)(os_mutex_id_t);
-    u32p_t        (*mutex_unlock)(os_mutex_id_t);
+        os_mutex_id_t (*mutex_init)(const char_t *);
+        u32p_t        (*mutex_lock)(os_mutex_id_t);
+        u32p_t        (*mutex_unlock)(os_mutex_id_t);
 
-    os_evt_id_t   (*evt_init)(u32_t, pEvent_callbackFunc_t, const char_t *);
-    u32p_t        (*evt_set)(os_evt_id_t, u32_t);
-    u32p_t        (*evt_wait)(os_evt_id_t, u32_t *, u32_t, u32_t, u32_t);
+        os_evt_id_t   (*evt_init)(u32_t, pEvent_callbackFunc_t, const char_t *);
+        u32p_t        (*evt_set)(os_evt_id_t, u32_t);
+        u32p_t        (*evt_wait)(os_evt_id_t, u32_t *, u32_t, u32_t, u32_t);
 
-    os_msgq_id_t  (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
-    u32p_t        (*msgq_send)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
-    u32p_t        (*msgq_receive)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
+        os_msgq_id_t  (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
+        u32p_t        (*msgq_send)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
+        u32p_t        (*msgq_receive)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
 
-    b_t           (*id_isInvalid)(struct os_id);
-    u32p_t        (*at_rtos_run)(void);
-}at_rtos_api_t;
+        b_t           (*id_isInvalid)(struct os_id);
+        u32p_t        (*at_rtos_run)(void);
+    }at_rtos_api_t;
 
-extern const at_rtos_api_t AtOS;
+    extern const at_rtos_api_t AtOS;
+#endif
 
 #ifdef __cplusplus
 }

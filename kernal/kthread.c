@@ -22,41 +22,43 @@ static u32_t _kernal_idle[((u32_t)(KERNAL_IDLE_THREAD_STACK_SIZE) / sizeof(u32_t
 /**
  * Global At_RTOS application interface init.
  */
-const at_rtos_api_t AtOS =
-{
-    .thread_init = thread_init,
-    .thread_sleep = thread_sleep,
-    .thread_resume = thread_resume,
-    .thread_suspend = thread_suspend,
-    .thread_yield = thread_yield,
-    .thread_delete = thread_delete,
+#if ( OS_INTERFACE_EXTERN_USE_ENABLE )
+    const at_rtos_api_t AtOS =
+    {
+        .thread_init = thread_init,
+        .thread_sleep = thread_sleep,
+        .thread_resume = thread_resume,
+        .thread_suspend = thread_suspend,
+        .thread_yield = thread_yield,
+        .thread_delete = thread_delete,
 
-    .timer_init = timer_init,
-    .timer_start = timer_start,
-    .timer_stop = timer_stop,
-    .timer_isBusy = timer_isBusy,
-    .timer_system_total_ms = timer_system_total_ms,
+        .timer_init = timer_init,
+        .timer_start = timer_start,
+        .timer_stop = timer_stop,
+        .timer_isBusy = timer_isBusy,
+        .timer_system_total_ms = timer_system_total_ms,
 
-    .sem_init = sem_init,
-    .sem_take = sem_take,
-    .sem_give = sem_give,
-    .sem_flush = sem_flush,
+        .sem_init = sem_init,
+        .sem_take = sem_take,
+        .sem_give = sem_give,
+        .sem_flush = sem_flush,
 
-    .mutex_init = mutex_init,
-    .mutex_lock = mutex_lock,
-    .mutex_unlock = mutex_unlock,
+        .mutex_init = mutex_init,
+        .mutex_lock = mutex_lock,
+        .mutex_unlock = mutex_unlock,
 
-    .evt_init = evt_init,
-    .evt_set = evt_set,
-    .evt_wait = evt_wait,
+        .evt_init = evt_init,
+        .evt_set = evt_set,
+        .evt_wait = evt_wait,
 
-    .msgq_init = msgq_init,
-    .msgq_send = msgq_send,
-    .msgq_receive = msgq_receive,
+        .msgq_init = msgq_init,
+        .msgq_send = msgq_send,
+        .msgq_receive = msgq_receive,
 
-    .id_isInvalid = os_id_is_invalid,
-    .at_rtos_run = kernal_atos_run,
-};
+        .id_isInvalid = os_id_is_invalid,
+        .at_rtos_run = kernal_atos_run,
+    };
+#endif
 
 /**
  * Data structure for location kernal thread.
