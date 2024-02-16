@@ -77,6 +77,7 @@ u32_t   _impl_kernal_member_unified_id_timerToThread(u32_t unified_id);
 u32_t   _impl_kernal_member_id_unifiedConvert(u8_t member_id, u32_t unified_id);
 b_t     _impl_kernal_os_id_is_invalid(struct os_id id);
 u32p_t  _impl_kernal_at_rtos_run(void);
+b_t     _impl_kernal_rtos_isRun(void);
 
 #ifdef __cplusplus
 }

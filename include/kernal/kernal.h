@@ -78,7 +78,6 @@ list_t* _impl_kernal_list_pendingHeadGet(void);
 u32_t   _impl_kernal_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size);
 b_t     _impl_kernal_isInThreadMode(void);
 u32_t   _impl_kernal_thread_schedule_request(void);
-b_t     _impl_kernal_rtos_isRun(void);
 void    _impl_kernal_message_notification(void);
 void    _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP);
 void    _impl_kernal_privilege_call_inSVC_c(u32_t *svc_args);

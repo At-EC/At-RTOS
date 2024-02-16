@@ -722,6 +722,24 @@ static inline b_t os_id_is_invalid(struct os_id id)
 }
 
 /**
+ * @brief To check if the kernal OS is running.
+ *
+ * return The true indicates the kernal OS is running.
+ **
+ * demo usage:
+ *
+ *     if (os_kernal_is_running())
+ *     {
+ *         printf("At-RTOS kernal is running\n");
+ *     }
+ *     ...
+ */
+static inline b_t os_kernal_is_running(void)
+{
+    return (b_t)(_impl_kernal_rtos_isRun() ? (TRUE) : (FALSE));
+}
+
+/**
  * @brief The kernal OS start to run.
  **
  * demo usage:
@@ -770,6 +788,7 @@ static inline u32p_t kernal_atos_run(void)
 
         b_t           (*id_isInvalid)(struct os_id);
         u32p_t        (*at_rtos_run)(void);
+        b_t           (*kernal_is_running)(void);
     }at_rtos_api_t;
 
     extern const at_rtos_api_t AtOS;

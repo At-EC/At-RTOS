@@ -57,6 +57,7 @@ static u32_t _kernal_idle[((u32_t)(KERNAL_IDLE_THREAD_STACK_SIZE) / sizeof(u32_t
 
         .id_isInvalid = os_id_is_invalid,
         .at_rtos_run = kernal_atos_run,
+        .kernal_is_running = os_kernal_is_running,
     };
 #endif
 
