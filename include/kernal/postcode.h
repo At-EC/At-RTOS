@@ -26,14 +26,23 @@ extern "C" {
 
 
 #define COMPLIER_LINE_NUMBER                __LINE__
-#define PC_LINE_NUMBER_MASK                 (0x3FFFu)
 
-#define PC_SUCCESS(OK_INFO)                 (((OK_INFO) & 0x0Fu) << 28u)
+#define PC_LINE_NUMBER_MASK                 (0x3FFFu)   /* The maximum line number up to 16383 */
+#define PC_LINE_NUMBER_POS                  (0u)
 
-#define PC_FAILED_IO(COMPONENT, ERR_INFO)   (((((COMPONENT) & 0x3FFFu) << 14u)) | ((ERR_INFO) & PC_LINE_NUMBER_MASK))
+#define PC_COMPONENT_NUMBER_MASK            (0x1FFFu)   /* The maximum component number up to 8,191 */
+#define PC_COMPONENT_NUMBER_POS             (14u)
+
+#define PC_PASS_NUMBER_MASK                 (0x1Fu)     /* The maximum pass information number up to 31 */
+#define PC_PASS_NUMBER_POS                  (27u)
+
+#define PC_SUCCESS(OK_INFO)                 (((OK_INFO) & PC_PASS_NUMBER_MASK) << PC_PASS_NUMBER_POS)
+
+#define PC_FAILED_IO(COMPONENT, ERR_INFO)   (((((COMPONENT) & PC_COMPONENT_NUMBER_MASK) << PC_COMPONENT_NUMBER_POS)) | ((ERR_INFO) & PC_LINE_NUMBER_MASK))
 
 #define PC_FAILED(COMPONENT)                PC_FAILED_IO(COMPONENT, COMPLIER_LINE_NUMBER)
 
+/* The following table defined the At-RTOS component number */
 enum
 {
     PC_CMPT_KERNAL = 1u,         /* 1 */
@@ -49,6 +58,10 @@ enum
     POSTCODE_COMPONENT_NUMBER,
 };
 
+/* This declaration is help to allow users define the customization component number in their application system */
+#define POSTCODE_COMPONENT_USER_NUMBER  POSTCODE_COMPONENT_NUMBER
+
+/* The following table defined the At-RTOS pass information number */
 enum
 {
     PC_SC_SUCCESS        = PC_SUCCESS(0u),
@@ -65,8 +78,8 @@ enum
 
 u32p_t _impl_postcode_trace_cmpt_last_failed(u32p_t postcode);
 
-#define PC_FAILED_CODE_MASK                 (0xFFFFFFFu)
-#define PC_TO_CMPT_ID(code)                 (((code) >> 14u) & 0x3FFFu)
+#define PC_FAILED_CODE_MASK                 (0x7FFFFFFu)
+#define PC_TO_CMPT_ID(code)                 (((code) >> PC_COMPONENT_NUMBER_POS) & PC_COMPONENT_NUMBER_MASK)
 
 #define _PC_IOK(code)                       UNFLAG((code) & PC_FAILED_CODE_MASK)
 #define _PC_IER(code)                       FLAG((code) & PC_FAILED_CODE_MASK)
@@ -119,8 +132,8 @@ u32p_t _impl_postcode_trace_cmpt_last_failed(u32p_t postcode);
 #define D_ASSERT_RANGE(val, low, high)          _CHECK_RANGE(val, low, high)
 #define D_ASSERT_BOUND(val, high)               _CHECK_BOUND(val, high)
 
-S_ASSERT((POSTCODE_INFORMATION_SUCCESS_NUMBER <= PC_SUCCESS(0x0Fu)), "Warning: PC_SUCCESS_INFO_NUMBER is higher than 0x0Fu");
-S_ASSERT((POSTCODE_COMPONENT_NUMBER <= 0x3FFFu), "Warning: PC_COMPONENT_NUMBER is higher than 0x3FFFu");
+S_ASSERT((POSTCODE_INFORMATION_SUCCESS_NUMBER <= PC_SUCCESS(PC_PASS_NUMBER_MASK)), "Warning: PC_SUCCESS_INFO_NUMBER is higher than PC_PASS_NUMBER_MASK");
+S_ASSERT((POSTCODE_COMPONENT_NUMBER <= PC_COMPONENT_NUMBER_MASK), "Warning: PC_COMPONENT_NUMBER is higher than PC_COMPONENT_NUMBER_MASK");
 
 #ifdef __cplusplus
 }
