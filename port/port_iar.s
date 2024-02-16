@@ -1,3 +1,9 @@
+; Copyright (c) Riven Zheng (zhengheiot@gmail.com).
+; 
+; This source code is licensed under the MIT license found in the
+; LICENSE file in the root directory of this source tree.
+;
+
         #if defined ( __ARMVFP__ )
             #define FPU_ENABLED  __ARMVFP__
         #else
