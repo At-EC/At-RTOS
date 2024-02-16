@@ -19,8 +19,8 @@ I hope the At-RTOS could be a popular community-based embedded controller's real
 
 | Version Name          | Description                                                                  |
 | ------------- | ------------------------------------------------------------------------------------ |
-| ![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS) | - Welcome to At-RTOS. This production version was released which supports a stable RTOS feature was implemented in the kernal system, Pls enjoy it (: |
-| ![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/At-EC/At-RTOS/main) | - The development version in the main branch was implemented which will support new features, but it maybe contain unknown issues. |
+| ![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS) | Welcome to At-RTOS. This production version was released which supports a stable RTOS feature was implemented in the kernal system, Pls enjoy it (: |
+| ![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/At-EC/At-RTOS/main) | The development version in the main branch was implemented which will support new features, but it probably has unknown issues. |
 
 ## Introduction
 
@@ -197,4 +197,5 @@ The At-RTOS is completely open-source, can be used in commercial applications fo
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */
+**/
+```

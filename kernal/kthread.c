@@ -19,10 +19,10 @@ extern "C" {
 static u32_t _kernal_schedule[((u32_t)(KERNAL_SCHEDULE_THREAD_STACK_SIZE) / sizeof(u32_t))] = {0u};
 static u32_t _kernal_idle[((u32_t)(KERNAL_IDLE_THREAD_STACK_SIZE) / sizeof(u32_t))] = {0u};
 
+/**
+ * Global At_RTOS application interface init.
+ */
 #if ( OS_INTERFACE_EXTERN_USE_ENABLE )
-    /**
-     * Global At_RTOS application interface init.
-     */
     const at_rtos_api_t AtOS =
     {
         .thread_init = thread_init,
@@ -58,6 +58,7 @@ static u32_t _kernal_idle[((u32_t)(KERNAL_IDLE_THREAD_STACK_SIZE) / sizeof(u32_t
         .id_isInvalid = os_id_is_invalid,
         .at_rtos_run = kernal_atos_run,
         .kernal_is_running = os_kernal_is_running,
+        .id_current_thread = os_id_current_thread,
     };
 #endif
 

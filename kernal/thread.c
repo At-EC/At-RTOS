@@ -211,6 +211,30 @@ u32_t _impl_thread_os_id_to_number(os_id_t id)
 }
 
 /**
+ * @brief Get the thread name based on provided unique id.
+ *
+ * @param id Thread unique id.
+ *
+ * @return The name of current thread.
+ */
+const char_t* _impl_thread_name_get(os_id_t id)
+{
+    if (_thread_id_isInvalid(id))
+    {
+        return NULL;
+    }
+
+    if (!_thread_object_isInit(id))
+    {
+        return NULL;
+    }
+
+    thread_context_t *pCurThread = (thread_context_t *)_thread_object_contextGet(id);
+
+    return (const char_t*)((pCurThread) ? (pCurThread->head.pName) : (NULL));
+}
+
+/**
  * @brief Initialize a new thread.
  *
  * @param pEntryFun The thread entry function pointer.

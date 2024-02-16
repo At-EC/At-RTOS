@@ -740,6 +740,27 @@ static inline b_t os_kernal_is_running(void)
 }
 
 /**
+ * @brief Get the current running thread id.
+ *
+ * @return The id of current running thread.
+ **
+ * demo usage:
+ *
+ *     os_thread_id_t current = os_id_current_thread();
+ *     printf("At-RTOS kernal current running thread is %s\n", current.pName);
+ *     ...
+ */
+static inline os_thread_id_t os_id_current_thread(void)
+{
+    os_thread_id_t id = {0u};
+    id.val = _impl_kernal_thread_runIdGet();
+    id.number = _impl_thread_os_id_to_number(id.val);
+    id.pName = _impl_thread_name_get(id.val);
+
+    return id;
+}
+
+/**
  * @brief The kernal OS start to run.
  **
  * demo usage:
@@ -774,21 +795,22 @@ static inline u32p_t kernal_atos_run(void)
         u32p_t         (*sem_give)(os_sem_id_t);
         u32p_t         (*sem_flush)(os_sem_id_t);
 
-        os_mutex_id_t (*mutex_init)(const char_t *);
-        u32p_t        (*mutex_lock)(os_mutex_id_t);
-        u32p_t        (*mutex_unlock)(os_mutex_id_t);
+        os_mutex_id_t  (*mutex_init)(const char_t *);
+        u32p_t         (*mutex_lock)(os_mutex_id_t);
+        u32p_t         (*mutex_unlock)(os_mutex_id_t);
 
-        os_evt_id_t   (*evt_init)(u32_t, pEvent_callbackFunc_t, const char_t *);
-        u32p_t        (*evt_set)(os_evt_id_t, u32_t);
-        u32p_t        (*evt_wait)(os_evt_id_t, u32_t *, u32_t, u32_t, u32_t);
+        os_evt_id_t    (*evt_init)(u32_t, pEvent_callbackFunc_t, const char_t *);
+        u32p_t         (*evt_set)(os_evt_id_t, u32_t);
+        u32p_t         (*evt_wait)(os_evt_id_t, u32_t *, u32_t, u32_t, u32_t);
 
-        os_msgq_id_t  (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
-        u32p_t        (*msgq_send)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
-        u32p_t        (*msgq_receive)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
+        os_msgq_id_t   (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
+        u32p_t         (*msgq_send)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
+        u32p_t         (*msgq_receive)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
 
-        b_t           (*id_isInvalid)(struct os_id);
-        u32p_t        (*at_rtos_run)(void);
-        b_t           (*kernal_is_running)(void);
+        b_t            (*id_isInvalid)(struct os_id);
+        u32p_t         (*at_rtos_run)(void);
+        b_t            (*kernal_is_running)(void);
+        os_thread_id_t (*id_current_thread)(void);
     }at_rtos_api_t;
 
     extern const at_rtos_api_t AtOS;
