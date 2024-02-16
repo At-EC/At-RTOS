@@ -79,7 +79,7 @@ extern "C" {
 #endif
 
 /* Configuration of the Cortex-M Processor and Core Peripherals.
- * You should check the chip header file or datasheet to check the following declaration symbol that support ARM Cortex-M Processor and Core Peripherals, and put it here. 
+ * You should check the chip header file or datasheet to check the following declaration symbol that support ARM Cortex-M Processor and Core Peripherals, and put it here.
  * It looks like this.
  *
  * #define __SAUREGION_PRESENT                          (1u) // SAU regions present
@@ -112,6 +112,11 @@ extern "C" {
     !defined ARCH_NATIVE_GCC
 
     #warning Not supported compiler type
+#endif
+
+/* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
+#ifndef OS_INTERFACE_EXTERN_USE_ENABLE
+    #define OS_INTERFACE_EXTERN_USE_ENABLE              (ENABLED)
 #endif
 
 #ifdef __cplusplus
