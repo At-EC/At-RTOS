@@ -89,6 +89,8 @@ typedef struct
 
     u8_t limitCount;
 
+    b_t isPermit;
+
     u32_t timeout_ms;
 
     list_t blockingThreadHead;

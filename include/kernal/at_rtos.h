@@ -287,27 +287,29 @@ static inline u32_t timer_system_total_ms(void)
 /**
  * @brief Initialize a new semaphore.
  *
- * @param pName The semaphore name.
  * @param initial The initial count that allows the system take.
  * @param limit The maximum count that it's the semaphore's limitation.
+ * @param permit TRUE flag permits that all sem_give counts save until sem_take flush, even if the counts number higher than limitation setting count.
+ *               FALSE flag can reduce useless thread wakeup calling.
+ * @param pName The semaphore name.
  *
  * @return The semaphore unique id.
  **
  * demo usage:
  *
- *    // We init a binary semaphore count.
- *     os_sem_id_t sample_id = sem_init(0u, 1u, "sample");
+ *    // Init a binary semaphore count.
+ *     os_sem_id_t sample_id = sem_init(0u, 1u, FALSE, "sample");
  *     if (os_id_is_invalid(sample_id))
  *     {
  *         printf("Semaphore %s init failed\n", sample_id.pName);
  *     }
  *     ...
  */
-static inline os_sem_id_t sem_init(u8_t initial, u8_t limit, const char_t *pName)
+static inline os_sem_id_t sem_init(u8_t initial, u8_t limit, b_t permit, const char_t *pName)
 {
     os_sem_id_t id = {0u};
 
-    id.val = _impl_semaphore_init(initial, limit, pName);
+    id.val = _impl_semaphore_init(initial, limit, permit, pName);
     id.number = _impl_semaphore_os_id_to_number(id.val);
     id.pName = pName;
 
@@ -790,7 +792,7 @@ static inline u32p_t kernal_atos_run(void)
         u32p_t         (*timer_isBusy)(os_timer_id_t);
         u32_t          (*timer_system_total_ms)(void);
 
-        os_sem_id_t    (*sem_init)(u8_t, u8_t, const char_t *);
+        os_sem_id_t    (*sem_init)(u8_t, u8_t, b_t, const char_t *);
         u32p_t         (*sem_take)(os_sem_id_t, u32_t);
         u32p_t         (*sem_give)(os_sem_id_t);
         u32p_t         (*sem_flush)(os_sem_id_t);

@@ -184,6 +184,7 @@ void _impl_kernal_thread_init(void)
             },
             .initialCount = 0u,
             .limitCount = OS_SEMPHORE_TICKET_BINARY,
+            .isPermit = FALSE, /* reduce useless thread calling */
         },
     };
 

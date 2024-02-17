@@ -18,7 +18,7 @@ extern "C" {
  * Local unique postcode.
  */
 #define _PC_CMPT_FAILED                             PC_FAILED(PC_CMPT_SEMAPHORE)
-#define _SEMAPHORE_AVAILABLE_COUNT_MAXIMUM          (0xFFu)
+#define _SEMAPHORE_AVAILABLE_COUNT_MAXIMUM          (0xFEu)
 
 /**
  * The local function lists for current file internal use.
@@ -172,19 +172,26 @@ u32_t _impl_semaphore_os_id_to_number(os_id_t id)
 /**
  * @brief Initialize a new semaphore.
  *
+ * @param initial The initial count that allows the system take.
+ * @param limit The maximum count that it's the semaphore's limitation.
+ * @param permit It permits that all sem_give counts save until sem_take flush, even if the counts number higher than limitation setting count.
  * @param pName The semaphore name.
- * @param initialCount The available count that allows the system take.
- * @param limitCount The maximum count that it's the semaphore's limitation.
  *
  * @return The semaphore unique id.
  */
-os_id_t _impl_semaphore_init(u8_t initialCount, u8_t limitCount, const char_t *pName)
+os_id_t _impl_semaphore_init(u8_t initialCount, u8_t limitCount, b_t permit, const char_t *pName)
 {
+    if (!limitCount)
+    {
+        return OS_INVALID_ID;
+    }
+
     arguments_t arguments[] =
     {
         [0] = {.u8_val = (u8_t)initialCount},
         [1] = {.u8_val = (u8_t)limitCount},
-        [2] = {.pch_val = (const char_t *)pName},
+        [2] = {.b_val = (b_t)permit},
+        [3] = {.pch_val = (const char_t *)pName},
     };
 
     return _impl_kernal_privilege_invoke((const void*)_semaphore_init_privilege_routine, arguments);
@@ -312,7 +319,8 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
 
     u8_t initialCount = (u8_t)(pArgs[0].u8_val);
     u8_t limitCount = (u8_t)(pArgs[1].u8_val);
-    const char_t *pName = (const char_t *)(pArgs[2].pch_val);
+    b_t permit = (b_t)(pArgs[2].b_val);
+    const char_t *pName = (const char_t *)(pArgs[3].pch_val);
 
     u32_t offset = (sizeof(semaphore_context_t)*KERNAL_APPLICATION_SEMAPHORE_INSTANCE);
     semaphore_context_t *pCurSemaphore = (semaphore_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_SEMAPHORE) + offset);
@@ -328,14 +336,15 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
 
             pCurSemaphore->initialCount = initialCount;
             pCurSemaphore->limitCount = limitCount;
+            pCurSemaphore->isPermit = permit;
 
-            if (pCurSemaphore->initialCount >= pCurSemaphore->limitCount)
+            if (pCurSemaphore->initialCount < pCurSemaphore->limitCount)
             {
-                _semaphore_list_transfer_toUnlock((linker_head_t*)&pCurSemaphore->head);
+                _semaphore_list_transfer_toLock((linker_head_t*)&pCurSemaphore->head);
             }
             else
             {
-                _semaphore_list_transfer_toLock((linker_head_t*)&pCurSemaphore->head);
+                _semaphore_list_transfer_toUnlock((linker_head_t*)&pCurSemaphore->head);
             }
 
             break;
@@ -415,11 +424,19 @@ static u32_t _semaphore_give_privilege_routine(arguments_t *pArgs)
     semaphore_context_t *pCurSemaphore = (semaphore_context_t *)_semaphore_object_contextGet(id);
     thread_context_t *pSemaphoreHighestBlockingThread = (thread_context_t *)_semaphore_linker_head_fromBlocking(id);
 
-    pCurSemaphore->initialCount++;
-
-    if (pCurSemaphore->initialCount >= _SEMAPHORE_AVAILABLE_COUNT_MAXIMUM)
+    if (pCurSemaphore->isPermit)
     {
-        postcode = _PC_CMPT_FAILED;
+        /* permit to save all released counts */
+        pCurSemaphore->initialCount++;
+
+        if (pCurSemaphore->initialCount >= _SEMAPHORE_AVAILABLE_COUNT_MAXIMUM)
+        {
+            postcode = _PC_CMPT_FAILED;
+        }
+    }
+    else if (pCurSemaphore->initialCount < pCurSemaphore->limitCount)
+    {
+        pCurSemaphore->initialCount++;
     }
 
     if (pSemaphoreHighestBlockingThread)
