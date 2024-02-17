@@ -72,6 +72,7 @@ u32_t   _impl_kernal_member_id_unifiedConvert(u8_t member_id, u32_t unified_id);
 void    _impl_kernal_thread_list_transfer_toEntry(linker_head_t *pCurHead);
 u32p_t  _impl_kernal_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToList, u32_t timeout_us, void (*pCallback)(os_id_t));
 u32p_t  _impl_kernal_thread_entry_trigger(os_id_t id, os_id_t release, u32_t result, void (*pCallback)(os_id_t));
+u32_t   _impl_kernal_schedule_entry_result_read_clean(action_schedule_t* pSchedule);
 void    _impl_kernal_thread_list_transfer_toPend(linker_head_t *pCurHead);
 list_t* _impl_kernal_list_pendingHeadGet(void);
 u32_t   _impl_kernal_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size);

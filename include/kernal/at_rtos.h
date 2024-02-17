@@ -17,12 +17,12 @@ extern "C" {
 #include "configuration.h"
 
 #define ATOS_THREAD_DEFINE(thread_name, stack_size, thread_priority)    static os_thread_symbol_t thread_name[((u32_t)(stack_size) / sizeof(u32_t))] = { \
-    [0] = {.size = stack_size},                                                                                                                           \
-    [1] = {.priority = thread_priority},                                                                                                                  \
-    [2] = {.pName = #thread_name},                                                                                                                         \
-};                                                                                                                                                        \
-S_ASSERT(((stack_size) >= STACK_SIZE_MINIMUM) , "The thread stack size must be higher than STACK_SIZE_MINIMUM");                                          \
-S_ASSERT((((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thread_priority) <= OS_PRIORITY_USER_THREAD_LOWEST_LEVEL)) ,                  \
+    [0] = {.size = stack_size},                                                                                                                          \
+    [1] = {.priority = thread_priority},                                                                                                                 \
+    [2] = {.pName = #thread_name},                                                                                                                       \
+};                                                                                                                                                       \
+S_ASSERT(((stack_size) >= STACK_SIZE_MINIMUM) , "The thread stack size must be higher than STACK_SIZE_MINIMUM");                                         \
+S_ASSERT((((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thread_priority) <= OS_PRIORITY_USER_THREAD_LOWEST_LEVEL)) ,                 \
          "The thread priority is out of the system design")
 
 #include "thread.h"

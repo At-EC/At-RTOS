@@ -471,7 +471,7 @@ u8_t _impl_kernal_member_unified_id_toId(u32_t unified_id)
 {
     u8_t member_id = KERNAL_MEMBER_THREAD;
 
-    while((member_id < KERNAL_MEMBER_NUMBER) && 
+    while((member_id < KERNAL_MEMBER_NUMBER) &&
           ((unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) || (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id))))
     {
         member_id++;
@@ -628,6 +628,21 @@ u32p_t _impl_kernal_thread_entry_trigger(os_id_t id, os_id_t release, u32_t resu
 
     _impl_kernal_thread_list_transfer_toEntry((linker_head_t*)&pCurThread->head);
     return _impl_kernal_thread_schedule_request();
+}
+
+/**
+ * @brief Read and clean the schedule entry result.
+ *
+ * @param pSchedule The pointer of thread action schedule.
+ *
+ * @return The result of entry action schedule.
+ */
+u32_t _impl_kernal_schedule_entry_result_read_clean(action_schedule_t* pSchedule)
+{
+    u32_t ret = (u32p_t)pSchedule->entry.result;
+    pSchedule->entry.result = 0u;
+
+    return (u32_t)ret;
 }
 
 /**

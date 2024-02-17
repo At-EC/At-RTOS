@@ -239,8 +239,7 @@ u32p_t _impl_semaphore_take(os_id_t id, u32_t timeout_ms)
     if (postcode == PC_SC_UNAVAILABLE)
     {
         thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
-        postcode = (u32p_t)pCurThread->schedule.entry.result;
-        pCurThread->schedule.entry.result = 0u;
+        postcode = (u32p_t)_impl_kernal_schedule_entry_result_read_clean((action_schedule_t*)&pCurThread->schedule);
     }
 
     if (PC_IOK(postcode) && (postcode != PC_SC_TIMEOUT))
