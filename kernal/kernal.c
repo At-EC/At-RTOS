@@ -206,10 +206,7 @@ static b_t _kernal_thread_exit_schedule(void)
         if (pExit->timeout_us)
         {
             _impl_thread_timer_start(_impl_kernal_member_unified_id_threadToTimer(pCurThread->head.id), pExit->timeout_us, pExit->pTimeoutCallFun);
-            if (pExit->timeout_us != OS_TIME_FOREVER_VAL)
-            {
-                request = TRUE;
-            }
+            request = (pExit->timeout_us != OS_TIME_FOREVER_VAL) ? (TRUE) : (FALSE);
         }
 
         _kernal_thread_list_transfer_toTargetBlocking((linker_head_t*)&pCurThread->head, (list_t*)pExit->pToList);
@@ -639,6 +636,11 @@ u32p_t _impl_kernal_thread_entry_trigger(os_id_t id, os_id_t release, u32_t resu
  */
 u32_t _impl_kernal_schedule_entry_result_read_clean(action_schedule_t* pSchedule)
 {
+    if (!pSchedule)
+    {
+        return 0u;
+    }
+
     u32_t ret = (u32p_t)pSchedule->entry.result;
     pSchedule->entry.result = 0u;
 
@@ -775,21 +777,17 @@ u32_t _impl_kernal_privilege_invoke(const void* pCallFun, arguments_t* pArgs)
         return _PC_CMPT_FAILED;
     }
 
-    u32_t ret = 0u;
-
     if (_kernal_isInPrivilegeMode())
     {
         ENTER_CRITICAL_SECTION();
         pPrivilege_callFunc_t pCall = (pPrivilege_callFunc_t)pCallFun;
-        ret = (u32_t)pCall((arguments_t *)pArgs);
+        u32_t ret = (u32_t)pCall((arguments_t *)pArgs);
         EXIT_CRITICAL_SECTION();
-    }
-    else
-    {
-        ret = _impl_kernal_svc_call((u32_t)pCallFun, (u32_t)pArgs, 0u, 0u);
+
+        return ret;
     }
 
-    return ret;
+    return (u32_t)_impl_kernal_svc_call((u32_t)pCallFun, (u32_t)pArgs, 0u, 0u);
 }
 
 #ifdef __cplusplus

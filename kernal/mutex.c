@@ -110,9 +110,10 @@ static void _mutex_list_transfer_toUnlock(linker_head_t *pCurHead)
 static linker_head_t* _mutex_linker_head_fromBlocking(os_id_t id)
 {
     ENTER_CRITICAL_SECTION();
-    list_t *pListBlocking = (list_t *)_mutex_list_blockingHeadGet(id);
-    EXIT_CRITICAL_SECTION();
 
+    list_t *pListBlocking = (list_t *)_mutex_list_blockingHeadGet(id);
+
+    EXIT_CRITICAL_SECTION();
     return (linker_head_t*)(pListBlocking->pHead);
 }
 
@@ -269,7 +270,6 @@ static u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
     id = ((!_mutex_id_isInvalid(id)) ? (id) : (OS_INVALID_ID));
 
     EXIT_CRITICAL_SECTION();
-
     return id;
 }
 
@@ -310,7 +310,6 @@ static u32_t _mutex_lock_privilege_routine(arguments_t *pArgs)
     }
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 
@@ -352,7 +351,6 @@ static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
     }
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 

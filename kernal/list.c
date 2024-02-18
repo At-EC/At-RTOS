@@ -96,23 +96,21 @@ b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
         pCurNode_tmp = pCurNode_tmp->pNext;
     }
 
-    if (pCurNode_tmp)
-    {
-        if (!pPrevNode_tmp)
-        {
-            pList->pHead = pCurNode_tmp->pNext;
-        }
-        else
-        {
-            pPrevNode_tmp->pNext = pCurNode_tmp->pNext;
-        }
-        pCurNode_tmp->pNext = NULL;
-    }
-    else
+    if (!pCurNode_tmp)
     {
         /* The target pNode is not in the list */
         return FALSE;
     }
+
+    if (!pPrevNode_tmp)
+    {
+        pList->pHead = pCurNode_tmp->pNext;
+    }
+    else
+    {
+        pPrevNode_tmp->pNext = pCurNode_tmp->pNext;
+    }
+    pCurNode_tmp->pNext = NULL;
 
     return TRUE;
 }
@@ -143,23 +141,21 @@ b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTa
         pCurNode_tmp = pCurNode_tmp->pNext;
     }
 
-    if (pCurNode_tmp)
-    {
-        if (!pPrevNode_tmp)
-        {
-            pList->pHead = pTargetNode;
-        }
-        else
-        {
-            pPrevNode_tmp->pNext = pTargetNode;
-        }
-        pTargetNode->pNext = pBefore;
-    }
-    else
+    if (!pCurNode_tmp)
     {
         /* The pBefore is not in the list */
         return FALSE;
     }
+
+    if (!pPrevNode_tmp)
+    {
+        pList->pHead = pTargetNode;
+    }
+    else
+    {
+        pPrevNode_tmp->pNext = pTargetNode;
+    }
+    pTargetNode->pNext = pBefore;
 
     return TRUE;
 }
@@ -251,12 +247,11 @@ list_node_t *list_node_pop(list_t *pList, list_direction_t direction)
                 pList->pHead = NULL;
             }
         }
-        else
-        {
-            pCurNode_temp = NULL;
-        }
+
+        return pOutNode;
     }
-    else if (direction == LIST_HEAD)
+
+    if (direction == LIST_HEAD)
     {
         pOutNode = pList->pHead;
         if (pList->pHead)
@@ -264,9 +259,11 @@ list_node_t *list_node_pop(list_t *pList, list_direction_t direction)
             pList->pHead = pList->pHead->pNext;
             pOutNode->pNext = NULL;
         }
+
+        return pOutNode;
     }
 
-    return pOutNode;
+    return NULL;
 }
 
 

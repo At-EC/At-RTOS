@@ -233,8 +233,8 @@ u32p_t _impl_event_wait(os_id_t id, u32_t *pEvent, u32_t trigger, u32_t listen, 
     {
         postcode = PC_SC_SUCCESS;
     }
-    EXIT_CRITICAL_SECTION();
 
+    EXIT_CRITICAL_SECTION();
     return postcode;
 }
 
@@ -280,7 +280,6 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
     id = ((!_event_id_isInvalid(id)) ? (id) : (OS_INVALID_ID));
 
     EXIT_CRITICAL_SECTION();
-
     return id;
 }
 
@@ -329,7 +328,6 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
     pCurEvent->set = 0u;
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 
@@ -360,7 +358,6 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
     u32p_t postcode = _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _event_list_blockingHeadGet(id), timeout_ms, _event_callback_fromTimeOut);
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 
@@ -372,48 +369,48 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
 static void _event_schedule(os_id_t id)
 {
     thread_context_t *pEntryThread = (thread_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
+    thread_entry_t *pEntry = NULL;
+    b_t isAvail = FALSE;
 
-    if (_impl_kernal_member_unified_id_toId(pEntryThread->schedule.hold) == KERNAL_MEMBER_EVENT)
+    if (_impl_kernal_member_unified_id_toId(pEntryThread->schedule.hold) != KERNAL_MEMBER_EVENT)
     {
-        thread_entry_t *pEntry = &pEntryThread->schedule.entry;
+        pEntryThread->schedule.entry.result = _PC_CMPT_FAILED;
+        return ;
+    }
 
-        if ((pEntry->result == PC_SC_SUCCESS) || (pEntry->result == PC_SC_TIMEOUT))
+    if ((pEntryThread->schedule.entry.result != PC_SC_SUCCESS) && (pEntryThread->schedule.entry.result != PC_SC_TIMEOUT))
+    {
+        return ;
+    }
+
+    pEntry = &pEntryThread->schedule.entry;
+    if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
+    {
+        if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
         {
-            b_t isAvail = FALSE;
-
-            if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
-            {
-                if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
-                {
-                    pEntry->result = PC_SC_TIMEOUT;
-                }
-                else
-                {
-                    isAvail = true;
-                }
-            }
-            else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_EVENT)
-            {
-                _impl_timer_stop(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
-                isAvail = true;
-            }
-            else
-            {
-                pEntry->result = _PC_CMPT_FAILED;
-            }
-
-            if (isAvail)
-            {
-                pEntry->result  = PC_SC_SUCCESS;
-            }
+            pEntry->result = PC_SC_TIMEOUT;
         }
-
-        pEntryThread->event.listen = 0u;
-        pEntryThread->event.trigger = 0u;
+        else
+        {
+            isAvail = true;
+        }
+    }
+    else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_EVENT)
+    {
+        _impl_timer_stop(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
+        isAvail = true;
     }
     else
     {
-        pEntryThread->schedule.entry.result = _PC_CMPT_FAILED;
+        pEntry->result = _PC_CMPT_FAILED;
+    }
+
+    pEntryThread->event.listen = 0u;
+    pEntryThread->event.trigger = 0u;
+
+    if (isAvail)
+    {
+        pEntry->result  = PC_SC_SUCCESS;
     }
 }
 
