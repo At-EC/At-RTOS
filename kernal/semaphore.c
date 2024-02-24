@@ -115,9 +115,10 @@ static void _semaphore_list_transfer_toUnlock(linker_head_t *pCurHead)
 static linker_head_t* _semaphore_linker_head_fromBlocking(os_id_t id)
 {
     ENTER_CRITICAL_SECTION();
-    list_t *pListPending = (list_t *)_semaphore_list_blockingHeadGet(id);
-    EXIT_CRITICAL_SECTION();
 
+    list_t *pListPending = (list_t *)_semaphore_list_blockingHeadGet(id);
+
+    EXIT_CRITICAL_SECTION();
     return (linker_head_t*)(pListPending->pHead);
 }
 
@@ -246,8 +247,8 @@ u32p_t _impl_semaphore_take(os_id_t id, u32_t timeout_ms)
     {
         postcode = PC_SC_SUCCESS;
     }
-    EXIT_CRITICAL_SECTION();
 
+    EXIT_CRITICAL_SECTION();
    return postcode;
 }
 
@@ -321,43 +322,45 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
     b_t permit = (b_t)(pArgs[2].b_val);
     const char_t *pName = (const char_t *)(pArgs[3].pch_val);
 
-    u32_t offset = (sizeof(semaphore_context_t)*KERNAL_APPLICATION_SEMAPHORE_INSTANCE);
-    semaphore_context_t *pCurSemaphore = (semaphore_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_SEMAPHORE) + offset);
-    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_SEMAPHORE) + offset;
+    u32_t internal = (sizeof(semaphore_context_t)*KERNAL_APPLICATION_SEMAPHORE_INSTANCE);
+    semaphore_context_t *pCurSemaphore = (semaphore_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_SEMAPHORE) + internal);
+    u32_t endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_SEMAPHORE);
 
     do {
-        if (!_semaphore_object_isInit(id))
+        os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurSemaphore);
+        if (_semaphore_id_isInvalid(id))
         {
-            _memset((char_t*)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
-
-            pCurSemaphore->head.id = id;
-            pCurSemaphore->head.pName = pName;
-
-            pCurSemaphore->initialCount = initialCount;
-            pCurSemaphore->limitCount = limitCount;
-            pCurSemaphore->isPermit = permit;
-
-            if (pCurSemaphore->initialCount < pCurSemaphore->limitCount)
-            {
-                _semaphore_list_transfer_toLock((linker_head_t*)&pCurSemaphore->head);
-            }
-            else
-            {
-                _semaphore_list_transfer_toUnlock((linker_head_t*)&pCurSemaphore->head);
-            }
-
             break;
         }
 
-        pCurSemaphore++;
-        id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurSemaphore);
-    } while ((u32_t)pCurSemaphore < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_SEMAPHORE));
+        if (_semaphore_object_isInit(id))
+        {
+            continue;
+        }
 
-    id = ((!_semaphore_id_isInvalid(id)) ? (id) : (OS_INVALID_ID));
+        _memset((char_t*)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
+        pCurSemaphore->head.id = id;
+        pCurSemaphore->head.pName = pName;
+
+        pCurSemaphore->initialCount = initialCount;
+        pCurSemaphore->limitCount = limitCount;
+        pCurSemaphore->isPermit = permit;
+
+        if (pCurSemaphore->initialCount < pCurSemaphore->limitCount)
+        {
+            _semaphore_list_transfer_toLock((linker_head_t*)&pCurSemaphore->head);
+        }
+        else
+        {
+            _semaphore_list_transfer_toUnlock((linker_head_t*)&pCurSemaphore->head);
+        }
+
+        EXIT_CRITICAL_SECTION();
+        return id;
+    } while ((u32_t)++pCurSemaphore < endAddr);
 
     EXIT_CRITICAL_SECTION();
-
-    return id;
+    return OS_INVALID_ID;
 }
 
 /**
@@ -402,7 +405,6 @@ static u32_t _semaphore_take_privilege_routine(arguments_t *pArgs)
     }
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 
@@ -444,7 +446,6 @@ static u32_t _semaphore_give_privilege_routine(arguments_t *pArgs)
     }
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 
@@ -478,7 +479,6 @@ static u32_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
     }
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 
@@ -490,60 +490,60 @@ static u32_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
 static void _semaphore_schedule(os_id_t id)
 {
     thread_context_t *pEntryThread = (thread_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
+    semaphore_context_t *pCurSemaphore = NULL;
+    thread_entry_t *pEntry = NULL;
+    b_t isAvail = FALSE;
 
-    if (_impl_kernal_member_unified_id_toId(pEntryThread->schedule.hold) == KERNAL_MEMBER_SEMAPHORE)
+    if (_impl_kernal_member_unified_id_toId(pEntryThread->schedule.hold) != KERNAL_MEMBER_SEMAPHORE)
     {
-        semaphore_context_t *pCurSemaphore = (semaphore_context_t *)_semaphore_object_contextGet(pEntryThread->schedule.hold);
+        pEntryThread->schedule.entry.result = _PC_CMPT_FAILED;
+        return ;
+    }
 
-        thread_entry_t *pEntry = &pEntryThread->schedule.entry;
+    if ((pEntryThread->schedule.entry.result != PC_SC_SUCCESS) && (pEntryThread->schedule.entry.result != PC_SC_TIMEOUT))
+    {
+        return ;
+    }
 
-        if ((pEntry->result == PC_SC_SUCCESS) || (pEntry->result == PC_SC_TIMEOUT))
+    // Release function doesn't kill the timer node from waiting list
+    pEntry = &pEntryThread->schedule.entry;
+    pCurSemaphore = (semaphore_context_t *)_semaphore_object_contextGet(pEntryThread->schedule.hold);
+    if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
+    {
+        if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
         {
-            b_t isAvail = FALSE;
-
-            // Release function doesn't kill the timer node from waiting list
-            if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
-            {
-                if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
-                {
-                    pEntry->result = PC_SC_TIMEOUT;
-                }
-                else
-                {
-                    isAvail = true;
-                }
-            }
-            else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_SEMAPHORE)
-            {
-                _impl_timer_stop(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
-                isAvail = true;
-            }
-            else
-            {
-                pEntry->result = _PC_CMPT_FAILED;
-            }
-
-            if (isAvail)
-            {
-                pEntry->result  = PC_SC_SUCCESS;
-                /* If the PC arrive, the semaphore will be available and can be acquired */
-                pCurSemaphore->initialCount--; // The semaphore has available count
-            }
-
-            /* Check if we can take the next acquired thread into locking */
-            if (pCurSemaphore->initialCount < pCurSemaphore->limitCount)
-            {
-                _semaphore_list_transfer_toLock((linker_head_t*)&pCurSemaphore->head);
-            }
-            else
-            {
-                _semaphore_list_transfer_toUnlock((linker_head_t*)&pCurSemaphore->head);
-            }
+            pEntry->result = PC_SC_TIMEOUT;
         }
+        else
+        {
+            isAvail = true;
+        }
+    }
+    else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_SEMAPHORE)
+    {
+        _impl_timer_stop(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
+        isAvail = true;
     }
     else
     {
-        pEntryThread->schedule.entry.result = _PC_CMPT_FAILED;
+        pEntry->result = _PC_CMPT_FAILED;
+    }
+
+    if (isAvail)
+    {
+        pEntry->result  = PC_SC_SUCCESS;
+        /* If the PC arrive, the semaphore will be available and can be acquired */
+        pCurSemaphore->initialCount--; // The semaphore has available count
+    }
+
+    /* Check if we can take the next acquired thread into locking */
+    if (pCurSemaphore->initialCount < pCurSemaphore->limitCount)
+    {
+        _semaphore_list_transfer_toLock((linker_head_t*)&pCurSemaphore->head);
+    }
+    else
+    {
+        _semaphore_list_transfer_toUnlock((linker_head_t*)&pCurSemaphore->head);
     }
 }
 

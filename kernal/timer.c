@@ -123,7 +123,6 @@ static void _timer_list_remove_fromWaitList(linker_head_t *pCurHead)
     {
         pNext->duration_us += pCurTimer->duration_us;
     }
-
     pCurTimer->duration_us = 0u;
 
     EXIT_CRITICAL_SECTION();
@@ -323,7 +322,7 @@ os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t time
     arguments_t arguments[] =
     {
         [0] = {.ptr_val = (const void*)pCallFun},
-        [1] = {.b_val = (u32_t)isCycle},
+        [1] = {.b_val = (b_t)isCycle},
         [2] = {.u32_val = (u32_t)timeout_ms},
         [3] = {.pch_val = (const void*)pName},
     };
@@ -476,13 +475,12 @@ b_t _impl_timer_status_isBusy(os_id_t id)
     }
 
     ENTER_CRITICAL_SECTION();
+
     linker_head_t *pCurHead = (linker_head_t *)_timer_object_contextGet(id);
-    b_t isBusy = FALSE;
-
-    isBusy = (pCurHead->linker.pList == (list_t*)_timer_list_waitingHeadGet());
+    b_t isBusy = (pCurHead->linker.pList == (list_t*)_timer_list_waitingHeadGet());
     isBusy |= (pCurHead->linker.pList == (list_t*)_timer_list_endingHeadGet());
-    EXIT_CRITICAL_SECTION();
 
+    EXIT_CRITICAL_SECTION();
     return isBusy;
 }
 
@@ -518,39 +516,42 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].ptr_val);
-    b_t isCycle = (u32_t)(pArgs[1].b_val);
+    b_t isCycle = (b_t)(pArgs[1].b_val);
     u32_t timeout_ms = (u32_t)(pArgs[2].u32_val);
     const char_t *pName = (const char_t *)pArgs[3].pch_val;
 
     timer_context_t *pCurTimer = (timer_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_TIMER);
-    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER);
+    u32_t endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_TIMER);
 
     do {
-        if (!_timer_object_isInit(id))
+        os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurTimer);
+        if (_timer_id_isInvalid(id))
         {
-            _memset((char_t*)pCurTimer, 0x0u, sizeof(timer_context_t));
-
-            pCurTimer->head.id = id;
-            pCurTimer->head.pName = pName;
-
-            pCurTimer->isCycle = isCycle;
-            pCurTimer->timeout_ms = timeout_ms;
-            pCurTimer->duration_us = 0u;
-            pCurTimer->call.pTimer = pCallFun;
-
-            _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
             break;
         }
 
-            pCurTimer++;
-            id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurTimer);
-    } while ((u32_t)pCurTimer < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_TIMER));
+        if (_timer_object_isInit(id))
+        {
+            continue;
+        }
 
-    id = ((!_timer_id_isInvalid(id)) ? (id) : (OS_INVALID_ID));
+        _memset((char_t*)pCurTimer, 0x0u, sizeof(timer_context_t));
+        pCurTimer->head.id = id;
+        pCurTimer->head.pName = pName;
+
+        pCurTimer->isCycle = isCycle;
+        pCurTimer->timeout_ms = timeout_ms;
+        pCurTimer->duration_us = 0u;
+        pCurTimer->call.pTimer = pCallFun;
+
+        _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
+
+        EXIT_CRITICAL_SECTION();
+        return id;
+    } while ((u32_t)++pCurTimer < endAddr);
 
     EXIT_CRITICAL_SECTION();
-
-    return id;
+    return OS_INVALID_ID;
 }
 
 /**
@@ -590,7 +591,6 @@ static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
     _impl_kernal_timer_schedule_request();
 
     EXIT_CRITICAL_SECTION();
-
     return PC_SC_SUCCESS;
 }
 
@@ -618,7 +618,6 @@ static u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
     _impl_kernal_timer_schedule_request();
 
     EXIT_CRITICAL_SECTION();
-
     return PC_SC_SUCCESS;
 }
 
@@ -642,7 +641,6 @@ static u32_t _timer_total_system_get_privilege_routine(arguments_t *pArgs)
     u32_t ms = ((us/1000u) & 0xFFFFFFFFu);
 
     EXIT_CRITICAL_SECTION();
-
     return ms;
 }
 
@@ -668,7 +666,6 @@ static u32_t _kernal_timer_schedule_request_privilege_routine(arguments_t *pArgs
     }
 
     EXIT_CRITICAL_SECTION();
-
     return PC_SC_SUCCESS;
 }
 

@@ -266,8 +266,8 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u
     {
         postcode = PC_SC_SUCCESS;
     }
-    EXIT_CRITICAL_SECTION();
 
+    EXIT_CRITICAL_SECTION();
     return postcode;
 }
 
@@ -328,8 +328,8 @@ u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
     {
         postcode = PC_SC_SUCCESS;
     }
-    EXIT_CRITICAL_SECTION();
 
+    EXIT_CRITICAL_SECTION();
     return postcode;
 }
 
@@ -350,37 +350,38 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
     const char_t *pName = (const char_t *)(pArgs[3].pch_val);
 
     queue_context_t *pCurQueue = (queue_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_QUEUE);
-    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_QUEUE);
+    u32_t endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_QUEUE);
 
     do {
-        if (!_queue_object_isInit(id))
+        os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurQueue);
+        if (_queue_id_isInvalid(id))
         {
-            _memset((char_t*)pCurQueue, 0x0u, sizeof(queue_context_t));
-
-            pCurQueue->head.id = id;
-            pCurQueue->head.pName = pName;
-
-            pCurQueue->pQueueBufferAddress = pQueueBufferAddr;
-            pCurQueue->elementLength = elementLen;
-            pCurQueue->elementNumber = elementNum;
-            pCurQueue->leftPosition = 0u;
-            pCurQueue->rightPosition = 0u;
-            pCurQueue->cacheSize = 0u;
-
-            _queue_list_transferToInit((linker_head_t*)&pCurQueue->head);
-
             break;
         }
 
-        pCurQueue++;
-        id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurQueue);
-    } while ((u32_t)pCurQueue < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_QUEUE));
+        if (_queue_object_isInit(id))
+        {
+            continue;
+        }
+        _memset((char_t*)pCurQueue, 0x0u, sizeof(queue_context_t));
+        pCurQueue->head.id = id;
+        pCurQueue->head.pName = pName;
 
-    id = ((!_queue_id_isInvalid(id)) ? (id) : (OS_INVALID_ID));
+        pCurQueue->pQueueBufferAddress = pQueueBufferAddr;
+        pCurQueue->elementLength = elementLen;
+        pCurQueue->elementNumber = elementNum;
+        pCurQueue->leftPosition = 0u;
+        pCurQueue->rightPosition = 0u;
+        pCurQueue->cacheSize = 0u;
+
+        _queue_list_transferToInit((linker_head_t*)&pCurQueue->head);
+
+        EXIT_CRITICAL_SECTION();
+        return id;
+    } while ((u32_t)++pCurQueue < endAddr);
 
     EXIT_CRITICAL_SECTION();
-
-    return id;
+    return OS_INVALID_ID;
 }
 
 /**
@@ -444,7 +445,6 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
     }
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 
@@ -521,88 +521,87 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
 static void _queue_schedule(os_id_t id)
 {
     thread_context_t *pEntryThread = (thread_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
+    queue_context_t *pCurQueue = NULL;
+    thread_entry_t *pEntry = NULL;
+    b_t isTxAvail = FALSE;
+    b_t isRxAvail = FALSE;
 
-    if (_impl_kernal_member_unified_id_toId(pEntryThread->schedule.hold) == KERNAL_MEMBER_QUEUE)
+    if (_impl_kernal_member_unified_id_toId(pEntryThread->schedule.hold) != KERNAL_MEMBER_QUEUE)
     {
-        queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(pEntryThread->schedule.hold);
-        thread_entry_t *pEntry = &pEntryThread->schedule.entry;
+        pEntryThread->schedule.entry.result = _PC_CMPT_FAILED;
+        return ;
+    }
 
-        b_t isTxAvail = FALSE;
-        b_t isRxAvail = FALSE;
-
-        if (pEntry->result == PC_SC_TIMEOUT)
+    pCurQueue = (queue_context_t *)_queue_object_contextGet(pEntryThread->schedule.hold);
+    pEntry = &pEntryThread->schedule.entry;
+    if (pEntry->result == PC_SC_TIMEOUT)
+    {
+        pEntry->result = PC_SC_TIMEOUT;
+    }
+    else if (pEntry->result == _QUEUE_WAKEUP_RECEIVER)
+    {
+        // Release function doesn't kill the timer node from waiting list
+        if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
         {
-            pEntry->result = PC_SC_TIMEOUT;
-        }
-        else if (pEntry->result == _QUEUE_WAKEUP_RECEIVER)
-        {
-            // Release function doesn't kill the timer node from waiting list
-            if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
+            if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
             {
-                if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
-                {
-                    pEntry->result = PC_SC_TIMEOUT;
-                }
-                else
-                {
-                    isRxAvail = true;
-                }
+                pEntry->result = PC_SC_TIMEOUT;
             }
-            else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_QUEUE)
+            else
             {
-                _impl_timer_stop(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
                 isRxAvail = true;
             }
-            else
-            {
-                pEntry->result = _PC_CMPT_FAILED;
-            }
         }
-        else if (pEntry->result == _QUEUE_WAKEUP_SENDER)
+        else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_QUEUE)
         {
-            // Release function doesn't kill the timer node from waiting list
-            if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
-            {
-                if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
-                {
-                    pEntry->result = PC_SC_TIMEOUT;
-                }
-                else
-                {
-                    isTxAvail = true;
-                }
-            }
-            else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_QUEUE)
-            {
-                _impl_timer_stop(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
-                isTxAvail = true;
-            }
-            else
-            {
-                pEntry->result = _PC_CMPT_FAILED;
-            }
+            _impl_timer_stop(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
+            isRxAvail = true;
         }
         else
         {
             pEntry->result = _PC_CMPT_FAILED;
         }
-
-        if ((isRxAvail) || (isTxAvail))
+    }
+    else if (pEntry->result == _QUEUE_WAKEUP_SENDER)
+    {
+        // Release function doesn't kill the timer node from waiting list
+        if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
         {
-            if (isRxAvail)
+            if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
             {
-                _message_receive((queue_context_t*)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+                pEntry->result = PC_SC_TIMEOUT;
             }
-            else if (isTxAvail)
+            else
             {
-                _message_send((queue_context_t*)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+                isTxAvail = true;
             }
-            pEntry->result = PC_SC_SUCCESS;
+        }
+        else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_QUEUE)
+        {
+            _impl_timer_stop(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
+            isTxAvail = true;
+        }
+        else
+        {
+            pEntry->result = _PC_CMPT_FAILED;
         }
     }
     else
     {
-        pEntryThread->schedule.entry.result = PC_FAILED(PC_CMPT_EVENT);
+        pEntry->result = _PC_CMPT_FAILED;
+    }
+
+    if ((isRxAvail) || (isTxAvail))
+    {
+        if (isRxAvail)
+        {
+            _message_receive((queue_context_t*)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+        }
+        else if (isTxAvail)
+        {
+            _message_send((queue_context_t*)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+        }
+        pEntry->result = PC_SC_SUCCESS;
     }
 }
 
