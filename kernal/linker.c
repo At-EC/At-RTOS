@@ -20,16 +20,13 @@ extern "C" {
  */
 void linker_list_transaction_common(linker_t *pLinker, list_t *pToList, list_direction_t direction)
 {
-    if ((pLinker)  && ((direction == LIST_HEAD) || (direction == LIST_TAIL)))
-    {
+    if ((pLinker) && ((direction == LIST_HEAD) || (direction == LIST_TAIL))) {
         /* Remove the node from the previous list */
-        if (pLinker->pList)
-        {
+        if (pLinker->pList) {
             list_node_delete(pLinker->pList, &pLinker->node);
         }
 
-        if (pToList)
-        {
+        if (pToList) {
             list_node_push(pToList, (list_node_t *)&pLinker->node, direction);
         }
         pLinker->pList = pToList;
@@ -45,11 +42,9 @@ void linker_list_transaction_common(linker_t *pLinker, list_t *pToList, list_dir
  */
 void linker_list_transaction_specific(linker_t *pLinker, list_t *pToList, pLinkerSpecificConditionFunc_t pConditionFunc)
 {
-    if ((pLinker) && (pToList) && (pConditionFunc))
-    {
+    if ((pLinker) && (pToList) && (pConditionFunc)) {
         /* Remove the node from the previous list */
-        if (pLinker->pList)
-        {
+        if (pLinker->pList) {
             list_node_delete(pLinker->pList, &pLinker->node);
         }
 
@@ -61,17 +56,13 @@ void linker_list_transaction_specific(linker_t *pLinker, list_t *pToList, pLinke
 
         pFindNode = (list_node_t *)list_iterator_next(&it);
 
-        while(pConditionFunc(&pLinker->node, pFindNode))
-        {
+        while (pConditionFunc(&pLinker->node, pFindNode)) {
             pFindNode = (list_node_t *)list_iterator_next(&it);
         }
 
-        if (pFindNode)
-        {
+        if (pFindNode) {
             list_node_insertBefore(pToList, pFindNode, &pLinker->node);
-        }
-        else
-        {
+        } else {
             list_node_push(pToList, &pLinker->node, LIST_TAIL);
         }
     }

@@ -17,19 +17,18 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_TIMER)
+#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_TIMER)
 
 /**
  * Data structure for location timer
  */
-typedef struct
-{
+typedef struct {
     /* The last load count value */
     u64_t system_us;
 
     /* The clock time total count value */
     u32_t remaining_us;
-}_timer_resource_t;
+} _timer_resource_t;
 
 /**
  * Local timer resource
@@ -52,9 +51,9 @@ static u32_t _kernal_timer_schedule_request_privilege_routine(arguments_t *pArgs
  *
  * @return The pointer of the current unique id timer context.
  */
-static timer_context_t* _timer_object_contextGet(os_id_t id)
+static timer_context_t *_timer_object_contextGet(os_id_t id)
 {
-    return (timer_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
+    return (timer_context_t *)(_impl_kernal_member_unified_id_toContainerAddress(id));
 }
 
 /**
@@ -62,9 +61,9 @@ static timer_context_t* _timer_object_contextGet(os_id_t id)
  *
  * @return The value of the stoping list head.
  */
-static list_t* _timer_list_stopingHeadGet(void)
+static list_t *_timer_list_stopingHeadGet(void)
 {
-    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_STOP);
+    return (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_STOP);
 }
 
 /**
@@ -72,9 +71,9 @@ static list_t* _timer_list_stopingHeadGet(void)
  *
  * @return The value of the waiting list head.
  */
-static list_t* _timer_list_waitingHeadGet(void)
+static list_t *_timer_list_waitingHeadGet(void)
 {
-    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_WAIT);
+    return (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_WAIT);
 }
 
 /**
@@ -82,9 +81,9 @@ static list_t* _timer_list_waitingHeadGet(void)
  *
  * @return The value of the ending list head.
  */
-static list_t* _timer_list_endingHeadGet(void)
+static list_t *_timer_list_endingHeadGet(void)
 {
-    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_END);
+    return (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_END);
 }
 
 /**
@@ -92,9 +91,9 @@ static list_t* _timer_list_endingHeadGet(void)
  *
  * @return The value of the pending list head.
  */
-static list_t* _timer_list_pendingHeadGet(void)
+static list_t *_timer_list_pendingHeadGet(void)
 {
-    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_PEND);
+    return (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_PEND);
 }
 
 /**
@@ -102,9 +101,9 @@ static list_t* _timer_list_pendingHeadGet(void)
  *
  * @return The value of the running list head.
  */
-static list_t* _timer_list_runningHeadGet(void)
+static list_t *_timer_list_runningHeadGet(void)
 {
-    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_RUN);
+    return (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_TIMER, KERNAL_MEMBER_LIST_TIMER_RUN);
 }
 
 /**
@@ -116,11 +115,10 @@ static void _timer_list_remove_fromWaitList(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    timer_context_t* pCurTimer = (timer_context_t*)&pCurHead->linker.node;
-    timer_context_t* pNext = (timer_context_t*)pCurTimer->head.linker.node.pNext;
+    timer_context_t *pCurTimer = (timer_context_t *)&pCurHead->linker.node;
+    timer_context_t *pNext = (timer_context_t *)pCurTimer->head.linker.node.pNext;
 
-    if (pNext)
-    {
+    if (pNext) {
         pNext->duration_us += pCurTimer->duration_us;
     }
     pCurTimer->duration_us = 0u;
@@ -207,19 +205,15 @@ static b_t _timer_node_Order_compare_condition(list_node_t *pCurNode, list_node_
     timer_context_t *pCurTimer = (timer_context_t *)pCurNode;
     timer_context_t *pExtractTimer = (timer_context_t *)pExtractNode;
 
-    if ((!pCurTimer) || (!pExtractTimer))
-    {
+    if ((!pCurTimer) || (!pExtractTimer)) {
         /* no available timer */
         return FALSE;
     }
 
-    if (pCurTimer->duration_us > pExtractTimer->duration_us)
-    {
+    if (pCurTimer->duration_us > pExtractTimer->duration_us) {
         pCurTimer->duration_us -= pExtractTimer->duration_us;
         return TRUE;
-    }
-    else
-    {
+    } else {
         pExtractTimer->duration_us -= pCurTimer->duration_us;
         return FALSE;
     }
@@ -246,13 +240,13 @@ static void _timer_list_transfer_toWaitList(linker_head_t *pCurHead)
  *
  * @return The value of waiting linker head pointer.
  */
-static linker_head_t* _timer_linker_head_fromWaiting(void)
+static linker_head_t *_timer_linker_head_fromWaiting(void)
 {
     ENTER_CRITICAL_SECTION();
     list_t *pListWaiting = (list_t *)_timer_list_waitingHeadGet();
     EXIT_CRITICAL_SECTION();
 
-    return (linker_head_t*)(pListWaiting->pHead);
+    return (linker_head_t *)(pListWaiting->pHead);
 }
 
 /**
@@ -291,18 +285,11 @@ static b_t _timer_object_isInit(u32_t id)
  */
 u32_t _impl_timer_os_id_to_number(u32_t id)
 {
-    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id))
-    {
-        return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) /
-                        sizeof(timer_context_t));
-    }
-    else if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id))
-    {
-        return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER)) /
-                        sizeof(timer_context_t));
-    }
-    else
-    {
+    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id)) {
+        return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) / sizeof(timer_context_t));
+    } else if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id)) {
+        return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER)) / sizeof(timer_context_t));
+    } else {
         return 0u;
     }
 }
@@ -319,15 +306,14 @@ u32_t _impl_timer_os_id_to_number(u32_t id)
  */
 os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t timeout_ms, const char_t *pName)
 {
-    arguments_t arguments[] =
-    {
-        [0] = {.ptr_val = (const void*)pCallFun},
+    arguments_t arguments[] = {
+        [0] = {.ptr_val = (const void *)pCallFun},
         [1] = {.b_val = (b_t)isCycle},
         [2] = {.u32_val = (u32_t)timeout_ms},
-        [3] = {.pch_val = (const void*)pName},
+        [3] = {.pch_val = (const void *)pName},
     };
 
-    return _impl_kernal_privilege_invoke((const void*)_timer_init_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void *)_timer_init_privilege_routine, arguments);
 }
 
 /**
@@ -339,9 +325,9 @@ void _impl_thread_timer_init(os_id_t id)
 {
     ENTER_CRITICAL_SECTION();
 
-    timer_context_t* pCurTimer = _timer_object_contextGet(id);
+    timer_context_t *pCurTimer = _timer_object_contextGet(id);
 
-    _memset((char_t*)pCurTimer, 0x0u, sizeof(timer_context_t));
+    _memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
 
     pCurTimer->head.id = id;
     pCurTimer->head.pName = "TH";
@@ -367,25 +353,21 @@ void _impl_thread_timer_start(os_id_t id, u32_t timeout_ms, void (*pCallback)(os
 {
     ENTER_CRITICAL_SECTION();
 
-    timer_context_t* pCurTimer = _timer_object_contextGet(id); // Only for internal thread use
+    timer_context_t *pCurTimer = _timer_object_contextGet(id); // Only for internal thread use
 
     pCurTimer->call.pThread = pCallback;
     pCurTimer->timeout_ms = OS_TIME_FOREVER_VAL;
     pCurTimer->isCycle = FALSE;
 
-    if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet())
-    {
-        _timer_list_remove_fromWaitList((linker_head_t*)&pCurTimer->head);
+    if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
+        _timer_list_remove_fromWaitList((linker_head_t *)&pCurTimer->head);
     }
 
-    if (timeout_ms == OS_TIME_FOREVER_VAL)
-    {
+    if (timeout_ms == OS_TIME_FOREVER_VAL) {
         _timer_list_transfer_toEndList((linker_head_t *)&pCurTimer->head);
-    }
-    else
-    {
+    } else {
         pCurTimer->duration_us = (timeout_ms * 1000u);
-        _timer_list_transfer_toWaitList((linker_head_t*)&pCurTimer->head);
+        _timer_list_transfer_toWaitList((linker_head_t *)&pCurTimer->head);
     }
 
     EXIT_CRITICAL_SECTION();
@@ -403,29 +385,25 @@ void _impl_thread_timer_start(os_id_t id, u32_t timeout_ms, void (*pCallback)(os
  */
 u32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
 {
-    if (_timer_id_isInvalid(id))
-    {
+    if (_timer_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    if (!_timer_object_isInit(id))
-    {
+    if (!_timer_object_isInit(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    if (!timeout_ms)
-    {
+    if (!timeout_ms) {
         return _PC_CMPT_FAILED;
     }
 
-    arguments_t arguments[] =
-    {
+    arguments_t arguments[] = {
         [0] = {.u32_val = (u32_t)id},
         [1] = {.b_val = (u32_t)isCycle},
         [2] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    return _impl_kernal_privilege_invoke((const void*)_timer_start_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void *)_timer_start_privilege_routine, arguments);
 }
 
 /**
@@ -437,22 +415,19 @@ u32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
  */
 u32p_t _impl_timer_stop(os_id_t id)
 {
-    if (_timer_id_isInvalid(id))
-    {
+    if (_timer_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    if (!_timer_object_isInit(id))
-    {
+    if (!_timer_object_isInit(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    arguments_t arguments[] =
-    {
+    arguments_t arguments[] = {
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke((const void*)_timer_stop_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void *)_timer_stop_privilege_routine, arguments);
 }
 
 /**
@@ -464,21 +439,19 @@ u32p_t _impl_timer_stop(os_id_t id)
  */
 b_t _impl_timer_status_isBusy(os_id_t id)
 {
-    if (_timer_id_isInvalid(id))
-    {
+    if (_timer_id_isInvalid(id)) {
         return FALSE;
     }
 
-    if (!_timer_object_isInit(id))
-    {
+    if (!_timer_object_isInit(id)) {
         return FALSE;
     }
 
     ENTER_CRITICAL_SECTION();
 
     linker_head_t *pCurHead = (linker_head_t *)_timer_object_contextGet(id);
-    b_t isBusy = (pCurHead->linker.pList == (list_t*)_timer_list_waitingHeadGet());
-    isBusy |= (pCurHead->linker.pList == (list_t*)_timer_list_endingHeadGet());
+    b_t isBusy = (pCurHead->linker.pList == (list_t *)_timer_list_waitingHeadGet());
+    isBusy |= (pCurHead->linker.pList == (list_t *)_timer_list_endingHeadGet());
 
     EXIT_CRITICAL_SECTION();
     return isBusy;
@@ -491,7 +464,7 @@ b_t _impl_timer_status_isBusy(os_id_t id)
  */
 u32_t _impl_timer_total_system_get(void)
 {
-    return _impl_kernal_privilege_invoke((const void*)_timer_total_system_get_privilege_routine, NULL);
+    return _impl_kernal_privilege_invoke((const void *)_timer_total_system_get_privilege_routine, NULL);
 }
 
 /**
@@ -501,7 +474,7 @@ u32_t _impl_timer_total_system_get(void)
  */
 u32p_t _impl_kernal_timer_schedule_request(void)
 {
-    return _impl_kernal_privilege_invoke((const void*)_kernal_timer_schedule_request_privilege_routine, NULL);
+    return _impl_kernal_privilege_invoke((const void *)_kernal_timer_schedule_request_privilege_routine, NULL);
 }
 
 /**
@@ -525,17 +498,15 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
 
     do {
         os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurTimer);
-        if (_timer_id_isInvalid(id))
-        {
+        if (_timer_id_isInvalid(id)) {
             break;
         }
 
-        if (_timer_object_isInit(id))
-        {
+        if (_timer_object_isInit(id)) {
             continue;
         }
 
-        _memset((char_t*)pCurTimer, 0x0u, sizeof(timer_context_t));
+        _memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
         pCurTimer->head.id = id;
         pCurTimer->head.pName = pName;
 
@@ -574,19 +545,15 @@ static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
     pCurTimer->timeout_ms = timeout_ms;
     pCurTimer->isCycle = isCycle;
 
-    if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet())
-    {
-        _timer_list_remove_fromWaitList((linker_head_t*)&pCurTimer->head);
+    if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
+        _timer_list_remove_fromWaitList((linker_head_t *)&pCurTimer->head);
     }
 
-    if (pCurTimer->timeout_ms == OS_TIME_FOREVER_VAL)
-    {
+    if (pCurTimer->timeout_ms == OS_TIME_FOREVER_VAL) {
         _timer_list_transfer_toEndList((linker_head_t *)&pCurTimer->head);
-    }
-    else
-    {
+    } else {
         pCurTimer->duration_us = timeout_ms * 1000u;
-        _timer_list_transfer_toWaitList((linker_head_t*)&pCurTimer->head);
+        _timer_list_transfer_toWaitList((linker_head_t *)&pCurTimer->head);
     }
     _impl_kernal_timer_schedule_request();
 
@@ -609,9 +576,8 @@ static u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
 
     timer_context_t *pCurTimer = (timer_context_t *)_timer_object_contextGet(id);
 
-    if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet())
-    {
-        _timer_list_remove_fromWaitList((linker_head_t*)&pCurTimer->head);
+    if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
+        _timer_list_remove_fromWaitList((linker_head_t *)&pCurTimer->head);
     }
     _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
 
@@ -638,7 +604,7 @@ static u32_t _timer_total_system_get_privilege_routine(arguments_t *pArgs)
 
     us += g_timer_resource.system_us;
 
-    u32_t ms = ((us/1000u) & 0xFFFFFFFFu);
+    u32_t ms = ((us / 1000u) & 0xFFFFFFFFu);
 
     EXIT_CRITICAL_SECTION();
     return ms;
@@ -656,12 +622,9 @@ static u32_t _kernal_timer_schedule_request_privilege_routine(arguments_t *pArgs
     ENTER_CRITICAL_SECTION();
 
     timer_context_t *pCurTimer = (timer_context_t *)_timer_linker_head_fromWaiting();
-    if (pCurTimer)
-    {
+    if (pCurTimer) {
         _impl_clock_time_interval_set(pCurTimer->duration_us);
-    }
-    else
-    {
+    } else {
         _impl_clock_time_interval_set(OS_TIME_FOREVER_VAL);
     }
 
@@ -680,10 +643,8 @@ void _impl_timer_reamining_elapsed_handler(void)
     struct callFunc *pCallFun = (struct callFunc *)list_node_pop(pListRunning, LIST_TAIL);
     EXIT_CRITICAL_SECTION();
 
-    while (pCallFun)
-    {
-        if (pCallFun->pTimer)
-        {
+    while (pCallFun) {
+        if (pCallFun->pTimer) {
             pCallFun->pTimer();
         }
 
@@ -708,32 +669,24 @@ void _impl_timer_elapsed_handler(u32_t elapsed_us)
     list_iterator_t it = {0u};
     list_t *pListWaiting = (list_t *)_timer_list_waitingHeadGet();
     list_iterator_init(&it, pListWaiting);
-    while (list_iterator_next_condition(&it, (void *)&pCurTimer))
-    {
-        if (g_timer_resource.remaining_us >= pCurTimer->duration_us)
-        {
+    while (list_iterator_next_condition(&it, (void *)&pCurTimer)) {
+        if (g_timer_resource.remaining_us >= pCurTimer->duration_us) {
             g_timer_resource.remaining_us -= pCurTimer->duration_us;
             g_timer_resource.system_us += pCurTimer->duration_us;
             pCurTimer->duration_us = 0u;
 
-            if (_impl_kernal_member_unified_id_toId(pCurTimer->head.id) == KERNAL_MEMBER_TIMER_INTERNAL)
-            {
+            if (_impl_kernal_member_unified_id_toId(pCurTimer->head.id) == KERNAL_MEMBER_TIMER_INTERNAL) {
                 _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
 
-                if (pCurTimer->call.pThread)
-                {
+                if (pCurTimer->call.pThread) {
                     pCurTimer->call.pThread(pCurTimer->head.id);
                 }
                 pCurTimer->call.pThread = NULL;
-            }
-            else
-            {
+            } else {
                 pCurTimer->duration_us = g_timer_resource.system_us;
                 _timer_list_transfer_toPendList((linker_head_t *)&pCurTimer->head);
             }
-        }
-        else
-        {
+        } else {
             pCurTimer->duration_us -= g_timer_resource.remaining_us;
             break;
         }
@@ -745,35 +698,28 @@ void _impl_timer_elapsed_handler(u32_t elapsed_us)
     b_t request = FALSE;
     list_t *pListPending = (list_t *)_timer_list_pendingHeadGet();
     list_iterator_init(&it, pListPending);
-    while (list_iterator_next_condition(&it, (void *)&pCurTimer))
-    {
-        if (pCurTimer->isCycle)
-        {
+    while (list_iterator_next_condition(&it, (void *)&pCurTimer)) {
+        if (pCurTimer->isCycle) {
             u64_t timeout_us = pCurTimer->timeout_ms * 1000u;
             u64_t elapsed_us = g_timer_resource.system_us - pCurTimer->duration_us;
 
-            while (elapsed_us >= timeout_us)
-            {
+            while (elapsed_us >= timeout_us) {
                 elapsed_us -= timeout_us;
             }
             pCurTimer->duration_us = timeout_us - elapsed_us;
             _timer_list_transfer_toWaitList((linker_head_t *)&pCurTimer->head);
-        }
-        else
-        {
+        } else {
             pCurTimer->duration_us = 0u;
             _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
         }
         list_t *pListRunning = (list_t *)_timer_list_runningHeadGet();
-        if (!list_node_isExisted(pListRunning, &pCurTimer->call.node))
-        {
+        if (!list_node_isExisted(pListRunning, &pCurTimer->call.node)) {
             list_node_push(_timer_list_runningHeadGet(), &pCurTimer->call.node, LIST_HEAD);
         }
         request = TRUE;
     }
 
-    if (request)
-    {
+    if (request) {
         _impl_kernal_message_notification();
     }
     _impl_kernal_timer_schedule_request();

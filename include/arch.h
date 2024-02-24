@@ -18,7 +18,7 @@ typedef enum IRQn {
     /******  Cortex-Mx Processor Exceptions Numbers
     ***************************************************/
     NonMaskableInt_IRQn = -14,   /*!< 2 Non Maskable Interrupt                         */
-    HardFault_IRQn = -13,        /*!<   3  Hard Fault, all classes of Fault        */
+    HardFault_IRQn = -13,        /*!<   3  Hard Fault, all classes of Fault            */
     MemoryManagement_IRQn = -12, /*!< 4 Cortex-Mx Memory Management Interrupt          */
     BusFault_IRQn = -11,         /*!< 5 Cortex-Mx Bus Fault Interrupt                  */
     UsageFault_IRQn = -10,       /*!< 6 Cortex-Mx Usage Fault Interrupt                */
@@ -30,106 +30,107 @@ typedef enum IRQn {
 
 /* Configuration of the Cortex-M Processor and Core Peripherals */
 /* SAU regions present */
-#if !defined ( __SAUREGION_PRESENT )
-    #if defined ( ARCH_SAUREGION_PRESENT )
-        #define __SAUREGION_PRESENT                 ARCH_SAUREGION_PRESENT
-    #endif
+#if !defined(__SAUREGION_PRESENT)
+#if defined(ARCH_SAUREGION_PRESENT)
+#define __SAUREGION_PRESENT ARCH_SAUREGION_PRESENT
+#endif
 #endif
 
 /* MPU present */
-#if !defined ( __MPU_PRESENT ) 
-    #if defined ( ARCH_MPU_PRESENT )
-        #define __MPU_PRESENT                       ARCH_MPU_PRESENT
-    #endif
+#if !defined(__MPU_PRESENT)
+#if defined(ARCH_MPU_PRESENT)
+#define __MPU_PRESENT ARCH_MPU_PRESENT
+#endif
 #endif
 
 /* MPU present */
-#if !defined ( __VTOR_PRESENT )
-    #if defined ( ARCH_VTOR_PRESENT )
-        #define __VTOR_PRESENT                      ARCH_VTOR_PRESENT
-    #endif
+#if !defined(__VTOR_PRESENT)
+#if defined(ARCH_VTOR_PRESENT)
+#define __VTOR_PRESENT ARCH_VTOR_PRESENT
+#endif
 #endif
 
 /* VTOR present */
-#if !defined ( __VTOR_PRESENT )
-    #if defined ( ARCH_VTOR_PRESENT )
-        #define __VTOR_PRESENT                      ARCH_VTOR_PRESENT
-    #endif
+#if !defined(__VTOR_PRESENT)
+#if defined(ARCH_VTOR_PRESENT)
+#define __VTOR_PRESENT ARCH_VTOR_PRESENT
+#endif
 #endif
 
-    
 /* DSP extension present */
-#if !defined ( __DSP_PRESENT )
-    #if defined ( ARCH_DSP_PRESENT )
-        #define __DSP_PRESENT                       ARCH_DSP_PRESENT
-    #endif
+#if !defined(__DSP_PRESENT)
+#if defined(ARCH_DSP_PRESENT)
+#define __DSP_PRESENT ARCH_DSP_PRESENT
+#endif
 #endif
 
 /* FPU present */
-#if !defined ( __FPU_PRESENT )
-    #if defined ( ARCH_FPU_PRESENT )
-        #define __FPU_PRESENT                       ARCH_FPU_PRESENT
-    #endif
+#if !defined(__FPU_PRESENT)
+#if defined(ARCH_FPU_PRESENT)
+#define __FPU_PRESENT ARCH_FPU_PRESENT
 #endif
-    
+#endif
+
 /* Number of Bits used for Priority Levels */
-#if !defined ( __NVIC_PRIO_BITS )
-    #if defined ( ARCH_NVIC_PRIO_BITS )
-        #define __NVIC_PRIO_BITS                    ARCH_NVIC_PRIO_BITS
-    #else
-        #error "No __NVIC_PRIO_BITS or ARCH_NVIC_PRIO_BITS is defined in head of this file"
-    #endif
+#if !defined(__NVIC_PRIO_BITS)
+#if defined(ARCH_NVIC_PRIO_BITS)
+#define __NVIC_PRIO_BITS ARCH_NVIC_PRIO_BITS
+#else
+#error "No __NVIC_PRIO_BITS or ARCH_NVIC_PRIO_BITS is defined in head of this file"
 #endif
-    
+#endif
+
 /* Set to 1 if different SysTick Config is used */
-#if !defined ( __Vendor_SysTickConfig )
-    #if defined ( ARCH_Vendor_SysTickConfig )
-        #define __Vendor_SysTickConfig              ARCH_Vendor_SysTickConfig
-    #else
-        #error "No __Vendor_SysTickConfig or ARCH_Vendor_SysTickConfig is defined in head of this file"
-    #endif
+#if !defined(__Vendor_SysTickConfig)
+#if defined(ARCH_Vendor_SysTickConfig)
+#define __Vendor_SysTickConfig ARCH_Vendor_SysTickConfig
+#else
+#error "No __Vendor_SysTickConfig or ARCH_Vendor_SysTickConfig is defined in head of this file"
+#endif
 #endif
 
-#if defined ( ARCH_ARM_CORTEX_CM0 )
-    #include "../arch/arch32/arm/cmsis/include/core_cm0.h"
+#if defined(ARCH_ARM_CORTEX_CM0)
+#include "../arch/arch32/arm/cmsis/include/core_cm0.h"
 
-#elif defined ( ARCH_ARM_CORTEX_CM0plus )
-    #include "../arch/arch32/arm/cmsis/include/core_cm0plus.h"
+#elif defined(ARCH_ARM_CORTEX_CM0plus)
+#include "../arch/arch32/arm/cmsis/include/core_cm0plus.h"
 
-#elif defined ( ARCH_ARM_CORTEX_CM3 )
-    #include "../arch/arch32/arm/cmsis/include/core_cm3.h"
+#elif defined(ARCH_ARM_CORTEX_CM3)
+#include "../arch/arch32/arm/cmsis/include/core_cm3.h"
 
-#elif defined ( ARCH_ARM_CORTEX_CM4 )
-    #include "../arch/arch32/arm/cmsis/include/core_cm4.h"
+#elif defined(ARCH_ARM_CORTEX_CM4)
+#include "../arch/arch32/arm/cmsis/include/core_cm4.h"
 
-#elif defined ( ARCH_ARM_CORTEX_CM23 )
-    #include "../arch/arch32/arm/cmsis/include/core_cm23.h"
+#elif defined(ARCH_ARM_CORTEX_CM23)
+#include "../arch/arch32/arm/cmsis/include/core_cm23.h"
 
-#elif defined ( ARCH_ARM_CORTEX_CM33 )
-    #include "../arch/arch32/arm/cmsis/include/core_cm33.h"
+#elif defined(ARCH_ARM_CORTEX_CM33)
+#include "../arch/arch32/arm/cmsis/include/core_cm33.h"
 
 #elif defined ARCH_ARM_CORTEX_CM7
-    #include "../arch/arch32/arm/cmsis/include/core_cm7.h"
+#include "../arch/arch32/arm/cmsis/include/core_cm7.h"
 
 #elif defined ARCH_NATIVE_GCC
-    // Nothing to do
+// Nothing to do
 #else
-    #error "No ARM Arch is defined in head of this file"
+#error "No ARM Arch is defined in head of this file"
 #endif
 
-#if !defined( ARCH_NATIVE_GCC )
-    #define ARCH_ENTER_CRITICAL_SECTION()   vu32_t PRIMASK_Bit = __get_PRIMASK();        \
-                                              __disable_irq();                           \
-                                              __DSB();                                   \
-                                              __ISB();
+#if !defined(ARCH_NATIVE_GCC)
+#define ARCH_ENTER_CRITICAL_SECTION()                                                                                                                                                                  \
+    vu32_t PRIMASK_Bit = __get_PRIMASK();                                                                                                                                                              \
+    __disable_irq();                                                                                                                                                                                   \
+    __DSB();                                                                                                                                                                                           \
+    __ISB();
 
-    #define ARCH_EXIT_CRITICAL_SECTION()    __set_PRIMASK(PRIMASK_Bit);                  \
-                                              __DSB();                                   \
-                                              __ISB();
+#define ARCH_EXIT_CRITICAL_SECTION()                                                                                                                                                                   \
+    __set_PRIMASK(PRIMASK_Bit);                                                                                                                                                                        \
+    __DSB();                                                                                                                                                                                           \
+    __ISB();
 
 #else
-    #define ARCH_ENTER_CRITICAL_SECTION()
-    #define ARCH_EXIT_CRITICAL_SECTION()
+#define ARCH_ENTER_CRITICAL_SECTION()
+#define ARCH_EXIT_CRITICAL_SECTION()
 #endif
 
 #ifdef __cplusplus

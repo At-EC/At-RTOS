@@ -16,14 +16,14 @@ extern "C" {
 #include "unique.h"
 #include "configuration.h"
 
-#define ATOS_THREAD_DEFINE(thread_name, stack_size, thread_priority)    static os_thread_symbol_t thread_name[((u32_t)(stack_size) / sizeof(u32_t))] = { \
-    [0] = {.size = stack_size},                                                                                                                          \
-    [1] = {.priority = thread_priority},                                                                                                                 \
-    [2] = {.pName = #thread_name},                                                                                                                       \
-};                                                                                                                                                       \
-S_ASSERT(((stack_size) >= STACK_SIZE_MINIMUM) , "The thread stack size must be higher than STACK_SIZE_MINIMUM");                                         \
-S_ASSERT((((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thread_priority) <= OS_PRIORITY_USER_THREAD_LOWEST_LEVEL)) ,                 \
-         "The thread priority is out of the system design")
+#define ATOS_THREAD_DEFINE(thread_name, stack_size, thread_priority)                                                                                                                                   \
+    static os_thread_symbol_t thread_name[((u32_t)(stack_size) / sizeof(u32_t))] = {                                                                                                                   \
+        [0] = {.size = stack_size},                                                                                                                                                                    \
+        [1] = {.priority = thread_priority},                                                                                                                                                           \
+        [2] = {.pName = #thread_name},                                                                                                                                                                 \
+    };                                                                                                                                                                                                 \
+    S_ASSERT(((stack_size) >= STACK_SIZE_MINIMUM), "The thread stack size must be higher than STACK_SIZE_MINIMUM");                                                                                    \
+    S_ASSERT((((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thread_priority) <= OS_PRIORITY_USER_THREAD_LOWEST_LEVEL)), "The thread priority is out of the system design")
 
 #include "thread.h"
 
@@ -62,13 +62,13 @@ S_ASSERT((((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thre
  * }
  *
  */
-static inline os_thread_id_t thread_init(os_thread_symbol_t* pThread_symbol, pThread_entryFunc_t pEntryFun)
+static inline os_thread_id_t thread_init(os_thread_symbol_t *pThread_symbol, pThread_entryFunc_t pEntryFun)
 {
     os_thread_id_t id = {0u};
-    u32_t* pStackAddress = (u32_t*)pThread_symbol;
+    u32_t *pStackAddress = (u32_t *)pThread_symbol;
     u32_t stackSize = (u32_t)pThread_symbol[0].size;
     u8_t priority = (u8_t)pThread_symbol[1].priority;
-    const char_t* pName = (const char_t*)pThread_symbol[2].pName;
+    const char_t *pName = (const char_t *)pThread_symbol[2].pName;
 
     id.val = _impl_thread_init(pEntryFun, pStackAddress, stackSize, priority, pName);
     id.number = _impl_thread_os_id_to_number(id.val);
@@ -482,13 +482,13 @@ static inline u32p_t mutex_unlock(os_mutex_id_t id)
 }
 
 #include "event.h"
- /**
-  * @brief Initialize a new event.
-  *
-  * @param pName The event name.
-  * @param edge Callback function trigger edge condition.
-  *
-  * @return The event unique id.
+/**
+ * @brief Initialize a new event.
+ *
+ * @param pName The event name.
+ * @param edge Callback function trigger edge condition.
+ *
+ * @return The event unique id.
  **
  * demo usage:
  *
@@ -776,46 +776,45 @@ static inline u32p_t kernal_atos_run(void)
 }
 
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
-#if ( OS_INTERFACE_EXTERN_USE_ENABLE )
-    typedef struct
-    {
-        os_thread_id_t (*thread_init)(os_thread_symbol_t*, pThread_entryFunc_t);
-        u32p_t         (*thread_sleep)(u32_t);
-        u32p_t         (*thread_resume)(os_thread_id_t);
-        u32p_t         (*thread_suspend)(os_thread_id_t);
-        u32p_t         (*thread_yield)(void);
-        u32p_t         (*thread_delete)(os_thread_id_t);
+#if (OS_INTERFACE_EXTERN_USE_ENABLE)
+typedef struct {
+    os_thread_id_t (*thread_init)(os_thread_symbol_t *, pThread_entryFunc_t);
+    u32p_t (*thread_sleep)(u32_t);
+    u32p_t (*thread_resume)(os_thread_id_t);
+    u32p_t (*thread_suspend)(os_thread_id_t);
+    u32p_t (*thread_yield)(void);
+    u32p_t (*thread_delete)(os_thread_id_t);
 
-        os_timer_id_t  (*timer_init)(pTimer_callbackFunc_t, b_t, u32_t, const char_t *);
-        u32p_t         (*timer_start)(os_timer_id_t, b_t, u32_t);
-        u32p_t         (*timer_stop)(os_timer_id_t);
-        u32p_t         (*timer_isBusy)(os_timer_id_t);
-        u32_t          (*timer_system_total_ms)(void);
+    os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, b_t, u32_t, const char_t *);
+    u32p_t (*timer_start)(os_timer_id_t, b_t, u32_t);
+    u32p_t (*timer_stop)(os_timer_id_t);
+    u32p_t (*timer_isBusy)(os_timer_id_t);
+    u32_t (*timer_system_total_ms)(void);
 
-        os_sem_id_t    (*sem_init)(u8_t, u8_t, b_t, const char_t *);
-        u32p_t         (*sem_take)(os_sem_id_t, u32_t);
-        u32p_t         (*sem_give)(os_sem_id_t);
-        u32p_t         (*sem_flush)(os_sem_id_t);
+    os_sem_id_t (*sem_init)(u8_t, u8_t, b_t, const char_t *);
+    u32p_t (*sem_take)(os_sem_id_t, u32_t);
+    u32p_t (*sem_give)(os_sem_id_t);
+    u32p_t (*sem_flush)(os_sem_id_t);
 
-        os_mutex_id_t  (*mutex_init)(const char_t *);
-        u32p_t         (*mutex_lock)(os_mutex_id_t);
-        u32p_t         (*mutex_unlock)(os_mutex_id_t);
+    os_mutex_id_t (*mutex_init)(const char_t *);
+    u32p_t (*mutex_lock)(os_mutex_id_t);
+    u32p_t (*mutex_unlock)(os_mutex_id_t);
 
-        os_evt_id_t    (*evt_init)(u32_t, pEvent_callbackFunc_t, const char_t *);
-        u32p_t         (*evt_set)(os_evt_id_t, u32_t);
-        u32p_t         (*evt_wait)(os_evt_id_t, u32_t *, u32_t, u32_t, u32_t);
+    os_evt_id_t (*evt_init)(u32_t, pEvent_callbackFunc_t, const char_t *);
+    u32p_t (*evt_set)(os_evt_id_t, u32_t);
+    u32p_t (*evt_wait)(os_evt_id_t, u32_t *, u32_t, u32_t, u32_t);
 
-        os_msgq_id_t   (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
-        u32p_t         (*msgq_send)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
-        u32p_t         (*msgq_receive)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
+    os_msgq_id_t (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
+    u32p_t (*msgq_send)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
+    u32p_t (*msgq_receive)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
 
-        b_t            (*id_isInvalid)(struct os_id);
-        u32p_t         (*at_rtos_run)(void);
-        b_t            (*kernal_is_running)(void);
-        os_thread_id_t (*id_current_thread)(void);
-    }at_rtos_api_t;
+    b_t (*id_isInvalid)(struct os_id);
+    u32p_t (*at_rtos_run)(void);
+    b_t (*kernal_is_running)(void);
+    os_thread_id_t (*id_current_thread)(void);
+} at_rtos_api_t;
 
-    extern const at_rtos_api_t AtOS;
+extern const at_rtos_api_t AtOS;
 #endif
 
 #ifdef __cplusplus
@@ -823,4 +822,3 @@ static inline u32p_t kernal_atos_run(void)
 #endif
 
 #endif /* _AT_RTOS_H_ */
-

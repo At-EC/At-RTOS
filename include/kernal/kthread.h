@@ -15,13 +15,12 @@
 extern "C" {
 #endif
 
-void  _impl_kernal_thread_message_notification(void);
+void _impl_kernal_thread_message_notification(void);
 u32_t _impl_kernal_thread_message_arrived(void);
-void  _impl_kernal_thread_init(void);
+void _impl_kernal_thread_init(void);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* _KTHREAD_H_ */
-

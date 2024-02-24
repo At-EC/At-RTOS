@@ -17,74 +17,75 @@
 extern "C" {
 #endif
 
-typedef char                                    char_t;
-typedef unsigned char                           uchar_t;
-typedef unsigned char                           u8_t;
-typedef unsigned short                          u16_t;
-typedef unsigned int                            u32_t;
-typedef unsigned long long                      u64_t;
-typedef signed char                             i8_t;
-typedef signed short                            i16_t;
-typedef signed int                              i32_t;
-typedef signed long long                        i64_t;
-typedef volatile char                           vchar_t;
-typedef volatile unsigned char                  vuchar_t;
-typedef volatile unsigned char                  vu8_t;
-typedef volatile unsigned short                 vu16_t;
-typedef volatile unsigned int                   vu32_t;
-typedef volatile unsigned long long             vu64_t;
-typedef volatile signed char                    vi8_t;
-typedef volatile signed short                   vi16_t;
-typedef volatile signed int                     vi32_t;
-typedef volatile signed long long               vi64_t;
-typedef bool                                    b_t;
-typedef u32_t                                   u32p_t;
+typedef char char_t;
+typedef unsigned char uchar_t;
+typedef unsigned char u8_t;
+typedef unsigned short u16_t;
+typedef unsigned int u32_t;
+typedef unsigned long long u64_t;
+typedef signed char i8_t;
+typedef signed short i16_t;
+typedef signed int i32_t;
+typedef signed long long i64_t;
+typedef volatile char vchar_t;
+typedef volatile unsigned char vuchar_t;
+typedef volatile unsigned char vu8_t;
+typedef volatile unsigned short vu16_t;
+typedef volatile unsigned int vu32_t;
+typedef volatile unsigned long long vu64_t;
+typedef volatile signed char vi8_t;
+typedef volatile signed short vi16_t;
+typedef volatile signed int vi32_t;
+typedef volatile signed long long vi64_t;
+typedef bool b_t;
+typedef u32_t u32p_t;
 
 #ifndef FALSE
-    #define FALSE                               false
+#define FALSE false
 #endif
 
 #ifndef TRUE
-    #define TRUE                                true
+#define TRUE true
 #endif
 
-#define UNUSED_MSG(x)                           (void)(x)
-#define UNUSED_ARG                              (0u)
+#define UNUSED_MSG(x) (void)(x)
+#define UNUSED_ARG    (0u)
 
-#define FLAG(x)                                 (!!(x))
-#define UNFLAG(x)                               (!!!(x))
+#define FLAG(x)   (!!(x))
+#define UNFLAG(x) (!!!(x))
 
-#define MAGIC(pre, post)                        pre ## post
+#define MAGIC(pre, post) pre##post
 
 #if defined __COUNTER__
-    #define COMPLIER_UNIQUE_NUMBER              __COUNTER__
+#define COMPLIER_UNIQUE_NUMBER __COUNTER__
 #else
-    #define COMPLIER_UNIQUE_NUMBER              __LINE__
+#define COMPLIER_UNIQUE_NUMBER __LINE__
 #endif
 
-#define VREG32(addr)                            (*(volatile u32_t *)(u32_t)(addr))
-#define VREG16(addr)                            (*(volatile u16_t *)(u32_t)(addr))
-#define VREG8(addr)                             (*(volatile u8_t *)(u32_t)(addr))
+#define VREG32(addr) (*(volatile u32_t *)(u32_t)(addr))
+#define VREG16(addr) (*(volatile u16_t *)(u32_t)(addr))
+#define VREG8(addr)  (*(volatile u8_t *)(u32_t)(addr))
 
-#define SBIT(x)                                 ((u32_t)((u32_t)0x01u<<(x)))
-#define SBITS(start, end)                       ((0xFFFFFFFFul << (start)) & (0xFFFFFFFFul >> (31u - (u32_t)(end))))
-#define GBITS(regval, start, end)               (((regval) & SBITS((start),(end))) >> (start))
+#define SBIT(x)                   ((u32_t)((u32_t)0x01u << (x)))
+#define SBITS(start, end)         ((0xFFFFFFFFul << (start)) & (0xFFFFFFFFul >> (31u - (u32_t)(end))))
+#define GBITS(regval, start, end) (((regval) & SBITS((start), (end))) >> (start))
 
-#define DEQUALIFY(s, v)                         ((s)(u32_t)(const volatile void *)(v))
-#define OFFSETOF(s, m)                          ((u32_t)(&((s *)0)->m))
-#define CONTAINEROF(p, s, m)                    (DEQUALIFY(s*, ((const vu8_t *)(p) - OFFSETOF(s, m))))
-#define SIZEOF(arr)                             (sizeof(arr))
-#define DIMOF(arr)                              (SIZEOF(arr) / SIZEOF(arr[0]))
+#define DEQUALIFY(s, v)      ((s)(u32_t)(const volatile void *)(v))
+#define OFFSETOF(s, m)       ((u32_t)(&((s *)0)->m))
+#define CONTAINEROF(p, s, m) (DEQUALIFY(s *, ((const vu8_t *)(p)-OFFSETOF(s, m))))
+#define SIZEOF(arr)          (sizeof(arr))
+#define DIMOF(arr)           (SIZEOF(arr) / SIZEOF(arr[0]))
 
-#define ROUND_UP(size, align)                   (((u32_t)(size) + (align - 1u)) & (~(align - 1)))
-#define ROUND_DOWN(size, align)                 (((u32_t)(size)) & (~(align - 1)))
-#define RANGE_ADDRESS_CONDITION(address, pool)  (((u32_t)(address) >= (u32_t)(pool)) && ((u32_t)(address) < ((u32_t)(pool) + (u16_t)SIZEOF(pool))))
+#define ROUND_UP(size, align)   (((u32_t)(size) + (align - 1u)) & (~(align - 1)))
+#define ROUND_DOWN(size, align) (((u32_t)(size)) & (~(align - 1)))
+#define RANGE_ADDRESS_CONDITION(address, pool)                                                                                             \
+    (((u32_t)(address) >= (u32_t)(pool)) && ((u32_t)(address) < ((u32_t)(pool) + (u16_t)SIZEOF(pool))))
 
 /**
  * The implement string operation function lists for rtos kernal internal use.
  */
-void  _memcpy(void *dst, const void *src, u32_t cnt);
-void  _memset(void *dst, u8_t val, u32_t cnt);
+void _memcpy(void *dst, const void *src, u32_t cnt);
+void _memset(void *dst, u8_t val, u32_t cnt);
 i32_t _memcmp(const void *dst, const void *src, u32_t cnt);
 u32_t _strlen(const uchar_t *str);
 
@@ -93,4 +94,3 @@ u32_t _strlen(const uchar_t *str);
 #endif
 
 #endif /* _TYPE_H_ */
-

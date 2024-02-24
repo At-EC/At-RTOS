@@ -1,0 +1,40 @@
+# Online References website: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+---
+Language: Cpp
+BasedOnStyle: LLVM
+AlignConsecutiveMacros: AcrossComments
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AttributeMacros:
+  - __aligned
+  - __packed
+  - __syscall
+BitFieldColonSpacing: Both
+BreakBeforeBraces: Linux
+ColumnLimit: 140
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^".*\.h"$'
+    Priority: 0
+  - Regex: '^<(stdlib|string|stdbool|stdio|type|basic)\.h>$'
+    Priority: 1
+  - Regex: '^\<atos/.*\.h\>$'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3
+IndentCaseLabels: true
+IndentWidth: 4
+InsertBraces: true
+SpaceBeforeParens: ControlStatementsExceptControlMacros
+SortIncludes: Never
+UseTab: Never
+WhitespaceSensitiveMacros:
+  - PRINTF
