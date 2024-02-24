@@ -4,7 +4,7 @@ At-RTOS(Advantage Real-Time Operating System) is an open and user-friendly Real-
 
 The goal of the system is to explore and try to provide a range of features and capabilities based on the RTOS to support and simplify your embedded firmware development.
 
-I hope the At-RTOS could be a popular community-based embedded controller's real-time operating system in the future. If this project was useful to you, give it a ⭐️ and share it to your friends. I'll keep improving it. 
+I hope the At-RTOS could be a popular community-based embedded controller's real-time operating system in the future. If this project was useful to you, give it a ⭐️. It is very important for us know it's useful to you. Your attention will encourage us. 
 
 Welcome PRs! If you are interested in contributing, Pls join us at [Discord](https://discord.gg/AxfF9aH58G). 
 
@@ -178,8 +178,7 @@ ATOS_THREAD_DEFINE(first_thread, 1024, 7); // Set the thread stack size to 1024 
 /* User thread's entry function. */
 static void first_thread_entry(void)
 {
-    while(1)
-    {
+    while(1) {
         AtOS.thread_sleep(1000u);
     }
 }
@@ -189,8 +188,7 @@ int main(void)
 {
     /* Initialize the your first thread. */
     os_thread_id_t first_id = AtOS.thread_init(first_thread, first_thread_entry);
-    if (AtOS.id_isInvalid(first_id))
-    {
+    if (AtOS.id_isInvalid(first_id)) {
         printf("Thread %s init failed\n", first_id.pName);
     }
 	
@@ -200,7 +198,6 @@ int main(void)
 ```
 
 ## License
-At-RTOS is [MIT licensed](./LICENSE).
 
 The At-RTOS is completely open-source, can be used in commercial applications for free, does not require the disclosure of code, and has no potential commercial risk. License information and copyright information can generally be seen at the beginning of the code:
 
@@ -212,3 +209,5 @@ The At-RTOS is completely open-source, can be used in commercial applications fo
  * LICENSE file in the root directory of this source tree.
 **/
 ```
+
+The MIT License is [here](./LICENSE).

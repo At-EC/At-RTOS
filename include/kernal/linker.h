@@ -14,20 +14,22 @@
 extern "C" {
 #endif
 
-#define LINKER_NULL        {{NULL}, NULL}
+#define LINKER_NULL                                                                                                                        \
+    {                                                                                                                                      \
+        {NULL}, NULL                                                                                                                       \
+    }
 
 /** @brief The pointer of condition function in order to allow the application register a speicfic rules to mannage the list node */
 typedef b_t (*pLinkerSpecificConditionFunc_t)(list_node_t *, list_node_t *);
 
 /** @brief The linker structure help to mannage the singly-linked list. */
-typedef struct
-{
+typedef struct {
     /* The node */
     list_node_t node;
 
     /* The node in which list */
     list_t *pList;
-}linker_t;
+} linker_t;
 
 void linker_list_transaction_common(linker_t *pLinker, list_t *pToList, list_direction_t direction);
 void linker_list_transaction_specific(linker_t *pLinker, list_t *pToList, pLinkerSpecificConditionFunc_t pConditionFunc);

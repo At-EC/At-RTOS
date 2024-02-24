@@ -16,8 +16,7 @@ extern "C" {
 /**
  * Data structure for location time clock
  */
-typedef struct
-{
+typedef struct {
     /* The last load count value */
     u32_t last_load;
 
@@ -32,7 +31,7 @@ typedef struct
 
     /* The flag indicates the clock ctrl register enabled status */
     b_t ctrl_enabled;
-}_clock_resource_t;
+} _clock_resource_t;
 
 /**
  * Local clock systick resource
@@ -68,8 +67,7 @@ static u32_t _clock_elapsed(void)
  */
 static void _clock_time_elapsed_report(u32_t us)
 {
-    if (g_clock_resource.pCallFunc)
-    {
+    if (g_clock_resource.pCallFunc) {
         g_clock_resource.pCallFunc(us);
     }
 }

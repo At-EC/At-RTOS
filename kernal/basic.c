@@ -22,8 +22,7 @@ void _memcpy(void *dst, const void *src, u32_t cnt)
 {
     uchar_t *d = (uchar_t *)dst;
     const uchar_t *s = (const uchar_t *)src;
-    while (cnt--)
-    {
+    while (cnt--) {
         *d++ = *s++;
     }
 }
@@ -38,8 +37,7 @@ void _memcpy(void *dst, const void *src, u32_t cnt)
 void _memset(void *dst, u8_t val, u32_t cnt)
 {
     uchar_t *d = (uchar_t *)dst;
-    while (cnt--)
-    {
+    while (cnt--) {
         *d++ = (u8_t)val;
     }
 }
@@ -57,7 +55,8 @@ i32_t _memcmp(const void *dst, const void *src, u32_t cnt)
 {
     const uchar_t *d = (const uchar_t *)dst, *s = (const uchar_t *)src;
     int r = 0;
-    while (cnt-- && (r = *d++ - *s++) == 0);
+    while (cnt-- && (r = *d++ - *s++) == 0)
+        ;
     return r;
 }
 
@@ -71,8 +70,7 @@ i32_t _memcmp(const void *dst, const void *src, u32_t cnt)
 u32_t _strlen(const uchar_t *str)
 {
     u32_t len = 0u;
-    while (*str++ != '\0')
-    {
+    while (*str++ != '\0') {
         len++;
     }
     return len;

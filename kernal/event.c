@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_EVENT)
+#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_EVENT)
 
 /**
  * The local function lists for current file internal use.
@@ -35,9 +35,9 @@ static void _event_schedule(os_id_t id);
  *
  * @return The pointer of the current unique id event context.
  */
-static event_context_t* _event_object_contextGet(os_id_t id)
+static event_context_t *_event_object_contextGet(os_id_t id)
 {
-    return (event_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
+    return (event_context_t *)(_impl_kernal_member_unified_id_toContainerAddress(id));
 }
 
 /**
@@ -45,9 +45,9 @@ static event_context_t* _event_object_contextGet(os_id_t id)
  *
  * @return The value of the active list head.
  */
-static list_t* _event_list_activeHeadGet(void)
+static list_t *_event_list_activeHeadGet(void)
 {
-    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_EVENT, KERNAL_MEMBER_LIST_EVENT_ACTIVE);
+    return (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_EVENT, KERNAL_MEMBER_LIST_EVENT_ACTIVE);
 }
 
 /**
@@ -57,11 +57,11 @@ static list_t* _event_list_activeHeadGet(void)
  *
  * @return The highest blocking thread head.
  */
-static list_t* _event_list_blockingHeadGet(os_id_t id)
+static list_t *_event_list_blockingHeadGet(os_id_t id)
 {
     event_context_t *pCurEvent = (event_context_t *)_event_object_contextGet(id);
 
-    return (list_t*)((pCurEvent) ? (&pCurEvent->blockingThreadHead) : (NULL));
+    return (list_t *)((pCurEvent) ? (&pCurEvent->blockingThreadHead) : (NULL));
 }
 
 /**
@@ -124,8 +124,8 @@ static void _event_callback_fromTimeOut(os_id_t id)
  */
 u32_t _impl_event_os_id_to_number(os_id_t id)
 {
-    return (u32_t)(_event_id_isInvalid(id) ?
-                   (0u) : (id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_EVENT)) / sizeof(event_context_t));
+    return (u32_t)(_event_id_isInvalid(id) ? (0u)
+                                           : (id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_EVENT)) / sizeof(event_context_t));
 }
 
 /**
@@ -138,14 +138,13 @@ u32_t _impl_event_os_id_to_number(os_id_t id)
  */
 os_id_t _impl_event_init(u32_t edge, pEvent_callbackFunc_t pCallFun, const char_t *pName)
 {
-    arguments_t arguments[] =
-    {
+    arguments_t arguments[] = {
         [0] = {.u32_val = (u32_t)edge},
-        [1] = {.ptr_val = (const void*)pCallFun},
+        [1] = {.ptr_val = (const void *)pCallFun},
         [2] = {.pch_val = (const char_t *)pName},
     };
 
-    return _impl_kernal_privilege_invoke((const void*)_event_init_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void *)_event_init_privilege_routine, arguments);
 }
 
 /**
@@ -158,23 +157,20 @@ os_id_t _impl_event_init(u32_t edge, pEvent_callbackFunc_t pCallFun, const char_
  */
 u32p_t _impl_event_set(os_id_t id, u32_t event)
 {
-    if (_event_id_isInvalid(id))
-    {
+    if (_event_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    if (!_event_object_isInit(id))
-    {
+    if (!_event_object_isInit(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    arguments_t arguments[] =
-    {
+    arguments_t arguments[] = {
         [0] = {.u32_val = (u32_t)id},
         [1] = {.u32_val = (u32_t)event},
     };
 
-    return _impl_kernal_privilege_invoke((const void*)_event_set_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void *)_event_set_privilege_routine, arguments);
 }
 
 /**
@@ -190,47 +186,37 @@ u32p_t _impl_event_set(os_id_t id, u32_t event)
  */
 u32p_t _impl_event_wait(os_id_t id, u32_t *pEvent, u32_t trigger, u32_t listen, u32_t timeout_ms)
 {
-    if (_event_id_isInvalid(id))
-    {
+    if (_event_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    if (!_event_object_isInit(id))
-    {
+    if (!_event_object_isInit(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    if (!timeout_ms)
-    {
+    if (!timeout_ms) {
         return _PC_CMPT_FAILED;
     }
 
-    if (!_impl_kernal_isInThreadMode())
-    {
+    if (!_impl_kernal_isInThreadMode()) {
         return _PC_CMPT_FAILED;
     }
 
-    arguments_t arguments[] =
-    {
-        [0] = {.u32_val = (u32_t)id},
-        [1] = {.u32_val = (u32_t)pEvent},
-        [2] = {.u32_val = (u32_t)trigger},
-        [3] = {.u32_val = (u32_t)listen},
-        [4] = {.u32_val = (u32_t)timeout_ms},
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (u32_t)id},     [1] = {.u32_val = (u32_t)pEvent},     [2] = {.u32_val = (u32_t)trigger},
+        [3] = {.u32_val = (u32_t)listen}, [4] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    u32p_t postcode = _impl_kernal_privilege_invoke((const void*)_event_wait_privilege_routine, arguments);
+    u32p_t postcode = _impl_kernal_privilege_invoke((const void *)_event_wait_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
 
-    if (PC_IOK(postcode))
-    {
+    if (PC_IOK(postcode)) {
         thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
-        postcode = (u32p_t)_impl_kernal_schedule_entry_result_read_clean((action_schedule_t*)&pCurThread->schedule);
+        postcode = (u32p_t)_impl_kernal_schedule_entry_result_read_clean((action_schedule_t *)&pCurThread->schedule);
     }
 
-    if (PC_IOK(postcode) && (postcode != PC_SC_TIMEOUT))
-    {
+    if (PC_IOK(postcode) && (postcode != PC_SC_TIMEOUT)) {
         postcode = PC_SC_SUCCESS;
     }
 
@@ -258,17 +244,15 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
 
     do {
         os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurEvent);
-        if (_event_id_isInvalid(id))
-        {
+        if (_event_id_isInvalid(id)) {
             break;
         }
 
-        if (_event_object_isInit(id))
-        {
+        if (_event_object_isInit(id)) {
             continue;
         }
 
-        _memset((char_t*)pCurEvent, 0x0u, sizeof(event_context_t));
+        _memset((char_t *)pCurEvent, 0x0u, sizeof(event_context_t));
         pCurEvent->head.id = id;
         pCurEvent->head.pName = pName;
 
@@ -276,7 +260,7 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
         pCurEvent->edge = edge;
         pCurEvent->pCallbackFunc = pCallFun;
 
-        _event_list_transfer_toActive((linker_head_t*)&pCurEvent->head);
+        _event_list_transfer_toActive((linker_head_t *)&pCurEvent->head);
 
         EXIT_CRITICAL_SECTION();
         return id;
@@ -307,23 +291,18 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
     list_iterator_t it = {0u};
     list_iterator_init(&it, _event_list_blockingHeadGet(id));
     thread_context_t *pCurThread = (thread_context_t *)list_iterator_next(&it);
-    while (pCurThread)
-    {
+    while (pCurThread) {
         *pCurThread->event.pStore |= ((pCurThread->event.listen) & (pCurEvent->set));
 
-        if ((pCurThread->event.trigger) && (pCurThread->event.trigger == (*pCurThread->event.pStore & pCurThread->event.trigger)))
-        {
+        if ((pCurThread->event.trigger) && (pCurThread->event.trigger == (*pCurThread->event.pStore & pCurThread->event.trigger))) {
             /* Group event */
             postcode = _impl_kernal_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _event_schedule);
-        }
-        else if ((!pCurThread->event.trigger) && (*pCurThread->event.pStore))
-        {
+        } else if ((!pCurThread->event.trigger) && (*pCurThread->event.pStore)) {
             /* General event */
             postcode = _impl_kernal_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _event_schedule);
         }
 
-        if (PC_IER(postcode))
-        {
+        if (PC_IER(postcode)) {
             break;
         }
         pCurThread = (thread_context_t *)list_iterator_next(&it);
@@ -347,7 +326,7 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    u32_t* pEvent = (u32_t*)pArgs[1].u32_val;
+    u32_t *pEvent = (u32_t *)pArgs[1].u32_val;
     u32_t trigger = (u32_t)pArgs[2].u32_val;
     u32_t listen = (u32_t)pArgs[3].u32_val;
     u32_t timeout_ms = (u32_t)pArgs[4].u32_val;
@@ -359,7 +338,8 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
     pCurThread->event.pStore = pEvent;
     *pCurThread->event.pStore = 0u;
 
-    u32p_t postcode = _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _event_list_blockingHeadGet(id), timeout_ms, _event_callback_fromTimeOut);
+    u32p_t postcode =
+        _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _event_list_blockingHeadGet(id), timeout_ms, _event_callback_fromTimeOut);
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -372,49 +352,38 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
  */
 static void _event_schedule(os_id_t id)
 {
-    thread_context_t *pEntryThread = (thread_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
+    thread_context_t *pEntryThread = (thread_context_t *)(_impl_kernal_member_unified_id_toContainerAddress(id));
     thread_entry_t *pEntry = NULL;
     b_t isAvail = FALSE;
 
-    if (_impl_kernal_member_unified_id_toId(pEntryThread->schedule.hold) != KERNAL_MEMBER_EVENT)
-    {
+    if (_impl_kernal_member_unified_id_toId(pEntryThread->schedule.hold) != KERNAL_MEMBER_EVENT) {
         pEntryThread->schedule.entry.result = _PC_CMPT_FAILED;
-        return ;
+        return;
     }
 
-    if ((pEntryThread->schedule.entry.result != PC_SC_SUCCESS) && (pEntryThread->schedule.entry.result != PC_SC_TIMEOUT))
-    {
-        return ;
+    if ((pEntryThread->schedule.entry.result != PC_SC_SUCCESS) && (pEntryThread->schedule.entry.result != PC_SC_TIMEOUT)) {
+        return;
     }
 
     pEntry = &pEntryThread->schedule.entry;
-    if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id)))
-    {
-        if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL)
-        {
+    if (!_impl_timer_status_isBusy(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id))) {
+        if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_TIMER_INTERNAL) {
             pEntry->result = PC_SC_TIMEOUT;
-        }
-        else
-        {
+        } else {
             isAvail = true;
         }
-    }
-    else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_EVENT)
-    {
+    } else if (_impl_kernal_member_unified_id_toId(pEntry->release) == KERNAL_MEMBER_EVENT) {
         _impl_timer_stop(_impl_kernal_member_unified_id_threadToTimer(pEntryThread->head.id));
         isAvail = true;
-    }
-    else
-    {
+    } else {
         pEntry->result = _PC_CMPT_FAILED;
     }
 
     pEntryThread->event.listen = 0u;
     pEntryThread->event.trigger = 0u;
 
-    if (isAvail)
-    {
-        pEntry->result  = PC_SC_SUCCESS;
+    if (isAvail) {
+        pEntry->result = PC_SC_SUCCESS;
     }
 }
 

@@ -11,7 +11,7 @@
 #include "configuration.h"
 
 #if !defined ARCH_NATIVE_GCC
-    #include "../arch/arch32/arm/cmsis/include/cmsis_compiler.h"
+#include "../arch/arch32/arm/cmsis/include/cmsis_compiler.h"
 #endif
 
 #ifdef __cplusplus

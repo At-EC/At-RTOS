@@ -18,28 +18,27 @@ extern "C" {
 #endif
 
 /* Start of section using anonymous unions */
-#if defined (__CC_ARM)
-    #pragma push
-    #pragma anon_unions
+#if defined(__CC_ARM)
+#pragma push
+#pragma anon_unions
 #elif (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
-    /* anonymous unions are enabled by default */
-#elif defined (__ICCARM__)
-    #pragma language=extended
-#elif defined (__GUNC__)
-    /* anonymous unions are enabled by default */
-#elif defined (__TMS470__)
-    /* anonymous unions are enabled by default */
-#elif defined (__TASKING__)
-    #pragma warning 586
-#elif defined (ARCH_NATIVE_GCC)
-    /* Nothing to do */
+/* anonymous unions are enabled by default */
+#elif defined(__ICCARM__)
+#pragma language = extended
+#elif defined(__GUNC__)
+/* anonymous unions are enabled by default */
+#elif defined(__TMS470__)
+/* anonymous unions are enabled by default */
+#elif defined(__TASKING__)
+#pragma warning 586
+#elif defined(ARCH_NATIVE_GCC)
+/* Nothing to do */
 #else
-    #warning Not supported compiler type
+#warning Not supported compiler type
 #endif
 
 /** @brief The linker structure head is to mannage the rtos context. */
-typedef struct
-{
+typedef struct {
     /* The linker is an important symbol to connect with same status node */
     linker_t linker;
 
@@ -56,8 +55,7 @@ typedef void (*pThread_callbackFunc_t)(os_id_t);
 typedef void (*pThread_entryFunc_t)(void);
 typedef void (*pEvent_callbackFunc_t)(void);
 
-typedef struct
-{
+typedef struct {
     /* A common struct head to link with other context */
     linker_head_t head;
 
@@ -67,12 +65,10 @@ typedef struct
 
     u64_t duration_us;
 
-    struct callFunc
-    {
+    struct callFunc {
         list_node_t node;
 
-        union
-        {
+        union {
             pTimer_callbackFunc_t pTimer;
 
             pThread_callbackFunc_t pThread;
@@ -80,8 +76,7 @@ typedef struct
     } call;
 } timer_context_t;
 
-typedef struct
-{
+typedef struct {
     /* A common struct head to link with other context */
     linker_head_t head;
 
@@ -96,8 +91,7 @@ typedef struct
     list_t blockingThreadHead;
 } semaphore_context_t;
 
-typedef struct
-{
+typedef struct {
     /* A common struct head to link with other context */
     linker_head_t head;
 
@@ -108,14 +102,12 @@ typedef struct
     list_t blockingThreadHead;
 } mutex_context_t;
 
-typedef struct
-{
+typedef struct {
     const u8_t *pUserBufferAddress;
     u16_t userBufferSize;
 } action_queue_t;
 
-typedef struct
-{
+typedef struct {
     /* A common struct head to link with other context */
     linker_head_t head;
 
@@ -138,8 +130,7 @@ typedef struct
     list_t outBlockingThreadListHead;
 } queue_context_t;
 
-typedef struct
-{
+typedef struct {
     /* Current thread listen which bits in the event */
     u32_t listen;
 
@@ -150,8 +141,7 @@ typedef struct
     u32_t *pStore;
 } action_event_t;
 
-typedef struct
-{
+typedef struct {
     /* A common struct head to link with other context */
     linker_head_t head;
 
@@ -168,8 +158,7 @@ typedef struct
     list_t blockingThreadHead;
 } event_context_t;
 
-typedef struct
-{
+typedef struct {
     list_t *pToList;
 
     u32_t timeout_us;
@@ -177,8 +166,7 @@ typedef struct
     pThread_callbackFunc_t pTimeoutCallFun;
 } thread_exit_t;
 
-typedef struct
-{
+typedef struct {
     os_id_t release;
 
     u32_t result;
@@ -186,19 +174,16 @@ typedef struct
     pThread_callbackFunc_t pEntryCallFun;
 } thread_entry_t;
 
-typedef struct
-{
+typedef struct {
     os_id_t hold;
-    union
-    {
+    union {
         thread_exit_t exit;
 
         thread_entry_t entry;
     };
-}action_schedule_t;
+} action_schedule_t;
 
-typedef struct
-{
+typedef struct {
     /* A common struct head to link with other context */
     linker_head_t head;
 
@@ -220,8 +205,7 @@ typedef struct
 } thread_context_t;
 
 /** @brief The kernal object type enum. */
-enum
-{
+enum {
     KERNAL_MEMBER_THREAD = 0u,
     KERNAL_MEMBER_TIMER_INTERNAL,
     KERNAL_MEMBER_TIMER,
@@ -256,25 +240,21 @@ enum {
     KERNAL_MEMBER_LIST_NUMBER,
 };
 
-
-typedef struct
-{
+typedef struct {
     u32_t mem;
     u32_t list;
-}kernal_member_setting_t;
+} kernal_member_setting_t;
 
-typedef struct
-{
+typedef struct {
     const u8_t *pMemoryContainer;
 
-    const list_t* pListContainer;
+    const list_t *pListContainer;
 
     kernal_member_setting_t *pSetting;
-}kernal_member_t;
+} kernal_member_t;
 
 /** @brief The rtos kernal structure. */
-typedef struct
-{
+typedef struct {
     /* The current running thread */
     os_id_t current;
 
@@ -286,8 +266,7 @@ typedef struct
     b_t run;
 } kernal_context_t;
 
-typedef struct
-{
+typedef struct {
     u32_t R4;
     u32_t R5;
     u32_t R6;
@@ -296,10 +275,9 @@ typedef struct
     u32_t R9;
     u32_t R10;
     u32_t R11;
-}cmx_t;
+} cmx_t;
 
-typedef struct
-{
+typedef struct {
     u32_t R8;
     u32_t R9;
     u32_t R10;
@@ -308,15 +286,13 @@ typedef struct
     u32_t R5;
     u32_t R6;
     u32_t R7;
-}cm0_t;
+} cm0_t;
 
 /**
  * Data structure for svc call function arguments
  */
-typedef struct
-{
-    union
-    {
+typedef struct {
+    union {
         /* The function arguments */
         u32_t u32_val;
 
@@ -326,39 +302,37 @@ typedef struct
 
         b_t b_val;
 
-        const void* ptr_val;
+        const void *ptr_val;
 
-        const char_t* pch_val;
+        const char_t *pch_val;
     };
-}arguments_t;
+} arguments_t;
 
-typedef struct
-{
-    union
-    {
+typedef struct {
+    union {
         u32_t size;
         u8_t priority;
         const char_t *pName;
     };
-}os_thread_symbol_t;
+} os_thread_symbol_t;
 
 /* End of section using anonymous unions */
-#if defined (__CC_ARM)
-    #pragma pop
+#if defined(__CC_ARM)
+#pragma pop
 #elif (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
-    /* anonymous unions are enabled by default */
-#elif defined (__ICCARM__)
-        /* leave anonymous unions enabled */
-#elif defined (__GUNC__)
-        /* anonymous unions are enabled by default */
-#elif defined (__TMS470__)
-        /* anonymous unions are enabled by default */
-#elif defined (__TASKING__)
-    #pragma warning restore
-#elif defined (ARCH_NATIVE_GCC)
-    /* Nothing to do */
+/* anonymous unions are enabled by default */
+#elif defined(__ICCARM__)
+/* leave anonymous unions enabled */
+#elif defined(__GUNC__)
+/* anonymous unions are enabled by default */
+#elif defined(__TMS470__)
+/* anonymous unions are enabled by default */
+#elif defined(__TASKING__)
+#pragma warning restore
+#elif defined(ARCH_NATIVE_GCC)
+/* Nothing to do */
 #else
-    #warning Not supported compiler type
+#warning Not supported compiler type
 #endif
 
 #ifdef __cplusplus
