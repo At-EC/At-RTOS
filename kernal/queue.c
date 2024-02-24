@@ -350,36 +350,38 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
     const char_t *pName = (const char_t *)(pArgs[3].pch_val);
 
     queue_context_t *pCurQueue = (queue_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_QUEUE);
-    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_QUEUE);
+    u32_t endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_QUEUE);
 
     do {
-        if (!_queue_object_isInit(id))
+        os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurQueue);
+        if (_queue_id_isInvalid(id))
         {
-            _memset((char_t*)pCurQueue, 0x0u, sizeof(queue_context_t));
-
-            pCurQueue->head.id = id;
-            pCurQueue->head.pName = pName;
-
-            pCurQueue->pQueueBufferAddress = pQueueBufferAddr;
-            pCurQueue->elementLength = elementLen;
-            pCurQueue->elementNumber = elementNum;
-            pCurQueue->leftPosition = 0u;
-            pCurQueue->rightPosition = 0u;
-            pCurQueue->cacheSize = 0u;
-
-            _queue_list_transferToInit((linker_head_t*)&pCurQueue->head);
-
             break;
         }
 
-        pCurQueue++;
-        id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurQueue);
-    } while ((u32_t)pCurQueue < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_QUEUE));
+        if (_queue_object_isInit(id))
+        {
+            continue;
+        }
+        _memset((char_t*)pCurQueue, 0x0u, sizeof(queue_context_t));
+        pCurQueue->head.id = id;
+        pCurQueue->head.pName = pName;
 
-    id = ((!_queue_id_isInvalid(id)) ? (id) : (OS_INVALID_ID));
+        pCurQueue->pQueueBufferAddress = pQueueBufferAddr;
+        pCurQueue->elementLength = elementLen;
+        pCurQueue->elementNumber = elementNum;
+        pCurQueue->leftPosition = 0u;
+        pCurQueue->rightPosition = 0u;
+        pCurQueue->cacheSize = 0u;
+
+        _queue_list_transferToInit((linker_head_t*)&pCurQueue->head);
+
+        EXIT_CRITICAL_SECTION();
+        return id;
+    } while ((u32_t)++pCurQueue < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return id;
+    return OS_INVALID_ID;
 }
 
 /**

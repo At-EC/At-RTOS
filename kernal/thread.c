@@ -429,8 +429,9 @@ static os_id_t _thread_init_privilege_routine(arguments_t* pArgs)
 
     u32_t internal = sizeof(thread_context_t) * KERNAL_APPLICATION_THREAD_INSTANCE;
     thread_context_t *pCurThread = (thread_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_THREAD) + internal);
+    u32_t endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_THREAD);
     do {
-        u32_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurThread);
+        os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurThread);
         if (_thread_id_isInvalid(id))
         {
             break;
@@ -442,7 +443,6 @@ static os_id_t _thread_init_privilege_routine(arguments_t* pArgs)
         }
 
         _memset((char_t*)pCurThread, 0x0u, sizeof(thread_context_t));
-
         pCurThread->head.id = id;
         pCurThread->head.pName = pName;
 
@@ -459,11 +459,10 @@ static os_id_t _thread_init_privilege_routine(arguments_t* pArgs)
 
         EXIT_CRITICAL_SECTION();
         return id;
-    } while ((u32_t)++pCurThread < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_THREAD));
-
+    } while ((u32_t)++pCurThread < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return OS_INVALID_ID_VAL;
+    return OS_INVALID_ID;
 }
 
 /**

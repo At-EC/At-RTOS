@@ -254,33 +254,37 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
     const char_t *pName = (const char_t *)(pArgs[2].pch_val);
 
     event_context_t *pCurEvent = (event_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_EVENT);
-    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_EVENT);
+    u32_t endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_EVENT);
 
     do {
-        if (!_event_object_isInit(id))
+        os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurEvent);
+        if (_event_id_isInvalid(id))
         {
-            _memset((char_t*)pCurEvent, 0x0u, sizeof(event_context_t));
-
-            pCurEvent->head.id = id;
-            pCurEvent->head.pName = pName;
-
-            pCurEvent->set = 0u;
-            pCurEvent->edge = edge;
-            pCurEvent->pCallbackFunc = pCallFun;
-
-            _event_list_transfer_toActive((linker_head_t*)&pCurEvent->head);
-
             break;
         }
 
-        pCurEvent++;
-        id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurEvent);
-    } while ((u32_t)pCurEvent < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_EVENT));
+        if (_event_object_isInit(id))
+        {
+            continue;
+        }
 
-    id = ((!_event_id_isInvalid(id)) ? (id) : (OS_INVALID_ID));
+        _memset((char_t*)pCurEvent, 0x0u, sizeof(event_context_t));
+        pCurEvent->head.id = id;
+        pCurEvent->head.pName = pName;
+
+        pCurEvent->set = 0u;
+        pCurEvent->edge = edge;
+        pCurEvent->pCallbackFunc = pCallFun;
+
+        _event_list_transfer_toActive((linker_head_t*)&pCurEvent->head);
+
+        EXIT_CRITICAL_SECTION();
+        return id;
+
+    } while ((u32_t)++pCurEvent < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return id;
+    return OS_INVALID_ID;
 }
 
 /**

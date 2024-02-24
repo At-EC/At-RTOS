@@ -322,42 +322,45 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
     b_t permit = (b_t)(pArgs[2].b_val);
     const char_t *pName = (const char_t *)(pArgs[3].pch_val);
 
-    u32_t offset = (sizeof(semaphore_context_t)*KERNAL_APPLICATION_SEMAPHORE_INSTANCE);
-    semaphore_context_t *pCurSemaphore = (semaphore_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_SEMAPHORE) + offset);
-    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_SEMAPHORE) + offset;
+    u32_t internal = (sizeof(semaphore_context_t)*KERNAL_APPLICATION_SEMAPHORE_INSTANCE);
+    semaphore_context_t *pCurSemaphore = (semaphore_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_SEMAPHORE) + internal);
+    u32_t endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_SEMAPHORE);
 
     do {
-        if (!_semaphore_object_isInit(id))
+        os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurSemaphore);
+        if (_semaphore_id_isInvalid(id))
         {
-            _memset((char_t*)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
-
-            pCurSemaphore->head.id = id;
-            pCurSemaphore->head.pName = pName;
-
-            pCurSemaphore->initialCount = initialCount;
-            pCurSemaphore->limitCount = limitCount;
-            pCurSemaphore->isPermit = permit;
-
-            if (pCurSemaphore->initialCount < pCurSemaphore->limitCount)
-            {
-                _semaphore_list_transfer_toLock((linker_head_t*)&pCurSemaphore->head);
-            }
-            else
-            {
-                _semaphore_list_transfer_toUnlock((linker_head_t*)&pCurSemaphore->head);
-            }
-
             break;
         }
 
-        pCurSemaphore++;
-        id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurSemaphore);
-    } while ((u32_t)pCurSemaphore < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_SEMAPHORE));
+        if (_semaphore_object_isInit(id))
+        {
+            continue;
+        }
 
-    id = ((!_semaphore_id_isInvalid(id)) ? (id) : (OS_INVALID_ID));
+        _memset((char_t*)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
+        pCurSemaphore->head.id = id;
+        pCurSemaphore->head.pName = pName;
+
+        pCurSemaphore->initialCount = initialCount;
+        pCurSemaphore->limitCount = limitCount;
+        pCurSemaphore->isPermit = permit;
+
+        if (pCurSemaphore->initialCount < pCurSemaphore->limitCount)
+        {
+            _semaphore_list_transfer_toLock((linker_head_t*)&pCurSemaphore->head);
+        }
+        else
+        {
+            _semaphore_list_transfer_toUnlock((linker_head_t*)&pCurSemaphore->head);
+        }
+
+        EXIT_CRITICAL_SECTION();
+        return id;
+    } while ((u32_t)++pCurSemaphore < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return id;
+    return OS_INVALID_ID;
 }
 
 /**

@@ -246,31 +246,35 @@ static u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
     const char_t *pName = (const char_t *)(pArgs[0].pch_val);
 
     mutex_context_t *pCurMutex = (mutex_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_MUTEX);
-    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_MUTEX);
+    u32_t endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_MUTEX);
 
     do {
-        if (!_mutex_object_isInit(id))
+        os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurMutex);
+        if (_mutex_id_isInvalid(id))
         {
-            _memset((char_t*)pCurMutex, 0x0u, sizeof(mutex_context_t));
-
-            pCurMutex->head.id = id;
-            pCurMutex->head.pName = pName;
-
-            pCurMutex->holdThreadId = OS_INVALID_ID;
-            pCurMutex->originalPriority.level = OS_PRIORITY_INVALID;
-
-            _mutex_list_transfer_toUnlock((linker_head_t*)&pCurMutex->head);
             break;
         }
 
-        pCurMutex++;
-        id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurMutex);
-    } while ((u32_t)pCurMutex < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_MUTEX));
+        if (_mutex_object_isInit(id))
+        {
+            continue;
+        }
 
-    id = ((!_mutex_id_isInvalid(id)) ? (id) : (OS_INVALID_ID));
+        _memset((char_t*)pCurMutex, 0x0u, sizeof(mutex_context_t));
+        pCurMutex->head.id = id;
+        pCurMutex->head.pName = pName;
+
+        pCurMutex->holdThreadId = OS_INVALID_ID;
+        pCurMutex->originalPriority.level = OS_PRIORITY_INVALID;
+
+        _mutex_list_transfer_toUnlock((linker_head_t*)&pCurMutex->head);
+
+        EXIT_CRITICAL_SECTION();
+        return id;
+    } while ((u32_t)++pCurMutex < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return id;
+    return OS_INVALID_ID;
 }
 
 /**
