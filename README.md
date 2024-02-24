@@ -1,19 +1,18 @@
-# [At-RTOS](https://github.com/At-EC/At-RTOS) &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/At-EC/At-RTOS/blob/main/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/At-EC/At-RTOS/tree/main/.github/Welcome_PRs.md) <a href="https://github.com/At-EC/At-RTOS/actions"><img alt="Build" src="https://github.com/At-EC/At-RTOS/workflows/Build/badge.svg"></a> <a href="https://github.com/At-EC/At-RTOS/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/At-EC/At-RTOS?color=success"></a> <a href="https://github.com/At-EC/At-RTOS/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/At-EC/At-RTOS"></a> ![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS)
+# [At-RTOS](https://github.com/At-EC/At-RTOS) &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/At-EC/At-RTOS/blob/main/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/At-EC/At-RTOS/tree/main/.github/Welcome_PRs.md) <a href="https://github.com/At-EC/At-RTOS/actions"><img alt="Build" src="https://github.com/At-EC/At-RTOS/workflows/Build/badge.svg"></a> <a href="https://github.com/At-EC/At-RTOS/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/At-EC/At-RTOS?color=success"></a> [![Discord](https://img.shields.io/discord/1208405601994932274?logo=discord)](https://discord.gg/AxfF9aH58G) ![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS)
 
-At-RTOS is a user-friendly embedded controller's real-time operating system designed specifically for the ARM Cortex M seiral architecture.
+At-RTOS(Advantage Real-Time Operating System) is an open and user-friendly Real-Time Operating System(RTOS) designed for supporting various embedded controllers.
 
-The goal of the project is to explore and try to provide a lot useful interfaces based on the RTOS to support and simplify your embedded firmware development.
+The goal of the system is to explore and try to provide a lot useful interfaces based on the RTOS to support and simplify your embedded firmware development.
 
 I hope the At-RTOS could be a popular community-based embedded controller's real-time operating system in the future. If this project was useful to you, give it a ⭐️ and I'll keep improving it. 
 
-Welcome PRs! If you are interested in contributing, Pls join us at [![Discord](https://img.shields.io/discord/1208405601994932274)](https://discord.gg/AxfF9aH58G). 
+Welcome PRs! If you are interested in contributing, Pls join us at [Discord](https://discord.gg/AxfF9aH58G). 
 
 <p align="center">
 
-<img src="https://socialify.git.ci/At-EC/At-RTOS/image?description=1&descriptionEditable=At-RTOS%20is%20an%20open%20user-friendly%20real-time%20operating%20system.&font=KoHo&forks=1&issues=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Dark" alt="At-RTOS" width="640" height="320" />
+<img src="https://socialify.git.ci/At-EC/At-RTOS/image?description=1&descriptionEditable=At-RTOS%20is%20a%20user-friendly%20Advantage%20Real-Time%20Operating%20System%20(RTOS).&font=KoHo&issues=1&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Dark" alt="At-RTOS" width="640" height="320" />
 
 </p>
-
 
 ## News
 
@@ -26,37 +25,46 @@ Welcome PRs! If you are interested in contributing, Pls join us at [![Discord](h
 
 ## Introduction
 
+At-RTOS is a type of Real-Time Operating System that focuses on adaptability and flexibility to cater to the needs of various embedded controllers. It's used to manage and control the hardware and firmware resources of embedded systems, ensuring real-time thread execution and system stability.
+
+It's an open and user-friendly embedded controller system that provides a range of features and capabilities such as thread scheduling, kernal objects sync up and interrupt handling, and more, to meet the requirements of embedded systems for real-time performance and reliability. It supports concurrent execution of multiple threads, enabling the management of multiple threads while ensuring synchronization and communication between them. 
+
+It's also offers extensive APIs(Application Programming Interfaces) that allow developers to configure the system, create threads, communicate betwwen threads, customize kernal clock, and more, with ease. Additionally At-RTOS supports various hardware platforms and compiilers specifically for the ARM Cortex M seiral architecture, offering good portability and scalability.
+
+Overall, At-RTOS is powerful, flexible, and scalable real-time operating system suitable for the development and deployment of various embbedded systems. For more information on At-RTOS, it is recommended to refer to relevant technical documentation and sample codes.
+
+And the keywords of the At-RTOS is shown as following lists.
+
 * **Open source:** Royalty free.
 * **Tickless:** At-RTOS makes it painless to create battery-powered application. 
-* **Preemptive and Cooperative Scheduling:** You can easily config your task to pass preemptive and cooperative scheduling through your thread's priority setting.
+* **Preemptive and Cooperative Scheduling:** You can easily config your thread to pass preemptive and cooperative scheduling through your thread's priority setting.
 * **Resource Mutexes:** It helps to protect your globally sensitive data from tampering by other threads.
 * **Binary and Counting Semaphores:** It provides selectable counting and binary semaphore for thread communication in the system.
 * **Queue Messages:** It's for thread-safe communication.
 * **Multiple Events:** It's for thread-safe communication.
 * **Software Timers with callback:** It supports your varity time requirements application.
 * **Fully configurable (ROM and RAM):** No limits on number of At-RTOS objects, except your devices' available memory.
-* **Tiny footprint:** It's as low as 1KB ROM/few bytes of RAM.
+* **Tiny footprint:** It has low ROM/RAM consumption.
 * **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack, so you can develop new features in At-RTOS without rewriting existing code.
 
 ## Supported Architectures
 
 At-RTOS supports many architectures, and has covered the major architectures in current kernal system. It supports the following architectures, and it lists the chip that was verified.
 
-- **ARCH_ARM_CORTEX_CM4**: [GD32F307E-START](https://www.gigadevice.com/product/mcu/arm-cortex-m4/gd32f307vet6)
-- **ARCH_ARM_CORTEX_CM33**: [GD32W515P-EVAL](https://www.gigadevice.com/product/mcu/arm-cortex-m33/gd32w515piq6)
+- **CORTEX-CM4**: [GD32F307E-START](https://www.gigadevice.com/product/mcu/arm-cortex-m4/gd32f307vet6)
+- **CORTEX-CM33**: [GD32W515P-EVAL](https://www.gigadevice.com/product/mcu/arm-cortex-m33/gd32w515piq6)
 
 There is planned support for the ARM Cortex remaining architectures though no chips are currently supported in my hand, If you perform it in your system, I'll thanks for your PRs to update the chip that verified into lists.
 
 ## Supported IDE and Compiler
 
-The main IDE/compilers supported by At-RTOS are:
+The main IDE/compilers currently is supported by At-RTOS are:
 
-- MDK KEIL (AC5): `Supported`
-- MDK KEIL (AC6): `Supported`
-- IAR IDE: `Supported`
-- ARMCLANG: `Supported`
-- Native CMAKE GCC: `Supported`
-- ARM CMAKE GCC: `TODO`
+- MDK KEIL (AC5)
+- MDK KEIL (AC6)
+- IAR IDE
+- ARMCLANG
+- Native CMAKE GCC
 
 ## Code Structure
 
@@ -120,7 +128,7 @@ At-RTOS ported a template At-RTOS configuration header file `<root_path>/include
 ```c
 /**
  * If you are use ARM Cortex M seiral architecture, the Cortex-M Core architecture must be declared as the following list.
- * ARCH_NATIVE_GCC
+ * 
  * ARCH_ARM_CORTEX_CM0
  * ARCH_ARM_CORTEX_CM0plus
  * ARCH_ARM_CORTEX_CM3
@@ -129,7 +137,7 @@ At-RTOS ported a template At-RTOS configuration header file `<root_path>/include
  * ARCH_ARM_CORTEX_CM33
  * ARCH_ARM_CORTEX_CM7
  **/
-#define ARCH_ARM_CORTEX_CM4
+#define ARCH_ARM_CORTEX_CM33
 
 /**
  * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
@@ -154,7 +162,7 @@ The more details you can see the descriptions in the file `<root_path>/include/a
 
 ## Interface
 
-The at_rtos.h is an interface of At-RTOS kernal. You can check the interface usage in this file to perform it in your embedded controller system.
+The [at_rtos.h](https://github.com/At-EC/At-RTOS/blob/main/include/kernal/at_rtos.h) is an interface of At-RTOS kernal. You can check the interface usage in this file to perform it in your embedded controller system.
 
 The following sample codes illustrates how to create your first thread:
 ```c
