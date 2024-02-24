@@ -117,15 +117,15 @@ typedef enum IRQn {
 #endif
 
 #if !defined(ARCH_NATIVE_GCC)
-#define ARCH_ENTER_CRITICAL_SECTION()                                                                                                                                                                  \
-    vu32_t PRIMASK_Bit = __get_PRIMASK();                                                                                                                                                              \
-    __disable_irq();                                                                                                                                                                                   \
-    __DSB();                                                                                                                                                                                           \
+#define ARCH_ENTER_CRITICAL_SECTION()                                                                                                      \
+    vu32_t PRIMASK_Bit = __get_PRIMASK();                                                                                                  \
+    __disable_irq();                                                                                                                       \
+    __DSB();                                                                                                                               \
     __ISB();
 
-#define ARCH_EXIT_CRITICAL_SECTION()                                                                                                                                                                   \
-    __set_PRIMASK(PRIMASK_Bit);                                                                                                                                                                        \
-    __DSB();                                                                                                                                                                                           \
+#define ARCH_EXIT_CRITICAL_SECTION()                                                                                                       \
+    __set_PRIMASK(PRIMASK_Bit);                                                                                                            \
+    __DSB();                                                                                                                               \
     __ISB();
 
 #else

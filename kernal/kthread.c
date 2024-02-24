@@ -157,15 +157,16 @@ void _impl_kernal_thread_init(void)
                 .pEntryFunc = _impl_kernal_atos_idle_thread,
                 .pStackAddr = (u32_t *)&_kernal_idle[0],
                 .stackSize = KERNAL_IDLE_THREAD_STACK_SIZE,
-                .PSPStartAddr =
-                    (u32_t)_impl_kernal_stack_frame_init(_impl_kernal_atos_idle_thread, (u32_t *)&_kernal_idle[0], KERNAL_IDLE_THREAD_STACK_SIZE),
+                .PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(_impl_kernal_atos_idle_thread, (u32_t *)&_kernal_idle[0],
+                                                                     KERNAL_IDLE_THREAD_STACK_SIZE),
             },
     };
 
     thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_THREAD);
     _memcpy((u8_t *)pCurThread, (u8_t *)kernal_thread, (sizeof(thread_context_t) * KERNAL_APPLICATION_THREAD_INSTANCE));
 
-    pCurThread = (thread_context_t *)_impl_kernal_member_unified_id_toContainerAddress(kernal_thread[KERNAL_SCHEDULE_THREAD_INSTANCE].head.id);
+    pCurThread =
+        (thread_context_t *)_impl_kernal_member_unified_id_toContainerAddress(kernal_thread[KERNAL_SCHEDULE_THREAD_INSTANCE].head.id);
     _impl_thread_timer_init(_impl_kernal_member_unified_id_threadToTimer(pCurThread->head.id));
     _impl_kernal_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
 
@@ -192,8 +193,8 @@ void _impl_kernal_thread_init(void)
     kernal_semaphore[KERNAL_SCHEDULE_SEMAPHORE_INSTANCE].head.id = g_kernal_thread_resource.sem_id.val;
     _memcpy((u8_t *)pCurSemaphore, (u8_t *)kernal_semaphore, (sizeof(semaphore_context_t) * KERNAL_APPLICATION_SEMAPHORE_INSTANCE));
 
-    pCurSemaphore =
-        (semaphore_context_t *)_impl_kernal_member_unified_id_toContainerAddress(kernal_semaphore[KERNAL_SCHEDULE_SEMAPHORE_INSTANCE].head.id);
+    pCurSemaphore = (semaphore_context_t *)_impl_kernal_member_unified_id_toContainerAddress(
+        kernal_semaphore[KERNAL_SCHEDULE_SEMAPHORE_INSTANCE].head.id);
     _impl_kernal_semaphore_list_transfer_toLock((linker_head_t *)&pCurSemaphore->head);
 }
 

@@ -14,7 +14,6 @@ extern "C" {
 
 /**
  * If you are use ARM Cortex M seiral architecture, the Cortex-M Core must be specificed as the following list.
- * ARCH_NATIVE_GCC
  * ARCH_ARM_CORTEX_CM0
  * ARCH_ARM_CORTEX_CM0plus
  * ARCH_ARM_CORTEX_CM3
@@ -26,8 +25,8 @@ extern "C" {
 #define ARCH_NATIVE_GCC
 
 /* Configuration of the Cortex-M Processor and Core Peripherals.
- * You should check the chip header file or datasheet to check the following declaration symbol that support ARM Cortex-M Processor and Core Peripherals, and put it here.
- * It looks like this.
+ * You should check the chip header file or datasheet to check the following declaration symbol that support ARM Cortex-M Processor and Core
+ * Peripherals, and put it here. It looks like this.
  *
  * #define __SAUREGION_PRESENT                          (1u) // SAU regions present
  * #define __MPU_PRESENT                                (1u) // MPU present
@@ -67,8 +66,8 @@ extern "C" {
 /**
  * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
  * The kernals periodic tick interrupt scheduler needs a minimum time to handle the kernal time function,
- * The defaule value is set ot 50us when the frequency is 120mhz. Your application will certainly need a different value so set this correctly.
- * This is very often, but not always, according to the main system clock frequency.
+ * The defaule value is set ot 50us when the frequency is 120mhz. Your application will certainly need a different value so set this
+ *correctly. This is very often, but not always, according to the main system clock frequency.
  **/
 #define PORTAL_SYSTEM_CLOCK_INTERVAL_MIN_US (50u)
 

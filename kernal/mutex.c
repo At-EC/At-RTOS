@@ -152,7 +152,8 @@ static b_t _mutex_object_isInit(i32_t id)
  */
 u32_t _impl_mutex_os_id_to_number(os_id_t id)
 {
-    return (u32_t)(_mutex_id_isInvalid(id) ? (0u) : (id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_MUTEX)) / sizeof(mutex_context_t));
+    return (u32_t)(_mutex_id_isInvalid(id) ? (0u)
+                                           : (id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_MUTEX)) / sizeof(mutex_context_t));
 }
 
 /**

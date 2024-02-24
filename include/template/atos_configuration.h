@@ -25,8 +25,8 @@ extern "C" {
 #define ARCH_ARM_CORTEX_CM33
 
 /* Configuration of the Cortex-M Processor and Core Peripherals.
- * You should check the chip header file or datasheet to check the following declaration symbol that support ARM Cortex-M Processor and Core Peripherals, and put it here.
- * It looks like this.
+ * You should check the chip header file or datasheet to check the following declaration symbol that support ARM Cortex-M Processor and Core
+ * Peripherals, and put it here. It looks like this.
  *
  * #define __SAUREGION_PRESENT                          (1u) // SAU regions present
  * #define __MPU_PRESENT                                (1u) // MPU present
@@ -38,13 +38,13 @@ extern "C" {
  *
  * Or you can manually defined it according to your using ARM Cortex M seiral chip here with the following declaration symbol.
  *
- * #define ARCH_SAUREGION_PRESENT                        (1u) // SAU regions present
- * #define ARCH_MPU_PRESENT                              (1u) // MPU present
- * #define ARCH_VTOR_PRESENT                             (1u) // VTOR present
- * #define ARCH_NVIC_PRIO_BITS                           (4u) // Number of Bits used for Priority Levels
- * #define ARCH_Vendor_SysTickConfig                     (0u) // Set to 1 if different SysTick Config is used
- * #define ARCH_FPU_PRESENT                              (1u) // FPU present
- * #define ARCH_DSP_PRESENT                              (1u) // DSP extension present
+ * #define ARCH_SAUREGION_PRESENT                       (1u) // SAU regions present
+ * #define ARCH_MPU_PRESENT                             (1u) // MPU present
+ * #define ARCH_VTOR_PRESENT                            (1u) // VTOR present
+ * #define ARCH_NVIC_PRIO_BITS                          (4u) // Number of Bits used for Priority Levels
+ * #define ARCH_Vendor_SysTickConfig                    (0u) // Set to 1 if different SysTick Config is used
+ * #define ARCH_FPU_PRESENT                             (1u) // FPU present
+ * #define ARCH_DSP_PRESENT                             (1u) // DSP extension present
  */
 #define ARCH_SAUREGION_PRESENT    (1u) // SAU regions present
 #define ARCH_MPU_PRESENT          (1u) // MPU present
@@ -66,8 +66,8 @@ extern "C" {
 /**
  * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
  * The kernals periodic tick interrupt scheduler needs a minimum time to handle the kernal time function,
- * The defaule value is set ot 50us when the frequency is 120mhz. Your application will certainly need a different value so set this correctly.
- * This is very often, but not always, according to the main system clock frequency.
+ * The defaule value is set ot 50us when the frequency is 120mhz. Your application will certainly need a different value so set this
+ *correctly. This is very often, but not always, according to the main system clock frequency.
  **/
 #define PORTAL_SYSTEM_CLOCK_INTERVAL_MIN_US (50u)
 
