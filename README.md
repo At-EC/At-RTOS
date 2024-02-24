@@ -23,11 +23,13 @@ Welcome PRs! If you are interested in contributing, Pls join us at [Discord](htt
 | ![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS) | Welcome to At-RTOS. This production version was released which supports a stable RTOS feature was implemented in the kernal system, Pls enjoy it (: |
 | ![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/At-EC/At-RTOS/main) | The development version in the main branch was implemented which will support new features, but it probably has unknown issues. |
 
+The release note is [release note](./release_note.md).
+
 ## Introduction
 
 At-RTOS is a type of Real-Time Operating System that focuses on adaptability and flexibility to cater to the needs of various embedded controllers. It's used to manage and control the hardware and firmware resources of embedded systems, ensuring real-time thread execution and system stability.
 
-It's an open and user-friendly embedded controller system that provides a range of features and capabilities such as thread scheduling, kernal objects sync up and interrupt handling, and more, to meet the requirements of embedded systems for real-time performance and reliability. It supports concurrent execution of multiple threads, enabling the management of multiple threads while ensuring synchronization and communication between them. 
+It provides a range of features and capabilities such as thread scheduling, messages routing and interrupt handling, and more, to meet the requirements of embedded systems for real-time performance and reliability. It supports concurrent execution of multiple threads, enabling the management of multiple threads while ensuring synchronization and communication between them. 
 
 It's also offers extensive APIs(Application Programming Interfaces) that allow developers to configure the system, create threads, communicate betwwen threads, customize kernal clock, and more, with ease. Additionally At-RTOS supports various hardware platforms and compiilers specifically for the ARM Cortex M seiral architecture, offering good portability and scalability.
 
@@ -82,7 +84,8 @@ At-RTOS
 │   └── CMakeLists.txt
 ├── port
 │   ├── port.c
-│   ├── port_keil.c
+│   ├── port_keil_ac5.c
+│   ├── port_keil_ac6.c
 │   ├── port_iar.s
 │   └── CMakeLists.txt
 ├── include
@@ -107,7 +110,7 @@ At-RTOS
 - **include :** It used to contain the At-RTOS kernal header files, Moreover it contained the portable arch, clock and port header files.
 - **kernal :** This folder was implemented for the At-RTOS kernal files.
 
-## ARM Cortex M Seiral Architecture
+## Core Architecture
 
 At-RTOS was designed specifically to take advantage of the powerful hardware features introduced with the ARM Cortex M architecture. The following HW resources were used in the At-RTOS kernal.
 
@@ -123,7 +126,7 @@ At-RTOS was designed specifically to take advantage of the powerful hardware fea
 
 ## Configuration
 
-At-RTOS ported a template At-RTOS configuration header file `<root_path>/include/atos_configuration.h`. Your board support package must provide the following variable symbols to instead of this one.
+At-RTOS ported a template At-RTOS configuration header file [atos_configuration.h](./include/template/atos_configuration.h). Your board support package must provide the following variable symbols to instead of this one.
 
 ```c
 /**
@@ -158,11 +161,11 @@ The symbols in the configuration header file look like this `<kernal component>_
 - TIMER
 - ...
 
-The more details you can see the descriptions in the file `<root_path>/include/atos_configuration.h`.
+The more details you can see the descriptions in the template file [atos_configuration.h](./include/template/atos_configuration.h).
 
 ## Interface
 
-The [at_rtos.h](https://github.com/At-EC/At-RTOS/blob/main/include/kernal/at_rtos.h) is an interface of At-RTOS kernal. You can check the interface usage in this file to perform it in your embedded controller system.
+The [at_rtos.h](./include/kernal/at_rtos.h) is an interface of At-RTOS kernal. You can check the interface usage in this file to perform it in your embedded controller system.
 
 The following sample codes illustrates how to create your first thread:
 ```c
