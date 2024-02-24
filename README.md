@@ -1,10 +1,10 @@
-# [At-RTOS](https://github.com/At-EC/At-RTOS) &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/At-EC/At-RTOS/blob/main/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/At-EC/At-RTOS/tree/main/.github/Welcome_PRs.md) <a href="https://github.com/At-EC/At-RTOS/actions"><img alt="Build" src="https://github.com/At-EC/At-RTOS/workflows/Build/badge.svg"></a> <a href="https://github.com/At-EC/At-RTOS/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/At-EC/At-RTOS?color=success"></a> [![Discord](https://img.shields.io/discord/1208405601994932274?logo=discord)](https://discord.gg/AxfF9aH58G) ![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS)
+# [At-RTOS](https://github.com/At-EC/At-RTOS) &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/At-EC/At-RTOS/blob/main/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/At-EC/At-RTOS/tree/main/.github/Welcome_PRs.md) <a href="https://github.com/At-EC/At-RTOS/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/At-EC/At-RTOS?color=success"></a> [![Discord](https://img.shields.io/discord/1208405601994932274?logo=discord)](https://discord.gg/AxfF9aH58G) <a href="https://github.com/At-EC/At-RTOS/actions"><img alt="Build" src="https://github.com/At-EC/At-RTOS/workflows/Build/badge.svg"></a> [![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS)](./release_note.md)
 
 At-RTOS(Advantage Real-Time Operating System) is an open and user-friendly Real-Time Operating System(RTOS) designed for supporting various embedded controllers.
 
-The goal of the system is to explore and try to provide a lot useful interfaces based on the RTOS to support and simplify your embedded firmware development.
+The goal of the system is to explore and try to provide a range of features and capabilities based on the RTOS to support and simplify your embedded firmware development.
 
-I hope the At-RTOS could be a popular community-based embedded controller's real-time operating system in the future. If this project was useful to you, give it a ⭐️ and I'll keep improving it. 
+I hope the At-RTOS could be a popular community-based embedded controller's real-time operating system in the future. If this project was useful to you, give it a ⭐️ and share it to your friends. I'll keep improving it. 
 
 Welcome PRs! If you are interested in contributing, Pls join us at [Discord](https://discord.gg/AxfF9aH58G). 
 
@@ -20,10 +20,10 @@ Welcome PRs! If you are interested in contributing, Pls join us at [Discord](htt
 
 | Version Name          | Description                                                                  |
 | ------------- | ------------------------------------------------------------------------------------ |
-| ![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS) | Welcome to At-RTOS. This production version was released which supports a stable RTOS feature was implemented in the kernal system, Pls enjoy it (: |
+| [![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS)](./release_note.md) | Welcome to At-RTOS. This production version was released which supports a stable RTOS feature was implemented in the kernal system, Pls enjoy it (: |
 | ![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/At-EC/At-RTOS/main) | The development version in the main branch was implemented which will support new features, but it probably has unknown issues. |
 
-The release note is [release note](./release_note.md).
+The release note is [here](./release_note.md).
 
 ## Introduction
 
