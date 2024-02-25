@@ -78,22 +78,25 @@ typedef struct {
 /**
  * Local timer resource
  */
-static _kernal_thread_resource_t g_kernal_thread_resource = {.schedule_id =
-                                                                 {
-                                                                     .pName = "kernal",
-                                                                     .val = 0u,
-                                                                     .number = KERNAL_SCHEDULE_THREAD_INSTANCE,
-                                                                 },
-                                                             .idle_id =
-                                                                 {
-                                                                     .pName = "idle",
-                                                                     .val = sizeof(thread_context_t),
-                                                                     .number = KERNAL_IDLE_THREAD_INSTANCE,
-                                                                 },
-                                                             .sem_id = {
-                                                                 .pName = "kernal",
-                                                                 .number = KERNAL_SCHEDULE_SEMAPHORE_INSTANCE,
-                                                             }};
+static _kernal_thread_resource_t g_kernal_thread_resource = {
+    .schedule_id =
+        {
+            .pName = "kernal",
+            .val = 0u,
+            .number = KERNAL_SCHEDULE_THREAD_INSTANCE,
+        },
+    .idle_id =
+        {
+            .pName = "idle",
+            .val = sizeof(thread_context_t),
+            .number = KERNAL_IDLE_THREAD_INSTANCE,
+        },
+    .sem_id =
+        {
+            .pName = "kernal",
+            .number = KERNAL_SCHEDULE_SEMAPHORE_INSTANCE,
+        },
+};
 
 /**
  * @brief To issue a kernal message notification.

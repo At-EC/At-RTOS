@@ -1,8 +1,10 @@
-# Online References website: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# Online References website is: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# The recommendation version of clang-format is up to 17.
 
 ---
 Language: Cpp
 BasedOnStyle: LLVM
+
 AlignConsecutiveMacros: AcrossComments
 AllowShortBlocksOnASingleLine: Empty
 AllowShortCaseLabelsOnASingleLine: false
@@ -38,3 +40,4 @@ SortIncludes: Never
 UseTab: Never
 WhitespaceSensitiveMacros:
   - PRINTF
+  

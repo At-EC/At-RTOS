@@ -258,8 +258,15 @@ static linker_head_t *_timer_linker_head_fromWaiting(void)
  */
 static b_t _timer_id_isInvalid(u32_t id)
 {
-    return ((_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id)) &&
-            (_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id)));
+    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id)) {
+        return FALSE;
+    }
+
+    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id)) {
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /**
@@ -271,7 +278,7 @@ static b_t _timer_id_isInvalid(u32_t id)
  */
 static b_t _timer_object_isInit(u32_t id)
 {
-    timer_context_t *pCurTimer = (timer_context_t *)_timer_object_contextGet(id);
+    timer_context_t *pCurTimer = _timer_object_contextGet(id);
 
     return ((pCurTimer) ? (((pCurTimer->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
 }
@@ -287,11 +294,13 @@ u32_t _impl_timer_os_id_to_number(u32_t id)
 {
     if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, id)) {
         return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) / sizeof(timer_context_t));
-    } else if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id)) {
-        return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER)) / sizeof(timer_context_t));
-    } else {
-        return 0u;
     }
+
+    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER, id)) {
+        return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER)) / sizeof(timer_context_t));
+    }
+
+    return 0u;
 }
 
 /**
@@ -328,7 +337,6 @@ void _impl_thread_timer_init(os_id_t id)
     timer_context_t *pCurTimer = _timer_object_contextGet(id);
 
     _memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
-
     pCurTimer->head.id = id;
     pCurTimer->head.pName = "TH";
 
@@ -492,10 +500,11 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
     b_t isCycle = (b_t)(pArgs[1].b_val);
     u32_t timeout_ms = (u32_t)(pArgs[2].u32_val);
     const char_t *pName = (const char_t *)pArgs[3].pch_val;
+    u32_t endAddr = 0u;
+    timer_context_t *pCurTimer = NULL;
 
-    timer_context_t *pCurTimer = (timer_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_TIMER);
-    u32_t endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_TIMER);
-
+    pCurTimer = (timer_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_TIMER);
+    endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_TIMER);
     do {
         os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurTimer);
         if (_timer_id_isInvalid(id)) {
@@ -539,9 +548,9 @@ static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     b_t isCycle = (b_t)pArgs[1].b_val;
     u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
+    timer_context_t *pCurTimer = NULL;
 
-    timer_context_t *pCurTimer = (timer_context_t *)_timer_object_contextGet(id);
-
+    pCurTimer = _timer_object_contextGet(id);
     pCurTimer->timeout_ms = timeout_ms;
     pCurTimer->isCycle = isCycle;
 
@@ -574,8 +583,9 @@ static u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
 
-    timer_context_t *pCurTimer = (timer_context_t *)_timer_object_contextGet(id);
+    timer_context_t *pCurTimer = NULL;
 
+    pCurTimer = _timer_object_contextGet(id);
     if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
         _timer_list_remove_fromWaitList((linker_head_t *)&pCurTimer->head);
     }

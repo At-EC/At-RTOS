@@ -25,7 +25,11 @@ extern "C" {
  */
 b_t list_node_isExisted(list_t *pList, list_node_t *pNode)
 {
-    if ((!pList) || (!pNode)) {
+    if (!pList) {
+        return FALSE;
+    }
+
+    if (!pNode) {
         return FALSE;
     }
 
@@ -78,7 +82,11 @@ u32_t list_size(list_t *pList)
  */
 b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
 {
-    if ((!pList) || (!pTargetNode)) {
+    if (!pList) {
+        return FALSE;
+    }
+
+    if (!pTargetNode) {
         return FALSE;
     }
 
@@ -117,7 +125,15 @@ b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
  */
 b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTargetNode)
 {
-    if ((!pList) || (!pBefore) || (!pTargetNode)) {
+    if (!pList) {
+        return FALSE;
+    }
+
+    if (!pBefore) {
+        return FALSE;
+    }
+
+    if (!pTargetNode) {
         return FALSE;
     }
 
@@ -156,7 +172,15 @@ b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTa
  */
 b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t direction)
 {
-    if ((!pList) || (!pInNode) || ((direction != LIST_HEAD) && (direction != LIST_TAIL))) {
+    if (!pList) {
+        return FALSE;
+    }
+
+    if (!pInNode) {
+        return FALSE;
+    }
+
+    if ((direction != LIST_HEAD) && (direction != LIST_TAIL)) {
         return FALSE;
     }
 
@@ -191,7 +215,11 @@ b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t directi
  */
 list_node_t *list_node_pop(list_t *pList, list_direction_t direction)
 {
-    if ((!pList) || ((direction != LIST_HEAD) && (direction != LIST_TAIL))) {
+    if (!pList) {
+        return NULL;
+    }
+
+    if ((direction != LIST_HEAD) && (direction != LIST_TAIL)) {
         return NULL;
     }
 
@@ -242,19 +270,23 @@ list_node_t *list_node_pop(list_t *pList, list_direction_t direction)
  */
 b_t list_iterator_init(list_iterator_t *pIterator, list_t *pList)
 {
-    if ((!pIterator) || (!pList)) {
+    if (!pIterator) {
+        return FALSE;
+    }
+
+    if (!pList) {
         return FALSE;
     }
 
     _memset((char_t *)pIterator, 0x0u, sizeof(list_iterator_t));
-    if (pList->pHead) {
-        pIterator->pCurNode = pList->pHead;
-        pIterator->pList = pList;
-
-        return TRUE;
+    if (!pList->pHead) {
+        return FALSE;
     }
 
-    return FALSE;
+    pIterator->pCurNode = pList->pHead;
+    pIterator->pList = pList;
+
+    return TRUE;
 }
 
 /**

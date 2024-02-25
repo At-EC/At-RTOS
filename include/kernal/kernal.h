@@ -83,10 +83,10 @@ void _impl_kernal_message_notification(void);
 void _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP);
 void _impl_kernal_privilege_call_inSVC_c(u32_t *svc_args);
 u32_t _impl_kernal_privilege_invoke(const void *pCallFun, arguments_t *pArgs);
-void *_impl_kernal_thread_runContextGet(void);
 void _impl_kernal_atos_schedule_thread(void);
 void _impl_kernal_atos_idle_thread(void);
 void _impl_kernal_semaphore_list_transfer_toLock(linker_head_t *pCurHead);
+thread_context_t *_impl_kernal_thread_runContextGet(void);
 
 #ifdef __cplusplus
 }

@@ -47,8 +47,7 @@ extern "C" {
  *
  * void thread_sample_function(void)
  * {
- *     while(1)
- *     {
+ *     while(1) {
  *         AtOS.thread_sleep(1000u);
  *     }
  * }
@@ -56,8 +55,7 @@ extern "C" {
  * int main(void)
  * {
  *     os_thread_id_t sample_id = thread_init(sample_thread, thread_sample_function);
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Thread %s init failed\n", sample_id.pName);
  *     }
  *     ...
@@ -90,8 +88,7 @@ static inline os_thread_id_t thread_init(os_thread_symbol_t *pThread_symbol, pTh
  *
  * void thread_sample_function(void)
  * {
- *     while(1)
- *     {
+ *     while(1) {
  *          thread_sleep(1000); // Put the thread to sleep mode 1 sec.
  *     }
  * }
@@ -144,8 +141,7 @@ static inline u32p_t thread_suspend(os_thread_id_t id)
  *
  * void thread_sample_function(void)
  * {
- *     while(1)
- *     {
+ *     while(1) {
  *          thread_yield(); // Put current thread to sleep mode manually.
  *     }
  * }
@@ -191,8 +187,7 @@ static inline u32p_t thread_delete(os_thread_id_t id)
  *    }
  *
  *    os_timer_id_t sample_id = timer_init(sample_timer_function, TRUE, 1000u, "sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Timer %s init failed\n", sample_id.pName);
  *     }
  *     ...
@@ -221,8 +216,7 @@ static inline os_timer_id_t timer_init(pTimer_callbackFunc_t pEntryFun, b_t isCy
  * demo usage:
  *
  *     u32p_t postcode = timer_start(sample_id, FALSE, 1000u);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Timer start successful\n");
  *     }
  */
@@ -241,8 +235,7 @@ static inline u32p_t timer_start(os_timer_id_t id, b_t isCycle, u32_t timeout_ms
  * demo usage:
  *
  *     u32p_t postcode = timer_stop(sample_id);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Timer stop successful\n");
  *     }
  */
@@ -260,8 +253,7 @@ static inline u32p_t timer_stop(os_timer_id_t id)
  **
  * demo usage:
  *
- *    if(timer_isBusy(sample_id))
- *    {
+ *    if(timer_isBusy(sample_id)) {
  *        printf("Timer %s is busy\n", sample_id.pName);
  *    }
  */
@@ -301,8 +293,7 @@ static inline u32_t timer_system_total_ms(void)
  *
  *    // Init a binary semaphore count.
  *     os_sem_id_t sample_id = sem_init(0u, 1u, FALSE, "sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Semaphore %s init failed\n", sample_id.pName);
  *     }
  *     ...
@@ -328,29 +319,20 @@ static inline os_sem_id_t sem_init(u8_t initial, u8_t limit, b_t permit, const c
  * demo usage:
  *
  *     u32p_t postcode = sem_take(sample_id, 1000u);
- *     if (PC_IOK(postcode))
- *     {
- *         if (postcode == PC_SC_TIMEOUT)
- *         {
+ *     if (PC_IOK(postcode)) {
+ *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Semaphore take wait timeout\n");
- *         }
- *         else
- *         {
+ *         } else {
  *             printf("Semaphore take successful\n");
  *         }
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Semaphore take error: 0x%x\n", postcode);
  *     }
  *
  *     u32p_t postcode = sem_take(sample_id, OS_WAIT_FOREVER);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *        printf("Semaphore take successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Semaphore take error: 0x%x\n", postcode);
  *     }
  */
@@ -369,12 +351,9 @@ static inline u32p_t sem_take(os_sem_id_t id, u32_t timeout_ms)
  * demo usage:
  *
  *     u32p_t postcode = sem_give(sample_id);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Semaphore give successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Semaphore give error: 0x%x\n", postcode);
  *     }
  */
@@ -393,12 +372,9 @@ static inline u32p_t sem_give(os_sem_id_t id)
  * demo usage:
  *
  *     u32p_t postcode = sem_flush(sample_id);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Semaphore flush successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Semaphore flush error: 0x%x\n", postcode);
  *     }
  */
@@ -418,8 +394,7 @@ static inline u32p_t sem_flush(os_sem_id_t id)
  * demo usage:
  *
  *     os_mutex_id_t sample_id = mutex_init("sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Mutex %s init failed\n", sample_id.pName);
  *     }
  *     ...
@@ -445,12 +420,9 @@ static inline os_mutex_id_t mutex_init(const char_t *pName)
  * demo usage:
  *
  *     u32p_t postcode = mutex_lock(sample_id);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Mutex lock successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Mutex lock error: 0x%x\n", postcode);
  *     }
  */
@@ -469,12 +441,9 @@ static inline u32p_t mutex_lock(os_mutex_id_t id)
  * demo usage:
  *
  *     u32p_t postcode = mutex_unlock(sample_id);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Mutex unlock successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Mutex unlock error: 0x%x\n", postcode);
  *     }
  */
@@ -495,8 +464,7 @@ static inline u32p_t mutex_unlock(os_mutex_id_t id)
  * demo usage:
  *
  *     os_evt_id_t sample_id = evt_init(0u, NULL, "sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Event %s init failed\n", sample_id.pName);
  *     }
  *     ...
@@ -523,12 +491,9 @@ static inline os_evt_id_t evt_init(u32_t edge, pEvent_callbackFunc_t pCallFun, c
  * demo usage:
  *
  *     u32p_t postcode = evt_set(sample_id, 0x01u);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Event set successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Event set error: 0x%x\n", postcode);
  *     }
  */
@@ -552,29 +517,20 @@ static inline u32p_t evt_set(os_evt_id_t id, u32_t event)
  *
  *     u32_t event = 0u;
  *     u32p_t postcode = evt_wait(sample_id, &event, 0x01u, 0x01u, OS_WAIT_FOREVER);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Event wait successful, The event value is 0x%x\n", event);
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  *
  *     u32p_t postcode = evt_wait(sample_id, &event, 0x01u, 0x01u, 1000u);
- *     if (PC_IOK(postcode))
- *     {
- *         if (postcode == PC_SC_TIMEOUT)
- *         {
+ *     if (PC_IOK(postcode)) {
+ *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Event wait timeout\n");
- *         }
- *         else
- *         {
+ *         } else {
  *             printf("Event wait successful, The event value is 0x%x\n", event);
  *         }
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  */
@@ -598,8 +554,7 @@ static inline u32p_t evt_wait(os_evt_id_t id, u32_t *pEvent, u32_t trigger, u32_
  *     static u8_t g_sample_msgq[3 * 10] = {0u};
  *
  *     os_msgq_id_t sample_id = msgq_init((u8_t*)g_sample_msgq, 3u, 10u, "sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Message queue %s init failed\n", sample_id.pName);
  *     }
  */
@@ -628,29 +583,20 @@ static inline os_msgq_id_t msgq_init(const void *pQueueBufferAddr, u16_t element
  *
  *     u8_t txdata = 0u;
  *     u32p_t postcode = msgq_send(sample_id, &txdata, 0x01u, OS_WAIT_FOREVER);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Message queue send successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Message queue send error: 0x%x\n", postcode);
  *     }
  *
  *     postcode = msgq_send(sample_id, &txdata, 0x01u, 1000u);
- *     if (PC_IOK(postcode))
- *     {
- *         if (postcode == PC_SC_TIMEOUT)
- *         {
+ *     if (PC_IOK(postcode)) {
+ *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Message queue send timeout\n");
- *         }
- *         else
- *         {
+ *         } else {
  *             printf("Message queue send successful\n");
  *         }
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Message queue send error: 0x%x\n", postcode);
  *     }
  */
@@ -673,29 +619,20 @@ static inline u32p_t msgq_send(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t b
  *
  *     u8_t rxdata = 0u;
  *     u32p_t postcode = msgq_receive(sample_id, &rxdata, 0x01u, OS_WAIT_FOREVER);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Message queue receive successful, the rx data is 0x%x\n", rxdata);
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Message queue receive error: 0x%x\n", postcode);
  *     }
  *
  *     postcode = msgq_receive(sample_id, &rxdata, 0x01u, 1000u);
- *     if (PC_IOK(postcode))
- *     {
- *         if (postcode == PC_SC_TIMEOUT)
- *         {
+ *     if (PC_IOK(postcode)) {
+ *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Message queue receive timeout\n");
- *         }
- *         else
- *         {
+ *         } else {
  *             printf("Message queue receive successful, the rx data is 0x%x\n", rxdata);
  *         }
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Message queue receive error: 0x%x\n", postcode);
  *     }
  */
@@ -714,8 +651,7 @@ static inline u32p_t msgq_receive(os_msgq_id_t id, const u8_t *pUserBuffer, u16_
  * demo usage:
  *
  *     os_mutex_id_t sample_id = mutex_init("sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Mutex %s init failed\n", sample_id.pName);
  *     }
  *     ...
@@ -732,8 +668,7 @@ static inline b_t os_id_is_invalid(struct os_id id)
  **
  * demo usage:
  *
- *     if (os_kernal_is_running())
- *     {
+ *     if (os_kernal_is_running()) {
  *         printf("At-RTOS kernal is running\n");
  *     }
  *     ...

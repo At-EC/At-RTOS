@@ -221,9 +221,7 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     _impl_kernal_thread_init();
-
     _impl_port_interrupt_init();
-
     _impl_clock_time_init(_impl_timer_elapsed_handler);
 
     g_kernal_resource.current = _kernal_thread_nextIdGet();
@@ -246,7 +244,11 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
  */
 static u32_t _kernal_member_id_toUnifiedIdEnd(u8_t member_id)
 {
-    return ((member_id < KERNAL_MEMBER_NUMBER) ? (g_kernal_resource.member.pSetting[member_id].mem) : (OS_INVALID_ID));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return OS_INVALID_ID;
+    }
+
+    return (u32_t)g_kernal_resource.member.pSetting[member_id].mem;
 }
 
 /**
@@ -258,9 +260,11 @@ static u32_t _kernal_member_id_toUnifiedIdEnd(u8_t member_id)
  */
 static u32_t _kernal_member_id_toUnifiedIdRange(u8_t member_id)
 {
-    return ((member_id < KERNAL_MEMBER_NUMBER)
-                ? (_kernal_member_id_toUnifiedIdEnd(member_id) - _impl_kernal_member_id_toUnifiedIdStart(member_id))
-                : (0u));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return 0u;
+    }
+
+    return (u32_t)(_kernal_member_id_toUnifiedIdEnd(member_id) - _impl_kernal_member_id_toUnifiedIdStart(member_id));
 }
 
 /**
@@ -295,11 +299,19 @@ void _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
  */
 list_t *_impl_kernal_member_list_get(u8_t member_id, u8_t list_id)
 {
-    return (list_t *)(((member_id < KERNAL_MEMBER_NUMBER) && (list_id < KERNAL_MEMBER_LIST_NUMBER))
-                          ? ((g_kernal_resource.member.pSetting[member_id].list & SBIT(list_id))
-                                 ? (&g_kernal_resource.member.pListContainer[list_id])
-                                 : (NULL))
-                          : (NULL));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return NULL;
+    }
+
+    if (list_id >= KERNAL_MEMBER_LIST_NUMBER) {
+        return NULL;
+    }
+
+    if (!(g_kernal_resource.member.pSetting[member_id].list & SBIT(list_id))) {
+        return NULL;
+    }
+
+    return (list_t *)&g_kernal_resource.member.pListContainer[list_id];
 }
 
 /**
@@ -311,7 +323,11 @@ list_t *_impl_kernal_member_list_get(u8_t member_id, u8_t list_id)
  */
 u8_t *_impl_kernal_member_unified_id_toContainerAddress(u32_t unified_id)
 {
-    return (u8_t *)((unified_id < KERNAL_MEMBER_MAP_NUMBER) ? (&g_kernal_resource.member.pMemoryContainer[unified_id]) : (NULL));
+    if (unified_id >= KERNAL_MEMBER_MAP_NUMBER) {
+        return NULL;
+    }
+
+    return (u8_t *)(&g_kernal_resource.member.pMemoryContainer[unified_id]);
 }
 
 /**
@@ -324,8 +340,16 @@ u8_t *_impl_kernal_member_unified_id_toContainerAddress(u32_t unified_id)
 u32_t _impl_kernal_member_containerAddress_toUnifiedid(u32_t container_address)
 {
     u32_t start = (u32_t)(u8_t *)&g_kernal_resource.member.pMemoryContainer[0];
-    return (u32_t)(((container_address >= start) && (container_address < (start + KERNAL_MEMBER_MAP_NUMBER))) ? (container_address - start)
-                                                                                                              : (OS_INVALID_ID));
+
+    if (container_address < start) {
+        return OS_INVALID_ID;
+    }
+
+    if (container_address >= (start + KERNAL_MEMBER_MAP_NUMBER)) {
+        return OS_INVALID_ID;
+    }
+
+    return (u32_t)(container_address - start);
 }
 
 /**
@@ -337,8 +361,15 @@ u32_t _impl_kernal_member_containerAddress_toUnifiedid(u32_t container_address)
  */
 u32_t _impl_kernal_member_id_toUnifiedIdStart(u8_t member_id)
 {
-    return ((member_id < KERNAL_MEMBER_NUMBER) ? (((member_id) ? (g_kernal_resource.member.pSetting[member_id - 1].mem) : (0u)))
-                                               : (OS_INVALID_ID));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return OS_INVALID_ID;
+    }
+
+    if (!member_id) {
+        return 0u;
+    }
+
+    return (u32_t)(g_kernal_resource.member.pSetting[member_id - 1].mem);
 }
 
 /**
@@ -350,9 +381,11 @@ u32_t _impl_kernal_member_id_toUnifiedIdStart(u8_t member_id)
  */
 u8_t *_impl_kernal_member_id_toContainerStartAddress(u32_t member_id)
 {
-    return (u8_t *)((member_id < KERNAL_MEMBER_NUMBER)
-                        ? (_impl_kernal_member_unified_id_toContainerAddress(_impl_kernal_member_id_toUnifiedIdStart(member_id)))
-                        : (NULL));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return NULL;
+    }
+
+    return (u8_t *)_impl_kernal_member_unified_id_toContainerAddress(_impl_kernal_member_id_toUnifiedIdStart(member_id));
 }
 
 /**
@@ -364,9 +397,11 @@ u8_t *_impl_kernal_member_id_toContainerStartAddress(u32_t member_id)
  */
 u8_t *_impl_kernal_member_id_toContainerEndAddress(u32_t member_id)
 {
-    return (u8_t *)((member_id < KERNAL_MEMBER_NUMBER)
-                        ? (_impl_kernal_member_unified_id_toContainerAddress(_kernal_member_id_toUnifiedIdEnd(member_id)))
-                        : (NULL));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return NULL;
+    }
+
+    return (u8_t *)_impl_kernal_member_unified_id_toContainerAddress(_kernal_member_id_toUnifiedIdEnd(member_id));
 }
 
 /**
@@ -379,11 +414,18 @@ u8_t *_impl_kernal_member_id_toContainerEndAddress(u32_t member_id)
  */
 u32_t _impl_kernal_member_id_unifiedConvert(u8_t member_id, u32_t unified_id)
 {
-    return (u32_t)((member_id < KERNAL_MEMBER_NUMBER) ? (((unified_id >= _impl_kernal_member_id_toUnifiedIdStart(member_id))
-                                                              ? (unified_id - _impl_kernal_member_id_toUnifiedIdStart(member_id))
-                                                              : (0U)) /
-                                                         _kernal_member_id_toUnifiedIdRange(member_id))
-                                                      : (0U));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return 0u;
+    }
+
+    u32_t diff = _impl_kernal_member_id_toUnifiedIdStart(member_id);
+    if (unified_id >= diff) {
+        diff = unified_id - diff;
+    } else {
+        diff = 0u;
+    }
+
+    return (u32_t)(diff / _kernal_member_id_toUnifiedIdRange(member_id));
 }
 
 /**
@@ -396,9 +438,23 @@ u32_t _impl_kernal_member_id_unifiedConvert(u8_t member_id, u32_t unified_id)
  */
 b_t _impl_kernal_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id)
 {
-    return ((member_id >= KERNAL_MEMBER_NUMBER) || (unified_id == OS_INVALID_ID) ||
-            (unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) ||
-            (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id)));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return TRUE;
+    }
+
+    if (unified_id == OS_INVALID_ID) {
+        return TRUE;
+    }
+
+    if (unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) {
+        return TRUE;
+    }
+
+    if (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id)) {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /**
@@ -410,7 +466,15 @@ b_t _impl_kernal_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id)
  */
 b_t _impl_kernal_os_id_is_invalid(struct os_id id)
 {
-    return ((id.val == OS_INVALID_ID) || (id.val >= KERNAL_MEMBER_MAP_NUMBER));
+    if (id.val == OS_INVALID_ID) {
+        return TRUE;
+    }
+
+    if (id.val == KERNAL_MEMBER_MAP_NUMBER) {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /**
@@ -424,11 +488,13 @@ u32_t _impl_kernal_member_unified_id_threadToTimer(u32_t unified_id)
 {
     u32_t uid = OS_INVALID_ID;
 
-    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_THREAD, unified_id)) {
-        uid = (unified_id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD)) / sizeof(thread_context_t);
-        uid = (uid * sizeof(timer_context_t)) + _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL);
+    if (_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_THREAD, unified_id)) {
+        return OS_INVALID_ID;
     }
-    return uid;
+
+    uid = (unified_id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD)) / sizeof(thread_context_t);
+
+    return (u32_t)((uid * sizeof(timer_context_t)) + _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL));
 }
 
 /**
@@ -442,11 +508,12 @@ u32_t _impl_kernal_member_unified_id_timerToThread(u32_t unified_id)
 {
     u32_t uid = OS_INVALID_ID;
 
-    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, unified_id)) {
-        uid = (unified_id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) / sizeof(timer_context_t);
-        uid = (uid * sizeof(thread_context_t)) + _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD);
+    if (_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, unified_id)) {
+        return OS_INVALID_ID;
     }
-    return uid;
+
+    uid = (unified_id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) / sizeof(timer_context_t);
+    return (u32_t)((uid * sizeof(thread_context_t)) + _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD));
 }
 
 /**
@@ -462,6 +529,7 @@ u8_t _impl_kernal_member_unified_id_toId(u32_t unified_id)
 
     while ((member_id < KERNAL_MEMBER_NUMBER) && ((unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) ||
                                                   (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id)))) {
+
         member_id++;
     }
 
@@ -507,7 +575,7 @@ os_id_t _impl_kernal_thread_runIdGet(void)
  *
  * @return The context pointer of current running thread.
  */
-void *_impl_kernal_thread_runContextGet(void)
+thread_context_t *_impl_kernal_thread_runContextGet(void)
 {
     return (void *)_impl_kernal_member_unified_id_toContainerAddress(_impl_kernal_thread_runIdGet());
 }
@@ -654,12 +722,12 @@ b_t _impl_kernal_isInThreadMode(void)
  */
 u32p_t _impl_kernal_thread_schedule_request(void)
 {
-    if (_kernal_isInPrivilegeMode()) {
-        _kernal_setPendSV();
-        return PC_SC_SUCCESS;
-    } else {
+    if (!_kernal_isInPrivilegeMode()) {
         return _PC_CMPT_FAILED;
     }
+
+    _kernal_setPendSV();
+    return PC_SC_SUCCESS;
 }
 
 /**
@@ -716,10 +784,11 @@ void _impl_kernal_atos_idle_thread(void)
  */
 u32p_t _impl_kernal_at_rtos_run(void)
 {
-    if (!_impl_kernal_rtos_isRun()) {
-        return _impl_kernal_privilege_invoke((const void *)_kernal_start_privilege_routine, NULL);
+    if (_impl_kernal_rtos_isRun()) {
+        return PC_SC_SUCCESS;
     }
-    return _PC_CMPT_FAILED;
+
+    return _impl_kernal_privilege_invoke((const void *)_kernal_start_privilege_routine, NULL);
 }
 
 /**
@@ -758,16 +827,16 @@ u32_t _impl_kernal_privilege_invoke(const void *pCallFun, arguments_t *pArgs)
         return _PC_CMPT_FAILED;
     }
 
-    if (_kernal_isInPrivilegeMode()) {
-        ENTER_CRITICAL_SECTION();
-        pPrivilege_callFunc_t pCall = (pPrivilege_callFunc_t)pCallFun;
-        u32_t ret = (u32_t)pCall((arguments_t *)pArgs);
-        EXIT_CRITICAL_SECTION();
-
-        return ret;
+    if (!_kernal_isInPrivilegeMode()) {
+        return (u32_t)_impl_kernal_svc_call((u32_t)pCallFun, (u32_t)pArgs, 0u, 0u);
     }
 
-    return (u32_t)_impl_kernal_svc_call((u32_t)pCallFun, (u32_t)pArgs, 0u, 0u);
+    ENTER_CRITICAL_SECTION();
+    pPrivilege_callFunc_t pCall = (pPrivilege_callFunc_t)pCallFun;
+    u32_t ret = (u32_t)pCall((arguments_t *)pArgs);
+    EXIT_CRITICAL_SECTION();
+
+    return ret;
 }
 
 #ifdef __cplusplus

@@ -59,7 +59,7 @@ static list_t *_event_list_activeHeadGet(void)
  */
 static list_t *_event_list_blockingHeadGet(os_id_t id)
 {
-    event_context_t *pCurEvent = (event_context_t *)_event_object_contextGet(id);
+    event_context_t *pCurEvent = _event_object_contextGet(id);
 
     return (list_t *)((pCurEvent) ? (&pCurEvent->blockingThreadHead) : (NULL));
 }
@@ -100,7 +100,7 @@ static b_t _event_id_isInvalid(u32_t id)
  */
 static b_t _event_object_isInit(u32_t id)
 {
-    event_context_t *pCurEvent = (event_context_t *)_event_object_contextGet(id);
+    event_context_t *pCurEvent = _event_object_contextGet(id);
 
     return ((pCurEvent) ? (((pCurEvent->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
 }
@@ -238,10 +238,11 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
     u32_t edge = (u32_t)(pArgs[0].u32_val);
     pEvent_callbackFunc_t pCallFun = (pEvent_callbackFunc_t)(pArgs[1].ptr_val);
     const char_t *pName = (const char_t *)(pArgs[2].pch_val);
+    u32_t endAddr = 0u;
+    event_context_t *pCurEvent = NULL;
 
-    event_context_t *pCurEvent = (event_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_EVENT);
-    u32_t endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_EVENT);
-
+    pCurEvent = (event_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_EVENT);
+    endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_EVENT);
     do {
         os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurEvent);
         if (_event_id_isInvalid(id)) {
@@ -285,9 +286,10 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     u32_t event = (u32_t)pArgs[1].u32_val;
     u32p_t postcode = PC_SC_SUCCESS;
-    event_context_t *pCurEvent = (event_context_t *)_event_object_contextGet(id);
-    pCurEvent->set = event;
+    event_context_t *pCurEvent = NULL;
 
+    pCurEvent = _event_object_contextGet(id);
+    pCurEvent->set = event;
     list_iterator_t it = {0u};
     list_iterator_init(&it, _event_list_blockingHeadGet(id));
     thread_context_t *pCurThread = (thread_context_t *)list_iterator_next(&it);
@@ -330,15 +332,16 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
     u32_t trigger = (u32_t)pArgs[2].u32_val;
     u32_t listen = (u32_t)pArgs[3].u32_val;
     u32_t timeout_ms = (u32_t)pArgs[4].u32_val;
+    thread_context_t *pCurThread = NULL;
+    u32p_t postcode = PC_SC_SUCCESS;
 
-    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
-
+    pCurThread = _impl_kernal_thread_runContextGet();
     pCurThread->event.listen = listen;
     pCurThread->event.trigger = trigger;
     pCurThread->event.pStore = pEvent;
     *pCurThread->event.pStore = 0u;
 
-    u32p_t postcode =
+    postcode =
         _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _event_list_blockingHeadGet(id), timeout_ms, _event_callback_fromTimeOut);
 
     EXIT_CRITICAL_SECTION();

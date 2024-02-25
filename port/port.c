@@ -70,9 +70,9 @@ void _impl_port_setPendSV(void)
  */
 void _impl_port_interrupt_init(void)
 {
-    NVIC_SetPriority(PendSV_IRQn, 0xFF); // Set PendSV to lowest possible priority
-    NVIC_SetPriority(SVCall_IRQn, 0xFF); // Set SV to lowest possible priority
-    NVIC_SetPriority(SysTick_IRQn, 0xFFu);
+    NVIC_SetPriority(PendSV_IRQn, 0xFFu); // Set PendSV to lowest possible priority
+    NVIC_SetPriority(SVCall_IRQn, 0u); // Set SV to lowest possible priority
+    NVIC_SetPriority(SysTick_IRQn, 0u);
 }
 
 /**

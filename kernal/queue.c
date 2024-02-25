@@ -59,7 +59,7 @@ static list_t *_queue_list_initHeadGet(void)
  */
 static list_t *_queue_list_inBlockingHeadGet(os_id_t id)
 {
-    queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(id);
+    queue_context_t *pCurQueue = _queue_object_contextGet(id);
     return (list_t *)(&pCurQueue->inBlockingThreadListHead);
 }
 
@@ -70,7 +70,7 @@ static list_t *_queue_list_inBlockingHeadGet(os_id_t id)
  */
 static list_t *_queue_list_OutBlockingHeadGet(os_id_t id)
 {
-    queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(id);
+    queue_context_t *pCurQueue = _queue_object_contextGet(id);
     return (list_t *)(&pCurQueue->outBlockingThreadListHead);
 }
 
@@ -110,7 +110,7 @@ static b_t _queue_id_isInvalid(u32_t id)
  */
 static b_t _queue_object_isInit(i32_t id)
 {
-    queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(id);
+    queue_context_t *pCurQueue = _queue_object_contextGet(id);
 
     return ((pCurQueue) ? (((pCurQueue->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
 }
@@ -134,8 +134,11 @@ static void _queue_callback_fromTimeOut(os_id_t id)
  */
 u32_t _impl_queue_os_id_to_number(os_id_t id)
 {
-    return (u32_t)(_queue_id_isInvalid(id) ? (0u)
-                                           : (id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_QUEUE)) / sizeof(queue_context_t));
+    if (_queue_id_isInvalid(id)) {
+        return 0u;
+    }
+
+    return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_QUEUE)) / sizeof(queue_context_t));
 }
 
 /**
@@ -181,7 +184,9 @@ os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t e
  */
 static void _message_send(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
 {
-    u8_t *pInBuffer = (u8_t *)((u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress));
+    u8_t *pInBuffer = NULL;
+
+    pInBuffer = (u8_t *)((u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress));
     _memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
     _memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
 
@@ -201,7 +206,9 @@ static void _message_send(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u
  */
 static void _message_receive(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
 {
-    u8_t *pOutBuffer = (u8_t *)((pCurQueue->rightPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress);
+    u8_t *pOutBuffer = NULL;
+
+    pOutBuffer = (u8_t *)((pCurQueue->rightPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress);
     _memset((char_t *)pUserBuffer, 0x0u, userSize);
     _memcpy((char_t *)pUserBuffer, (const char_t *)pOutBuffer, userSize);
 
@@ -273,9 +280,6 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u
  */
 u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u32_t timeout_ms)
 {
-    queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(id);
-    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
-
     if (_queue_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
     }
@@ -331,10 +335,11 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
     u16_t elementLen = (u16_t)(pArgs[1].u16_val);
     u16_t elementNum = (u16_t)(pArgs[2].u16_val);
     const char_t *pName = (const char_t *)(pArgs[3].pch_val);
+    u32_t endAddr = 0u;
+    queue_context_t *pCurQueue = NULL;
 
-    queue_context_t *pCurQueue = (queue_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_QUEUE);
-    u32_t endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_QUEUE);
-
+    pCurQueue = (queue_context_t *)_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_QUEUE);
+    endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_QUEUE);
     do {
         os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurQueue);
         if (_queue_id_isInvalid(id)) {
@@ -380,11 +385,12 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
     const u8_t *pUserBuffer = (const void *)pArgs[1].ptr_val;
     u16_t bufferSize = (u16_t)pArgs[2].u16_val;
     u32_t timeout_ms = (u32_t)pArgs[3].u32_val;
-
+    queue_context_t *pCurQueue = NULL;
+    thread_context_t *pCurThread = NULL;
     u32p_t postcode = PC_SC_SUCCESS;
-    queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(id);
-    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
 
+    pCurQueue = _queue_object_contextGet(id);
+    pCurThread = _impl_kernal_thread_runContextGet();
     if (bufferSize > pCurQueue->elementLength) {
         EXIT_CRITICAL_SECTION();
         return _PC_CMPT_FAILED;
@@ -436,11 +442,12 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
     const u8_t *pUserBuffer = (const u8_t *)pArgs[1].ptr_val;
     u16_t bufferSize = (u16_t)pArgs[2].u16_val;
     u32_t timeout_ms = (u32_t)pArgs[3].u32_val;
-
+    queue_context_t *pCurQueue = NULL;
+    thread_context_t *pCurThread = NULL;
     u32p_t postcode = PC_SC_SUCCESS;
-    queue_context_t *pCurQueue = (queue_context_t *)_queue_object_contextGet(id);
-    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
 
+    pCurQueue = _queue_object_contextGet(id);
+    pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
     if (bufferSize > pCurQueue->elementLength) {
         EXIT_CRITICAL_SECTION();
         return _PC_CMPT_FAILED;
@@ -474,7 +481,6 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
     }
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 
@@ -496,7 +502,7 @@ static void _queue_schedule(os_id_t id)
         return;
     }
 
-    pCurQueue = (queue_context_t *)_queue_object_contextGet(pEntryThread->schedule.hold);
+    pCurQueue = _queue_object_contextGet(pEntryThread->schedule.hold);
     pEntry = &pEntryThread->schedule.entry;
     if (pEntry->result == PC_SC_TIMEOUT) {
         pEntry->result = PC_SC_TIMEOUT;
