@@ -16,14 +16,16 @@ extern "C" {
 #include "unique.h"
 #include "configuration.h"
 
-#define ATOS_THREAD_DEFINE(thread_name, stack_size, thread_priority)    static os_thread_symbol_t thread_name[((u32_t)(stack_size) / sizeof(u32_t))] = { \
-    [0] = {.size = stack_size},                                                                                                                           \
-    [1] = {.priority = thread_priority},                                                                                                                  \
-    [2] = {.pName = #thread_name},                                                                                                                         \
-};                                                                                                                                                        \
-S_ASSERT(((stack_size) >= STACK_SIZE_MINIMUM) , "The thread stack size must be higher than STACK_SIZE_MINIMUM");                                          \
-S_ASSERT((((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thread_priority) <= OS_PRIORITY_USER_THREAD_LOWEST_LEVEL)) ,                  \
-         "The thread priority is out of the system design")
+#define ATOS_THREAD_DEFINE(thread_name, stack_size, thread_priority)                                                                       \
+    static os_thread_symbol_t thread_name[((u32_t)(stack_size) / sizeof(u32_t))] = {                                                       \
+        [0] = {.size = stack_size},                                                                                                        \
+        [1] = {.priority = thread_priority},                                                                                               \
+        [2] = {.pName = #thread_name},                                                                                                     \
+    };                                                                                                                                     \
+    S_ASSERT(((stack_size) >= STACK_SIZE_MINIMUM), "The thread stack size must be higher than STACK_SIZE_MINIMUM");                        \
+    S_ASSERT(                                                                                                                              \
+        (((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thread_priority) <= OS_PRIORITY_USER_THREAD_LOWEST_LEVEL)),     \
+        "The thread priority is out of the system design")
 
 #include "thread.h"
 
@@ -45,8 +47,7 @@ S_ASSERT((((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thre
  *
  * void thread_sample_function(void)
  * {
- *     while(1)
- *     {
+ *     while(1) {
  *         AtOS.thread_sleep(1000u);
  *     }
  * }
@@ -54,21 +55,20 @@ S_ASSERT((((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thre
  * int main(void)
  * {
  *     os_thread_id_t sample_id = thread_init(sample_thread, thread_sample_function);
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Thread %s init failed\n", sample_id.pName);
  *     }
  *     ...
  * }
  *
  */
-static inline os_thread_id_t thread_init(os_thread_symbol_t* pThread_symbol, pThread_entryFunc_t pEntryFun)
+static inline os_thread_id_t thread_init(os_thread_symbol_t *pThread_symbol, pThread_entryFunc_t pEntryFun)
 {
     os_thread_id_t id = {0u};
-    u32_t* pStackAddress = (u32_t*)pThread_symbol;
+    u32_t *pStackAddress = (u32_t *)pThread_symbol;
     u32_t stackSize = (u32_t)pThread_symbol[0].size;
     u8_t priority = (u8_t)pThread_symbol[1].priority;
-    const char_t* pName = (const char_t*)pThread_symbol[2].pName;
+    const char_t *pName = (const char_t *)pThread_symbol[2].pName;
 
     id.val = _impl_thread_init(pEntryFun, pStackAddress, stackSize, priority, pName);
     id.number = _impl_thread_os_id_to_number(id.val);
@@ -88,8 +88,7 @@ static inline os_thread_id_t thread_init(os_thread_symbol_t* pThread_symbol, pTh
  *
  * void thread_sample_function(void)
  * {
- *     while(1)
- *     {
+ *     while(1) {
  *          thread_sleep(1000); // Put the thread to sleep mode 1 sec.
  *     }
  * }
@@ -142,8 +141,7 @@ static inline u32p_t thread_suspend(os_thread_id_t id)
  *
  * void thread_sample_function(void)
  * {
- *     while(1)
- *     {
+ *     while(1) {
  *          thread_yield(); // Put current thread to sleep mode manually.
  *     }
  * }
@@ -189,8 +187,7 @@ static inline u32p_t thread_delete(os_thread_id_t id)
  *    }
  *
  *    os_timer_id_t sample_id = timer_init(sample_timer_function, TRUE, 1000u, "sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Timer %s init failed\n", sample_id.pName);
  *     }
  *     ...
@@ -219,8 +216,7 @@ static inline os_timer_id_t timer_init(pTimer_callbackFunc_t pEntryFun, b_t isCy
  * demo usage:
  *
  *     u32p_t postcode = timer_start(sample_id, FALSE, 1000u);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Timer start successful\n");
  *     }
  */
@@ -239,8 +235,7 @@ static inline u32p_t timer_start(os_timer_id_t id, b_t isCycle, u32_t timeout_ms
  * demo usage:
  *
  *     u32p_t postcode = timer_stop(sample_id);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Timer stop successful\n");
  *     }
  */
@@ -258,8 +253,7 @@ static inline u32p_t timer_stop(os_timer_id_t id)
  **
  * demo usage:
  *
- *    if(timer_isBusy(sample_id))
- *    {
+ *    if(timer_isBusy(sample_id)) {
  *        printf("Timer %s is busy\n", sample_id.pName);
  *    }
  */
@@ -287,27 +281,28 @@ static inline u32_t timer_system_total_ms(void)
 /**
  * @brief Initialize a new semaphore.
  *
- * @param pName The semaphore name.
  * @param initial The initial count that allows the system take.
  * @param limit The maximum count that it's the semaphore's limitation.
+ * @param permit TRUE flag permits that all sem_give counts save until sem_take flush, even if the counts number higher than limitation
+ *setting count. FALSE flag can reduce useless thread wakeup calling.
+ * @param pName The semaphore name.
  *
  * @return The semaphore unique id.
  **
  * demo usage:
  *
- *    // We init a binary semaphore count.
- *     os_sem_id_t sample_id = sem_init(0u, 1u, "sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *    // Init a binary semaphore count.
+ *     os_sem_id_t sample_id = sem_init(0u, 1u, FALSE, "sample");
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Semaphore %s init failed\n", sample_id.pName);
  *     }
  *     ...
  */
-static inline os_sem_id_t sem_init(u8_t initial, u8_t limit, const char_t *pName)
+static inline os_sem_id_t sem_init(u8_t initial, u8_t limit, b_t permit, const char_t *pName)
 {
     os_sem_id_t id = {0u};
 
-    id.val = _impl_semaphore_init(initial, limit, pName);
+    id.val = _impl_semaphore_init(initial, limit, permit, pName);
     id.number = _impl_semaphore_os_id_to_number(id.val);
     id.pName = pName;
 
@@ -324,29 +319,20 @@ static inline os_sem_id_t sem_init(u8_t initial, u8_t limit, const char_t *pName
  * demo usage:
  *
  *     u32p_t postcode = sem_take(sample_id, 1000u);
- *     if (PC_IOK(postcode))
- *     {
- *         if (postcode == PC_SC_TIMEOUT)
- *         {
+ *     if (PC_IOK(postcode)) {
+ *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Semaphore take wait timeout\n");
- *         }
- *         else
- *         {
+ *         } else {
  *             printf("Semaphore take successful\n");
  *         }
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Semaphore take error: 0x%x\n", postcode);
  *     }
  *
  *     u32p_t postcode = sem_take(sample_id, OS_WAIT_FOREVER);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *        printf("Semaphore take successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Semaphore take error: 0x%x\n", postcode);
  *     }
  */
@@ -365,12 +351,9 @@ static inline u32p_t sem_take(os_sem_id_t id, u32_t timeout_ms)
  * demo usage:
  *
  *     u32p_t postcode = sem_give(sample_id);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Semaphore give successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Semaphore give error: 0x%x\n", postcode);
  *     }
  */
@@ -389,12 +372,9 @@ static inline u32p_t sem_give(os_sem_id_t id)
  * demo usage:
  *
  *     u32p_t postcode = sem_flush(sample_id);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Semaphore flush successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Semaphore flush error: 0x%x\n", postcode);
  *     }
  */
@@ -414,8 +394,7 @@ static inline u32p_t sem_flush(os_sem_id_t id)
  * demo usage:
  *
  *     os_mutex_id_t sample_id = mutex_init("sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Mutex %s init failed\n", sample_id.pName);
  *     }
  *     ...
@@ -441,12 +420,9 @@ static inline os_mutex_id_t mutex_init(const char_t *pName)
  * demo usage:
  *
  *     u32p_t postcode = mutex_lock(sample_id);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Mutex lock successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Mutex lock error: 0x%x\n", postcode);
  *     }
  */
@@ -465,12 +441,9 @@ static inline u32p_t mutex_lock(os_mutex_id_t id)
  * demo usage:
  *
  *     u32p_t postcode = mutex_unlock(sample_id);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Mutex unlock successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Mutex unlock error: 0x%x\n", postcode);
  *     }
  */
@@ -480,19 +453,18 @@ static inline u32p_t mutex_unlock(os_mutex_id_t id)
 }
 
 #include "event.h"
- /**
-  * @brief Initialize a new event.
-  *
-  * @param pName The event name.
-  * @param edge Callback function trigger edge condition.
-  *
-  * @return The event unique id.
+/**
+ * @brief Initialize a new event.
+ *
+ * @param pName The event name.
+ * @param edge Callback function trigger edge condition.
+ *
+ * @return The event unique id.
  **
  * demo usage:
  *
  *     os_evt_id_t sample_id = evt_init(0u, NULL, "sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Event %s init failed\n", sample_id.pName);
  *     }
  *     ...
@@ -519,12 +491,9 @@ static inline os_evt_id_t evt_init(u32_t edge, pEvent_callbackFunc_t pCallFun, c
  * demo usage:
  *
  *     u32p_t postcode = evt_set(sample_id, 0x01u);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Event set successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Event set error: 0x%x\n", postcode);
  *     }
  */
@@ -548,29 +517,20 @@ static inline u32p_t evt_set(os_evt_id_t id, u32_t event)
  *
  *     u32_t event = 0u;
  *     u32p_t postcode = evt_wait(sample_id, &event, 0x01u, 0x01u, OS_WAIT_FOREVER);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Event wait successful, The event value is 0x%x\n", event);
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  *
  *     u32p_t postcode = evt_wait(sample_id, &event, 0x01u, 0x01u, 1000u);
- *     if (PC_IOK(postcode))
- *     {
- *         if (postcode == PC_SC_TIMEOUT)
- *         {
+ *     if (PC_IOK(postcode)) {
+ *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Event wait timeout\n");
- *         }
- *         else
- *         {
+ *         } else {
  *             printf("Event wait successful, The event value is 0x%x\n", event);
  *         }
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  */
@@ -594,8 +554,7 @@ static inline u32p_t evt_wait(os_evt_id_t id, u32_t *pEvent, u32_t trigger, u32_
  *     static u8_t g_sample_msgq[3 * 10] = {0u};
  *
  *     os_msgq_id_t sample_id = msgq_init((u8_t*)g_sample_msgq, 3u, 10u, "sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Message queue %s init failed\n", sample_id.pName);
  *     }
  */
@@ -624,29 +583,20 @@ static inline os_msgq_id_t msgq_init(const void *pQueueBufferAddr, u16_t element
  *
  *     u8_t txdata = 0u;
  *     u32p_t postcode = msgq_send(sample_id, &txdata, 0x01u, OS_WAIT_FOREVER);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Message queue send successful\n");
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Message queue send error: 0x%x\n", postcode);
  *     }
  *
  *     postcode = msgq_send(sample_id, &txdata, 0x01u, 1000u);
- *     if (PC_IOK(postcode))
- *     {
- *         if (postcode == PC_SC_TIMEOUT)
- *         {
+ *     if (PC_IOK(postcode)) {
+ *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Message queue send timeout\n");
- *         }
- *         else
- *         {
+ *         } else {
  *             printf("Message queue send successful\n");
  *         }
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Message queue send error: 0x%x\n", postcode);
  *     }
  */
@@ -669,29 +619,20 @@ static inline u32p_t msgq_send(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t b
  *
  *     u8_t rxdata = 0u;
  *     u32p_t postcode = msgq_receive(sample_id, &rxdata, 0x01u, OS_WAIT_FOREVER);
- *     if (PC_IOK(postcode))
- *     {
+ *     if (PC_IOK(postcode)) {
  *         printf("Message queue receive successful, the rx data is 0x%x\n", rxdata);
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Message queue receive error: 0x%x\n", postcode);
  *     }
  *
  *     postcode = msgq_receive(sample_id, &rxdata, 0x01u, 1000u);
- *     if (PC_IOK(postcode))
- *     {
- *         if (postcode == PC_SC_TIMEOUT)
- *         {
+ *     if (PC_IOK(postcode)) {
+ *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Message queue receive timeout\n");
- *         }
- *         else
- *         {
+ *         } else {
  *             printf("Message queue receive successful, the rx data is 0x%x\n", rxdata);
  *         }
- *     }
- *     else
- *     {
+ *     } else {
  *         printf("Message queue receive error: 0x%x\n", postcode);
  *     }
  */
@@ -710,8 +651,7 @@ static inline u32p_t msgq_receive(os_msgq_id_t id, const u8_t *pUserBuffer, u16_
  * demo usage:
  *
  *     os_mutex_id_t sample_id = mutex_init("sample");
- *     if (os_id_is_invalid(sample_id))
- *     {
+ *     if (os_id_is_invalid(sample_id)) {
  *         printf("Mutex %s init failed\n", sample_id.pName);
  *     }
  *     ...
@@ -719,6 +659,44 @@ static inline u32p_t msgq_receive(os_msgq_id_t id, const u8_t *pUserBuffer, u16_
 static inline b_t os_id_is_invalid(struct os_id id)
 {
     return (b_t)_impl_kernal_os_id_is_invalid(id);
+}
+
+/**
+ * @brief To check if the kernal OS is running.
+ *
+ * return The true indicates the kernal OS is running.
+ **
+ * demo usage:
+ *
+ *     if (os_kernal_is_running()) {
+ *         printf("At-RTOS kernal is running\n");
+ *     }
+ *     ...
+ */
+static inline b_t os_kernal_is_running(void)
+{
+    return (b_t)(_impl_kernal_rtos_isRun() ? (TRUE) : (FALSE));
+}
+
+/**
+ * @brief Get the current running thread id.
+ *
+ * @return The id of current running thread.
+ **
+ * demo usage:
+ *
+ *     os_thread_id_t current = os_id_current_thread();
+ *     printf("At-RTOS kernal current running thread is %s\n", current.pName);
+ *     ...
+ */
+static inline os_thread_id_t os_id_current_thread(void)
+{
+    os_thread_id_t id = {0u};
+    id.val = _impl_kernal_thread_runIdGet();
+    id.number = _impl_thread_os_id_to_number(id.val);
+    id.pName = _impl_thread_name_get(id.val);
+
+    return id;
 }
 
 /**
@@ -735,44 +713,45 @@ static inline u32p_t kernal_atos_run(void)
 }
 
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
-#if ( OS_INTERFACE_EXTERN_USE_ENABLE )
-    typedef struct
-    {
-        os_thread_id_t (*thread_init)(os_thread_symbol_t*, pThread_entryFunc_t);
-        u32p_t         (*thread_sleep)(u32_t);
-        u32p_t         (*thread_resume)(os_thread_id_t);
-        u32p_t         (*thread_suspend)(os_thread_id_t);
-        u32p_t         (*thread_yield)(void);
-        u32p_t         (*thread_delete)(os_thread_id_t);
+#if (OS_INTERFACE_EXTERN_USE_ENABLE)
+typedef struct {
+    os_thread_id_t (*thread_init)(os_thread_symbol_t *, pThread_entryFunc_t);
+    u32p_t (*thread_sleep)(u32_t);
+    u32p_t (*thread_resume)(os_thread_id_t);
+    u32p_t (*thread_suspend)(os_thread_id_t);
+    u32p_t (*thread_yield)(void);
+    u32p_t (*thread_delete)(os_thread_id_t);
 
-        os_timer_id_t  (*timer_init)(pTimer_callbackFunc_t, b_t, u32_t, const char_t *);
-        u32p_t         (*timer_start)(os_timer_id_t, b_t, u32_t);
-        u32p_t         (*timer_stop)(os_timer_id_t);
-        u32p_t         (*timer_isBusy)(os_timer_id_t);
-        u32_t          (*timer_system_total_ms)(void);
+    os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, b_t, u32_t, const char_t *);
+    u32p_t (*timer_start)(os_timer_id_t, b_t, u32_t);
+    u32p_t (*timer_stop)(os_timer_id_t);
+    u32p_t (*timer_isBusy)(os_timer_id_t);
+    u32_t (*timer_system_total_ms)(void);
 
-        os_sem_id_t    (*sem_init)(u8_t, u8_t, const char_t *);
-        u32p_t         (*sem_take)(os_sem_id_t, u32_t);
-        u32p_t         (*sem_give)(os_sem_id_t);
-        u32p_t         (*sem_flush)(os_sem_id_t);
+    os_sem_id_t (*sem_init)(u8_t, u8_t, b_t, const char_t *);
+    u32p_t (*sem_take)(os_sem_id_t, u32_t);
+    u32p_t (*sem_give)(os_sem_id_t);
+    u32p_t (*sem_flush)(os_sem_id_t);
 
-        os_mutex_id_t (*mutex_init)(const char_t *);
-        u32p_t        (*mutex_lock)(os_mutex_id_t);
-        u32p_t        (*mutex_unlock)(os_mutex_id_t);
+    os_mutex_id_t (*mutex_init)(const char_t *);
+    u32p_t (*mutex_lock)(os_mutex_id_t);
+    u32p_t (*mutex_unlock)(os_mutex_id_t);
 
-        os_evt_id_t   (*evt_init)(u32_t, pEvent_callbackFunc_t, const char_t *);
-        u32p_t        (*evt_set)(os_evt_id_t, u32_t);
-        u32p_t        (*evt_wait)(os_evt_id_t, u32_t *, u32_t, u32_t, u32_t);
+    os_evt_id_t (*evt_init)(u32_t, pEvent_callbackFunc_t, const char_t *);
+    u32p_t (*evt_set)(os_evt_id_t, u32_t);
+    u32p_t (*evt_wait)(os_evt_id_t, u32_t *, u32_t, u32_t, u32_t);
 
-        os_msgq_id_t  (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
-        u32p_t        (*msgq_send)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
-        u32p_t        (*msgq_receive)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
+    os_msgq_id_t (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
+    u32p_t (*msgq_send)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
+    u32p_t (*msgq_receive)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
 
-        b_t           (*id_isInvalid)(struct os_id);
-        u32p_t        (*at_rtos_run)(void);
-    }at_rtos_api_t;
+    b_t (*id_isInvalid)(struct os_id);
+    u32p_t (*at_rtos_run)(void);
+    b_t (*kernal_is_running)(void);
+    os_thread_id_t (*id_current_thread)(void);
+} at_rtos_api_t;
 
-    extern const at_rtos_api_t AtOS;
+extern const at_rtos_api_t AtOS;
 #endif
 
 #ifdef __cplusplus
@@ -780,4 +759,3 @@ static inline u32p_t kernal_atos_run(void)
 #endif
 
 #endif /* _AT_RTOS_H_ */
-

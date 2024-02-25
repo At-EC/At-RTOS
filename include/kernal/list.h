@@ -15,32 +15,35 @@ extern "C" {
 #endif
 
 /* Define the list null value */
-#define LIST_NULL               {NULL}
-#define ITERATION_NULL          {NULL, NULL}
+#define LIST_NULL                                                                                                                          \
+    {                                                                                                                                      \
+        NULL                                                                                                                               \
+    }
+#define ITERATION_NULL                                                                                                                     \
+                                                                                                                                           \
+    {                                                                                                                                      \
+        NULL, NULL                                                                                                                         \
+    }
 
 /** @brief singly linked list node structure. */
-typedef struct list_node
-{
+typedef struct list_node {
     /* The pointer of the next node head. */
     struct list_node *pNext;
 } list_node_t;
 
 /** @brief singly linked list structure. */
-typedef struct list
-{
+typedef struct list {
     /* The pointer of the node head. */
     list_node_t *pHead;
 } list_t;
 
 /** @brief the direction of node operation structure. */
-typedef enum
-{
+typedef enum {
     LIST_HEAD,
     LIST_TAIL
 } list_direction_t;
 
-typedef struct
-{
+typedef struct {
     /* The pointer of the current node. */
     list_node_t *pCurNode;
 
@@ -48,15 +51,15 @@ typedef struct
     list_t *pList;
 } list_iterator_t;
 
-b_t         list_node_isExisted(list_t *pList, list_node_t *pNode);
-u32_t       list_size(list_t *pList);
-b_t         list_node_delete(list_t *pList, list_node_t *pTargetNode);
-b_t         list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTargetNode);
-b_t         list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t direction);
+b_t list_node_isExisted(list_t *pList, list_node_t *pNode);
+u32_t list_size(list_t *pList);
+b_t list_node_delete(list_t *pList, list_node_t *pTargetNode);
+b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTargetNode);
+b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t direction);
 list_node_t *list_node_pop(list_t *pList, list_direction_t direction);
 
-b_t          list_iterator_init(list_iterator_t* pIterator, list_t *pList);
-b_t          list_iterator_next_condition(list_iterator_t *pIterator, list_node_t **ppOutNode);
+b_t list_iterator_init(list_iterator_t *pIterator, list_t *pList);
+b_t list_iterator_next_condition(list_iterator_t *pIterator, list_node_t **ppOutNode);
 list_node_t *list_iterator_next(list_iterator_t *pIterator);
 
 #ifdef __cplusplus

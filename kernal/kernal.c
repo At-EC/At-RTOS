@@ -18,20 +18,19 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_KERNAL)
+#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_KERNAL)
 
 /**
  * Local kernal member setting container.
  */
-static kernal_member_setting_t g_kernal_member_setting[KERNAL_MEMBER_NUMBER] =
-{
-    [KERNAL_MEMBER_THREAD]         = {KERNAL_MEMBER_MAP_1, (SBITS(KERNAL_MEMBER_LIST_THREAD_WAIT, KERNAL_MEMBER_LIST_THREAD_EXIT))},
+static kernal_member_setting_t g_kernal_member_setting[KERNAL_MEMBER_NUMBER] = {
+    [KERNAL_MEMBER_THREAD] = {KERNAL_MEMBER_MAP_1, (SBITS(KERNAL_MEMBER_LIST_THREAD_WAIT, KERNAL_MEMBER_LIST_THREAD_EXIT))},
     [KERNAL_MEMBER_TIMER_INTERNAL] = {KERNAL_MEMBER_MAP_2, (SBITS(KERNAL_MEMBER_LIST_TIMER_STOP, KERNAL_MEMBER_LIST_TIMER_RUN))},
-    [KERNAL_MEMBER_TIMER]          = {KERNAL_MEMBER_MAP_3, (SBITS(KERNAL_MEMBER_LIST_TIMER_STOP, KERNAL_MEMBER_LIST_TIMER_RUN))},
-    [KERNAL_MEMBER_SEMAPHORE]      = {KERNAL_MEMBER_MAP_4, (SBITS(KERNAL_MEMBER_LIST_SEMAPHORE_LOCK, KERNAL_MEMBER_LIST_SEMAPHORE_UNLOCK))},
-    [KERNAL_MEMBER_MUTEX]          = {KERNAL_MEMBER_MAP_5, (SBITS(KERNAL_MEMBER_LIST_MUTEX_LOCK, KERNAL_MEMBER_LIST_MUTEX_UNLOCK))},
-    [KERNAL_MEMBER_EVENT]          = {KERNAL_MEMBER_MAP_6, (SBITS(KERNAL_MEMBER_LIST_EVENT_INACTIVE, KERNAL_MEMBER_LIST_EVENT_ACTIVE))},
-    [KERNAL_MEMBER_QUEUE]          = {KERNAL_MEMBER_MAP_7, (SBIT(KERNAL_MEMBER_LIST_QUEUE_INIT))},
+    [KERNAL_MEMBER_TIMER] = {KERNAL_MEMBER_MAP_3, (SBITS(KERNAL_MEMBER_LIST_TIMER_STOP, KERNAL_MEMBER_LIST_TIMER_RUN))},
+    [KERNAL_MEMBER_SEMAPHORE] = {KERNAL_MEMBER_MAP_4, (SBITS(KERNAL_MEMBER_LIST_SEMAPHORE_LOCK, KERNAL_MEMBER_LIST_SEMAPHORE_UNLOCK))},
+    [KERNAL_MEMBER_MUTEX] = {KERNAL_MEMBER_MAP_5, (SBITS(KERNAL_MEMBER_LIST_MUTEX_LOCK, KERNAL_MEMBER_LIST_MUTEX_UNLOCK))},
+    [KERNAL_MEMBER_EVENT] = {KERNAL_MEMBER_MAP_6, (SBITS(KERNAL_MEMBER_LIST_EVENT_INACTIVE, KERNAL_MEMBER_LIST_EVENT_ACTIVE))},
+    [KERNAL_MEMBER_QUEUE] = {KERNAL_MEMBER_MAP_7, (SBIT(KERNAL_MEMBER_LIST_QUEUE_INIT))},
 };
 
 /**
@@ -47,17 +46,16 @@ static list_t g_kernal_member_list[KERNAL_MEMBER_LIST_NUMBER] = {LIST_NULL};
 /**
  * Local kernal resource
  */
-static kernal_context_t g_kernal_resource =
-{
+static kernal_context_t g_kernal_resource = {
     .current = 0u,
     .list = LIST_NULL,
     .run = FALSE,
     .member =
-    {
-        .pListContainer = (list_t*)&g_kernal_member_list[0],
-        .pMemoryContainer = (u8_t*)&g_kernal_member_container[0],
-        .pSetting = (kernal_member_setting_t*)&g_kernal_member_setting[0],
-    },
+        {
+            .pListContainer = (list_t *)&g_kernal_member_list[0],
+            .pMemoryContainer = (u8_t *)&g_kernal_member_container[0],
+            .pSetting = (kernal_member_setting_t *)&g_kernal_member_setting[0],
+        },
 };
 
 /**
@@ -90,11 +88,11 @@ static b_t _kernal_isInPrivilegeMode(void)
  *
  * @return The PSP stacke address.
  */
-u32_t* _kernal_thread_PSP_Get(os_id_t id)
+u32_t *_kernal_thread_PSP_Get(os_id_t id)
 {
-    thread_context_t* pCurThread = (thread_context_t*)_impl_kernal_member_unified_id_toContainerAddress(id);
+    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_member_unified_id_toContainerAddress(id);
 
-    return (u32_t*)&pCurThread->PSPStartAddr;
+    return (u32_t *)&pCurThread->PSPStartAddr;
 }
 
 /**
@@ -106,7 +104,7 @@ static os_id_t _kernal_thread_nextIdGet(void)
 {
     ENTER_CRITICAL_SECTION();
     list_t *pListPending = (list_t *)_impl_kernal_list_pendingHeadGet();
-    linker_head_t* pHead = (linker_head_t*)(pListPending->pHead);
+    linker_head_t *pHead = (linker_head_t *)(pListPending->pHead);
     EXIT_CRITICAL_SECTION();
 
     return pHead->id;
@@ -125,14 +123,12 @@ static b_t _kernal_thread_node_Order_compare_condition(list_node_t *pCurNode, li
     thread_context_t *pCurThread = (thread_context_t *)pCurNode;
     thread_context_t *pExtractThread = (thread_context_t *)pExtractNode;
 
-    if ((!pCurThread) || (!pExtractThread))
-    {
+    if ((!pCurThread) || (!pExtractThread)) {
         /* no available thread */
         return FALSE;
     }
 
-    if (pCurThread->priority.level < pExtractThread->priority.level)
-    {
+    if (pCurThread->priority.level < pExtractThread->priority.level) {
         /* Find a right position and doesn't has to do schedule */
         return FALSE;
     }
@@ -149,8 +145,7 @@ static void _kernal_thread_list_transfer_toTargetBlocking(linker_head_t *pCurHea
 {
     ENTER_CRITICAL_SECTION();
 
-    if (pToBlockingList)
-    {
+    if (pToBlockingList) {
         linker_list_transaction_specific(&pCurHead->linker, pToBlockingList, _kernal_thread_node_Order_compare_condition);
     }
 
@@ -168,12 +163,10 @@ static void _kernal_thread_entry_schedule(void)
 
     list_t *pList = (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_ENTRY);
     list_iterator_init(&it, pList);
-    while (list_iterator_next_condition(&it, (void *)&pCurThread))
-    {
+    while (list_iterator_next_condition(&it, (void *)&pCurThread)) {
         pEntry = &pCurThread->schedule.entry;
 
-        if (pEntry->pEntryCallFun)
-        {
+        if (pEntry->pEntryCallFun) {
             pEntry->pEntryCallFun(pCurThread->head.id);
             pEntry->pEntryCallFun = NULL;
             pEntry->release = OS_INVALID_ID;
@@ -199,20 +192,16 @@ static b_t _kernal_thread_exit_schedule(void)
     /* The thread block */
     list_t *pList = (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_EXIT);
     list_iterator_init(&it, pList);
-    while (list_iterator_next_condition(&it, (void *)&pCurThread))
-    {
+    while (list_iterator_next_condition(&it, (void *)&pCurThread)) {
         pExit = &pCurThread->schedule.exit;
 
-        if (pExit->timeout_us)
-        {
-            _impl_thread_timer_start(_impl_kernal_member_unified_id_threadToTimer(pCurThread->head.id), pExit->timeout_us, pExit->pTimeoutCallFun);
-            if (pExit->timeout_us != OS_TIME_FOREVER_VAL)
-            {
-                request = TRUE;
-            }
+        if (pExit->timeout_us) {
+            _impl_thread_timer_start(_impl_kernal_member_unified_id_threadToTimer(pCurThread->head.id), pExit->timeout_us,
+                                     pExit->pTimeoutCallFun);
+            request = (pExit->timeout_us != OS_TIME_FOREVER_VAL) ? (TRUE) : (FALSE);
         }
 
-        _kernal_thread_list_transfer_toTargetBlocking((linker_head_t*)&pCurThread->head, (list_t*)pExit->pToList);
+        _kernal_thread_list_transfer_toTargetBlocking((linker_head_t *)&pCurThread->head, (list_t *)pExit->pToList);
     }
 
     return request;
@@ -232,9 +221,7 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     _impl_kernal_thread_init();
-
     _impl_port_interrupt_init();
-
     _impl_clock_time_init(_impl_timer_elapsed_handler);
 
     g_kernal_resource.current = _kernal_thread_nextIdGet();
@@ -257,7 +244,11 @@ static u32_t _kernal_start_privilege_routine(arguments_t *pArgs)
  */
 static u32_t _kernal_member_id_toUnifiedIdEnd(u8_t member_id)
 {
-    return ((member_id < KERNAL_MEMBER_NUMBER) ? (g_kernal_resource.member.pSetting[member_id].mem) : (OS_INVALID_ID));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return OS_INVALID_ID;
+    }
+
+    return (u32_t)g_kernal_resource.member.pSetting[member_id].mem;
 }
 
 /**
@@ -269,8 +260,11 @@ static u32_t _kernal_member_id_toUnifiedIdEnd(u8_t member_id)
  */
 static u32_t _kernal_member_id_toUnifiedIdRange(u8_t member_id)
 {
-    return ((member_id < KERNAL_MEMBER_NUMBER) ?
-            (_kernal_member_id_toUnifiedIdEnd(member_id) - _impl_kernal_member_id_toUnifiedIdStart(member_id)) : (0u));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return 0u;
+    }
+
+    return (u32_t)(_kernal_member_id_toUnifiedIdEnd(member_id) - _impl_kernal_member_id_toUnifiedIdStart(member_id));
 }
 
 /**
@@ -281,8 +275,7 @@ static u32_t _kernal_member_id_toUnifiedIdRange(u8_t member_id)
  */
 void _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
 {
-    if (_kernal_thread_exit_schedule())
-    {
+    if (_kernal_thread_exit_schedule()) {
         _impl_kernal_timer_schedule_request();
     }
 
@@ -290,8 +283,8 @@ void _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
 
     os_id_t next = _kernal_thread_nextIdGet();
 
-    *ppCurPsp = (u32_t*)_kernal_thread_PSP_Get(g_kernal_resource.current);
-    *ppNextPSP = (u32_t*)_kernal_thread_PSP_Get(next);
+    *ppCurPsp = (u32_t *)_kernal_thread_PSP_Get(g_kernal_resource.current);
+    *ppNextPSP = (u32_t *)_kernal_thread_PSP_Get(next);
 
     g_kernal_resource.current = next;
 }
@@ -306,9 +299,19 @@ void _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
  */
 list_t *_impl_kernal_member_list_get(u8_t member_id, u8_t list_id)
 {
-    return (list_t*)(((member_id < KERNAL_MEMBER_NUMBER) && (list_id < KERNAL_MEMBER_LIST_NUMBER)) ?
-                     ((g_kernal_resource.member.pSetting[member_id].list & SBIT(list_id)) ?
-                     (&g_kernal_resource.member.pListContainer[list_id]):(NULL)) : (NULL));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return NULL;
+    }
+
+    if (list_id >= KERNAL_MEMBER_LIST_NUMBER) {
+        return NULL;
+    }
+
+    if (!(g_kernal_resource.member.pSetting[member_id].list & SBIT(list_id))) {
+        return NULL;
+    }
+
+    return (list_t *)&g_kernal_resource.member.pListContainer[list_id];
 }
 
 /**
@@ -318,10 +321,13 @@ list_t *_impl_kernal_member_list_get(u8_t member_id, u8_t list_id)
  *
  * @return The pointer of the memeber address.
  */
-u8_t* _impl_kernal_member_unified_id_toContainerAddress(u32_t unified_id)
+u8_t *_impl_kernal_member_unified_id_toContainerAddress(u32_t unified_id)
 {
-    return (u8_t*)((unified_id < KERNAL_MEMBER_MAP_NUMBER) ?
-                   (&g_kernal_resource.member.pMemoryContainer[unified_id]) : (NULL));
+    if (unified_id >= KERNAL_MEMBER_MAP_NUMBER) {
+        return NULL;
+    }
+
+    return (u8_t *)(&g_kernal_resource.member.pMemoryContainer[unified_id]);
 }
 
 /**
@@ -333,9 +339,17 @@ u8_t* _impl_kernal_member_unified_id_toContainerAddress(u32_t unified_id)
  */
 u32_t _impl_kernal_member_containerAddress_toUnifiedid(u32_t container_address)
 {
-    u32_t start = (u32_t)(u8_t*)&g_kernal_resource.member.pMemoryContainer[0];
-    return (u32_t)(((container_address >= start) && (container_address < (start + KERNAL_MEMBER_MAP_NUMBER))) ?
-                   (container_address - start) : (OS_INVALID_ID));
+    u32_t start = (u32_t)(u8_t *)&g_kernal_resource.member.pMemoryContainer[0];
+
+    if (container_address < start) {
+        return OS_INVALID_ID;
+    }
+
+    if (container_address >= (start + KERNAL_MEMBER_MAP_NUMBER)) {
+        return OS_INVALID_ID;
+    }
+
+    return (u32_t)(container_address - start);
 }
 
 /**
@@ -347,8 +361,15 @@ u32_t _impl_kernal_member_containerAddress_toUnifiedid(u32_t container_address)
  */
 u32_t _impl_kernal_member_id_toUnifiedIdStart(u8_t member_id)
 {
-    return ((member_id < KERNAL_MEMBER_NUMBER) ? (((member_id) ?
-             (g_kernal_resource.member.pSetting[member_id-1].mem): (0u))) : (OS_INVALID_ID));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return OS_INVALID_ID;
+    }
+
+    if (!member_id) {
+        return 0u;
+    }
+
+    return (u32_t)(g_kernal_resource.member.pSetting[member_id - 1].mem);
 }
 
 /**
@@ -358,10 +379,13 @@ u32_t _impl_kernal_member_id_toUnifiedIdStart(u8_t member_id)
  *
  * @return The value of the kernal member address range.
  */
-u8_t* _impl_kernal_member_id_toContainerStartAddress(u32_t member_id)
+u8_t *_impl_kernal_member_id_toContainerStartAddress(u32_t member_id)
 {
-    return (u8_t*)((member_id < KERNAL_MEMBER_NUMBER) ?
-                   (_impl_kernal_member_unified_id_toContainerAddress(_impl_kernal_member_id_toUnifiedIdStart(member_id))) : (NULL));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return NULL;
+    }
+
+    return (u8_t *)_impl_kernal_member_unified_id_toContainerAddress(_impl_kernal_member_id_toUnifiedIdStart(member_id));
 }
 
 /**
@@ -371,10 +395,13 @@ u8_t* _impl_kernal_member_id_toContainerStartAddress(u32_t member_id)
  *
  * @return The value of the kernal member ending address.
  */
-u8_t* _impl_kernal_member_id_toContainerEndAddress(u32_t member_id)
+u8_t *_impl_kernal_member_id_toContainerEndAddress(u32_t member_id)
 {
-    return (u8_t*)((member_id < KERNAL_MEMBER_NUMBER) ?
-                   (_impl_kernal_member_unified_id_toContainerAddress(_kernal_member_id_toUnifiedIdEnd(member_id))) : (NULL));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return NULL;
+    }
+
+    return (u8_t *)_impl_kernal_member_unified_id_toContainerAddress(_kernal_member_id_toUnifiedIdEnd(member_id));
 }
 
 /**
@@ -387,12 +414,19 @@ u8_t* _impl_kernal_member_id_toContainerEndAddress(u32_t member_id)
  */
 u32_t _impl_kernal_member_id_unifiedConvert(u8_t member_id, u32_t unified_id)
 {
-    return (u32_t)((member_id < KERNAL_MEMBER_NUMBER) ?
-            (((unified_id >= _impl_kernal_member_id_toUnifiedIdStart(member_id)) ?
-                (unified_id - _impl_kernal_member_id_toUnifiedIdStart(member_id)) : (0U))
-                / _kernal_member_id_toUnifiedIdRange(member_id)) : (0U));
-}
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return 0u;
+    }
 
+    u32_t diff = _impl_kernal_member_id_toUnifiedIdStart(member_id);
+    if (unified_id >= diff) {
+        diff = unified_id - diff;
+    } else {
+        diff = 0u;
+    }
+
+    return (u32_t)(diff / _kernal_member_id_toUnifiedIdRange(member_id));
+}
 
 /**
  * @brief Check if the kernal member unique id if is's invalid.
@@ -404,10 +438,23 @@ u32_t _impl_kernal_member_id_unifiedConvert(u8_t member_id, u32_t unified_id)
  */
 b_t _impl_kernal_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id)
 {
-    return ((member_id >= KERNAL_MEMBER_NUMBER) ||
-            (unified_id == OS_INVALID_ID) ||
-            (unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) ||
-            (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id)));
+    if (member_id >= KERNAL_MEMBER_NUMBER) {
+        return TRUE;
+    }
+
+    if (unified_id == OS_INVALID_ID) {
+        return TRUE;
+    }
+
+    if (unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) {
+        return TRUE;
+    }
+
+    if (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id)) {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /**
@@ -419,7 +466,15 @@ b_t _impl_kernal_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id)
  */
 b_t _impl_kernal_os_id_is_invalid(struct os_id id)
 {
-    return ((id.val == OS_INVALID_ID) || (id.val >= KERNAL_MEMBER_MAP_NUMBER));
+    if (id.val == OS_INVALID_ID) {
+        return TRUE;
+    }
+
+    if (id.val == KERNAL_MEMBER_MAP_NUMBER) {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /**
@@ -433,12 +488,13 @@ u32_t _impl_kernal_member_unified_id_threadToTimer(u32_t unified_id)
 {
     u32_t uid = OS_INVALID_ID;
 
-    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_THREAD, unified_id))
-    {
-        uid = (unified_id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD)) / sizeof(thread_context_t);
-        uid = (uid * sizeof(timer_context_t)) + _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL);
+    if (_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_THREAD, unified_id)) {
+        return OS_INVALID_ID;
     }
-    return uid;
+
+    uid = (unified_id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD)) / sizeof(thread_context_t);
+
+    return (u32_t)((uid * sizeof(timer_context_t)) + _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL));
 }
 
 /**
@@ -452,12 +508,12 @@ u32_t _impl_kernal_member_unified_id_timerToThread(u32_t unified_id)
 {
     u32_t uid = OS_INVALID_ID;
 
-    if (!_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, unified_id))
-    {
-        uid = (unified_id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) / sizeof(timer_context_t);
-        uid = (uid * sizeof(thread_context_t)) + _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD);
+    if (_impl_kernal_member_unified_id_isInvalid(KERNAL_MEMBER_TIMER_INTERNAL, unified_id)) {
+        return OS_INVALID_ID;
     }
-    return uid;
+
+    uid = (unified_id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_TIMER_INTERNAL)) / sizeof(timer_context_t);
+    return (u32_t)((uid * sizeof(thread_context_t)) + _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD));
 }
 
 /**
@@ -471,9 +527,9 @@ u8_t _impl_kernal_member_unified_id_toId(u32_t unified_id)
 {
     u8_t member_id = KERNAL_MEMBER_THREAD;
 
-    while((member_id < KERNAL_MEMBER_NUMBER) && 
-          ((unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) || (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id))))
-    {
+    while ((member_id < KERNAL_MEMBER_NUMBER) && ((unified_id < _impl_kernal_member_id_toUnifiedIdStart(member_id)) ||
+                                                  (unified_id >= _kernal_member_id_toUnifiedIdEnd(member_id)))) {
+
         member_id++;
     }
 
@@ -499,9 +555,9 @@ u32_t _impl_kernal_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddres
  *
  * @return The pending list head.
  */
-list_t* _impl_kernal_list_pendingHeadGet(void)
+list_t *_impl_kernal_list_pendingHeadGet(void)
 {
-    return (list_t*)(&g_kernal_resource.list);
+    return (list_t *)(&g_kernal_resource.list);
 }
 
 /**
@@ -519,9 +575,9 @@ os_id_t _impl_kernal_thread_runIdGet(void)
  *
  * @return The context pointer of current running thread.
  */
-void* _impl_kernal_thread_runContextGet(void)
+thread_context_t *_impl_kernal_thread_runContextGet(void)
 {
-    return (void*)_impl_kernal_member_unified_id_toContainerAddress(_impl_kernal_thread_runIdGet());
+    return (void *)_impl_kernal_member_unified_id_toContainerAddress(_impl_kernal_thread_runIdGet());
 }
 
 /**
@@ -533,7 +589,7 @@ static void _impl_kernal_thread_list_transfer_toExit(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    list_t *pToExitList = (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_EXIT);
+    list_t *pToExitList = (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_EXIT);
     linker_list_transaction_common(&pCurHead->linker, pToExitList, LIST_TAIL);
 
     EXIT_CRITICAL_SECTION();
@@ -548,7 +604,7 @@ void _impl_kernal_thread_list_transfer_toEntry(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    list_t *pToEntryList = (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_ENTRY);
+    list_t *pToEntryList = (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_ENTRY);
     linker_list_transaction_common(&pCurHead->linker, pToEntryList, LIST_TAIL);
 
     EXIT_CRITICAL_SECTION();
@@ -578,7 +634,7 @@ void _impl_kernal_semaphore_list_transfer_toLock(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    list_t *pToLockList = (list_t *)(list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_SEMAPHORE, KERNAL_MEMBER_LIST_SEMAPHORE_LOCK);
+    list_t *pToLockList = (list_t *)(list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_SEMAPHORE, KERNAL_MEMBER_LIST_SEMAPHORE_LOCK);
     linker_list_transaction_common(&pCurHead->linker, pToLockList, LIST_TAIL);
 
     EXIT_CRITICAL_SECTION();
@@ -597,14 +653,14 @@ void _impl_kernal_semaphore_list_transfer_toLock(linker_head_t *pCurHead)
  */
 u32p_t _impl_kernal_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToList, u32_t timeout_us, void (*pCallback)(os_id_t))
 {
-    thread_context_t *pCurThread = (thread_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
+    thread_context_t *pCurThread = (thread_context_t *)(_impl_kernal_member_unified_id_toContainerAddress(id));
 
     pCurThread->schedule.hold = hold;
     pCurThread->schedule.exit.pToList = pToList;
     pCurThread->schedule.exit.timeout_us = timeout_us;
     pCurThread->schedule.exit.pTimeoutCallFun = pCallback;
 
-    _impl_kernal_thread_list_transfer_toExit((linker_head_t*)&pCurThread->head);
+    _impl_kernal_thread_list_transfer_toExit((linker_head_t *)&pCurThread->head);
     return _impl_kernal_thread_schedule_request();
 }
 
@@ -620,14 +676,33 @@ u32p_t _impl_kernal_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToLis
  */
 u32p_t _impl_kernal_thread_entry_trigger(os_id_t id, os_id_t release, u32_t result, void (*pCallback)(os_id_t))
 {
-    thread_context_t *pCurThread = (thread_context_t*)(_impl_kernal_member_unified_id_toContainerAddress(id));
+    thread_context_t *pCurThread = (thread_context_t *)(_impl_kernal_member_unified_id_toContainerAddress(id));
 
     pCurThread->schedule.entry.release = release;
     pCurThread->schedule.entry.result = result;
     pCurThread->schedule.entry.pEntryCallFun = pCallback;
 
-    _impl_kernal_thread_list_transfer_toEntry((linker_head_t*)&pCurThread->head);
+    _impl_kernal_thread_list_transfer_toEntry((linker_head_t *)&pCurThread->head);
     return _impl_kernal_thread_schedule_request();
+}
+
+/**
+ * @brief Read and clean the schedule entry result.
+ *
+ * @param pSchedule The pointer of thread action schedule.
+ *
+ * @return The result of entry action schedule.
+ */
+u32_t _impl_kernal_schedule_entry_result_read_clean(action_schedule_t *pSchedule)
+{
+    if (!pSchedule) {
+        return 0u;
+    }
+
+    u32_t ret = (u32p_t)pSchedule->entry.result;
+    pSchedule->entry.result = 0u;
+
+    return (u32_t)ret;
 }
 
 /**
@@ -647,15 +722,12 @@ b_t _impl_kernal_isInThreadMode(void)
  */
 u32p_t _impl_kernal_thread_schedule_request(void)
 {
-    if (_kernal_isInPrivilegeMode())
-    {
-        _kernal_setPendSV();
-        return PC_SC_SUCCESS;
-    }
-    else
-    {
+    if (!_kernal_isInPrivilegeMode()) {
         return _PC_CMPT_FAILED;
     }
+
+    _kernal_setPendSV();
+    return PC_SC_SUCCESS;
 }
 
 /**
@@ -689,11 +761,9 @@ static u32_t _kernal_message_arrived(void)
  */
 void _impl_kernal_atos_schedule_thread(void)
 {
-    while (1)
-    {
+    while (1) {
         u32p_t postcode = (_kernal_message_arrived());
-        if (PC_IOK(postcode))
-        {
+        if (PC_IOK(postcode)) {
             _impl_timer_reamining_elapsed_handler();
         }
     }
@@ -704,8 +774,7 @@ void _impl_kernal_atos_schedule_thread(void)
  */
 void _impl_kernal_atos_idle_thread(void)
 {
-    while(1)
-    {
+    while (1) {
         /* TODO: Power Management */
     }
 }
@@ -715,11 +784,11 @@ void _impl_kernal_atos_idle_thread(void)
  */
 u32p_t _impl_kernal_at_rtos_run(void)
 {
-    if (!_impl_kernal_rtos_isRun())
-    {
-        return _impl_kernal_privilege_invoke((const void*)_kernal_start_privilege_routine, NULL);
+    if (_impl_kernal_rtos_isRun()) {
+        return PC_SC_SUCCESS;
     }
-    return _PC_CMPT_FAILED;
+
+    return _impl_kernal_privilege_invoke((const void *)_kernal_start_privilege_routine, NULL);
 }
 
 /**
@@ -730,18 +799,17 @@ u32p_t _impl_kernal_at_rtos_run(void)
 void _impl_kernal_privilege_call_inSVC_c(u32_t *svc_args)
 {
     /*
-    * Stack contains:
-    * r0, r1, r2, r3, r12, r14, the return address and xPSR
-    * First argument (r0) is svc_args[0]
-    * Put the result into R0
-    */
+     * Stack contains:
+     * r0, r1, r2, r3, r12, r14, the return address and xPSR
+     * First argument (r0) is svc_args[0]
+     * Put the result into R0
+     */
     u8_t svc_number = ((u8_t *)svc_args[6])[-2];
 
-    if (svc_number == SVC_KERNAL_INVOKE_NUMBER)
-    {
+    if (svc_number == SVC_KERNAL_INVOKE_NUMBER) {
         pPrivilege_callFunc_t pCall = (pPrivilege_callFunc_t)svc_args[0];
 
-        svc_args[0] = (u32_t)pCall((arguments_t*)svc_args[1]);
+        svc_args[0] = (u32_t)pCall((arguments_t *)svc_args[1]);
     }
 }
 
@@ -753,26 +821,20 @@ void _impl_kernal_privilege_call_inSVC_c(u32_t *svc_args)
  *
  * @return The result of the privilege function.
  */
-u32_t _impl_kernal_privilege_invoke(const void* pCallFun, arguments_t* pArgs)
+u32_t _impl_kernal_privilege_invoke(const void *pCallFun, arguments_t *pArgs)
 {
-    if (!pCallFun)
-    {
+    if (!pCallFun) {
         return _PC_CMPT_FAILED;
     }
 
-    u32_t ret = 0u;
+    if (!_kernal_isInPrivilegeMode()) {
+        return (u32_t)_impl_kernal_svc_call((u32_t)pCallFun, (u32_t)pArgs, 0u, 0u);
+    }
 
-    if (_kernal_isInPrivilegeMode())
-    {
-        ENTER_CRITICAL_SECTION();
-        pPrivilege_callFunc_t pCall = (pPrivilege_callFunc_t)pCallFun;
-        ret = (u32_t)pCall((arguments_t *)pArgs);
-        EXIT_CRITICAL_SECTION();
-    }
-    else
-    {
-        ret = _impl_kernal_svc_call((u32_t)pCallFun, (u32_t)pArgs, 0u, 0u);
-    }
+    ENTER_CRITICAL_SECTION();
+    pPrivilege_callFunc_t pCall = (pPrivilege_callFunc_t)pCallFun;
+    u32_t ret = (u32_t)pCall((arguments_t *)pArgs);
+    EXIT_CRITICAL_SECTION();
 
     return ret;
 }

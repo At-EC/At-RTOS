@@ -22,13 +22,13 @@ typedef void (*time_report_handler_t)(u32_t);
 /**
  * The implement function lists for rtos kernal internal use.
  */
-void  _impl_clock_isr(void);
-void  _impl_clock_time_interval_set(u32_t interval_us);
+void _impl_clock_isr(void);
+void _impl_clock_time_interval_set(u32_t interval_us);
 u32_t _impl_clock_time_elapsed_get(void);
 u32_t _impl_clock_time_get(void);
-void  _impl_clock_time_enable(void);
-void  _impl_clock_time_disable(void);
-void  _impl_clock_time_init(time_report_handler_t pTime_function);
+void _impl_clock_time_enable(void);
+void _impl_clock_time_disable(void);
+void _impl_clock_time_init(time_report_handler_t pTime_function);
 
 #ifdef __cplusplus
 }

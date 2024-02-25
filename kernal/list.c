@@ -25,17 +25,18 @@ extern "C" {
  */
 b_t list_node_isExisted(list_t *pList, list_node_t *pNode)
 {
-    if ((!pList) || (!pNode))
-    {
+    if (!pList) {
+        return FALSE;
+    }
+
+    if (!pNode) {
         return FALSE;
     }
 
     list_node_t *pCurNode_temp = pList->pHead;
 
-    while (pCurNode_temp)
-    {
-        if (pCurNode_temp == pNode)
-        {
+    while (pCurNode_temp) {
+        if (pCurNode_temp == pNode) {
             return TRUE;
         }
         pCurNode_temp = pCurNode_temp->pNext;
@@ -55,15 +56,13 @@ b_t list_node_isExisted(list_t *pList, list_node_t *pNode)
  */
 u32_t list_size(list_t *pList)
 {
-    if (!pList)
-    {
+    if (!pList) {
         return 0u;
     }
 
     u32_t size = 0;
     list_node_t *pCurNode_temp = pList->pHead;
-    while (pCurNode_temp)
-    {
+    while (pCurNode_temp) {
         pCurNode_temp = pCurNode_temp->pNext;
         size++;
     }
@@ -83,36 +82,32 @@ u32_t list_size(list_t *pList)
  */
 b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
 {
-    if ((!pList) || (!pTargetNode))
-    {
+    if (!pList) {
+        return FALSE;
+    }
+
+    if (!pTargetNode) {
         return FALSE;
     }
 
     list_node_t *pCurNode_tmp = pList->pHead;
     list_node_t *pPrevNode_tmp = NULL;
-    while ((pCurNode_tmp) && (pCurNode_tmp != pTargetNode))
-    {
+    while ((pCurNode_tmp) && (pCurNode_tmp != pTargetNode)) {
         pPrevNode_tmp = pCurNode_tmp;
         pCurNode_tmp = pCurNode_tmp->pNext;
     }
 
-    if (pCurNode_tmp)
-    {
-        if (!pPrevNode_tmp)
-        {
-            pList->pHead = pCurNode_tmp->pNext;
-        }
-        else
-        {
-            pPrevNode_tmp->pNext = pCurNode_tmp->pNext;
-        }
-        pCurNode_tmp->pNext = NULL;
-    }
-    else
-    {
+    if (!pCurNode_tmp) {
         /* The target pNode is not in the list */
         return FALSE;
     }
+
+    if (!pPrevNode_tmp) {
+        pList->pHead = pCurNode_tmp->pNext;
+    } else {
+        pPrevNode_tmp->pNext = pCurNode_tmp->pNext;
+    }
+    pCurNode_tmp->pNext = NULL;
 
     return TRUE;
 }
@@ -130,36 +125,36 @@ b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
  */
 b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTargetNode)
 {
-    if ((!pList) || (!pBefore) || (!pTargetNode))
-    {
+    if (!pList) {
+        return FALSE;
+    }
+
+    if (!pBefore) {
+        return FALSE;
+    }
+
+    if (!pTargetNode) {
         return FALSE;
     }
 
     list_node_t *pCurNode_tmp = pList->pHead;
     list_node_t *pPrevNode_tmp = NULL;
-    while ((pCurNode_tmp) && (pCurNode_tmp != pBefore))
-    {
+    while ((pCurNode_tmp) && (pCurNode_tmp != pBefore)) {
         pPrevNode_tmp = pCurNode_tmp;
         pCurNode_tmp = pCurNode_tmp->pNext;
     }
 
-    if (pCurNode_tmp)
-    {
-        if (!pPrevNode_tmp)
-        {
-            pList->pHead = pTargetNode;
-        }
-        else
-        {
-            pPrevNode_tmp->pNext = pTargetNode;
-        }
-        pTargetNode->pNext = pBefore;
-    }
-    else
-    {
+    if (!pCurNode_tmp) {
         /* The pBefore is not in the list */
         return FALSE;
     }
+
+    if (!pPrevNode_tmp) {
+        pList->pHead = pTargetNode;
+    } else {
+        pPrevNode_tmp->pNext = pTargetNode;
+    }
+    pTargetNode->pNext = pBefore;
 
     return TRUE;
 }
@@ -177,31 +172,30 @@ b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTa
  */
 b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t direction)
 {
-    if ((!pList) || (!pInNode) || ((direction != LIST_HEAD) &&
-                                  (direction != LIST_TAIL)))
-    {
+    if (!pList) {
         return FALSE;
     }
 
-    if (direction == LIST_TAIL)
-    {
+    if (!pInNode) {
+        return FALSE;
+    }
+
+    if ((direction != LIST_HEAD) && (direction != LIST_TAIL)) {
+        return FALSE;
+    }
+
+    if (direction == LIST_TAIL) {
         list_node_t *pCurNode_temp = pList->pHead;
-        if (pCurNode_temp)
-        {
-            while(pCurNode_temp->pNext)
-            {
+        if (pCurNode_temp) {
+            while (pCurNode_temp->pNext) {
                 pCurNode_temp = pCurNode_temp->pNext;
             }
             pCurNode_temp->pNext = pInNode;
-        }
-        else
-        {
+        } else {
             pList->pHead = pInNode;
         }
         pInNode->pNext = NULL;
-    }
-    else if (direction == LIST_HEAD)
-    {
+    } else if (direction == LIST_HEAD) {
         pInNode->pNext = pList->pHead;
         pList->pHead = pInNode;
     }
@@ -221,54 +215,48 @@ b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t directi
  */
 list_node_t *list_node_pop(list_t *pList, list_direction_t direction)
 {
-    if ((!pList) || ((direction != LIST_HEAD) &&
-                      (direction != LIST_TAIL)))
-    {
+    if (!pList) {
+        return NULL;
+    }
+
+    if ((direction != LIST_HEAD) && (direction != LIST_TAIL)) {
         return NULL;
     }
 
     list_node_t *pOutNode = NULL;
-    if (direction == LIST_TAIL)
-    {
+    if (direction == LIST_TAIL) {
         list_node_t *pCurNode_temp = pList->pHead;
         list_node_t *pPrevNode_tmp = NULL;
-        if (pCurNode_temp)
-        {
-            while(pCurNode_temp->pNext)
-            {
+        if (pCurNode_temp) {
+            while (pCurNode_temp->pNext) {
                 pPrevNode_tmp = pCurNode_temp;
                 pCurNode_temp = pCurNode_temp->pNext;
             }
 
             pOutNode = pCurNode_temp;
 
-            if (pPrevNode_tmp)
-            {
+            if (pPrevNode_tmp) {
                 pPrevNode_tmp->pNext = NULL;
-            }
-            else
-            {
+            } else {
                 pList->pHead = NULL;
             }
         }
-        else
-        {
-            pCurNode_temp = NULL;
-        }
+
+        return pOutNode;
     }
-    else if (direction == LIST_HEAD)
-    {
+
+    if (direction == LIST_HEAD) {
         pOutNode = pList->pHead;
-        if (pList->pHead)
-        {
+        if (pList->pHead) {
             pList->pHead = pList->pHead->pNext;
             pOutNode->pNext = NULL;
         }
+
+        return pOutNode;
     }
 
-    return pOutNode;
+    return NULL;
 }
-
 
 /**
  * @brief Initialize a iterator to traverse all node in the list from the list head.
@@ -280,23 +268,25 @@ list_node_t *list_node_pop(list_t *pList, list_direction_t direction)
  *
  * @return The true indicates the iterator symbol created successful, otherwist is failed.
  */
-b_t list_iterator_init(list_iterator_t* pIterator, list_t *pList)
+b_t list_iterator_init(list_iterator_t *pIterator, list_t *pList)
 {
-    if ((!pIterator) || (!pList))
-    {
+    if (!pIterator) {
         return FALSE;
     }
 
-    _memset((char_t*)pIterator, 0x0u, sizeof(list_iterator_t));
-    if (pList->pHead)
-    {
-        pIterator->pCurNode = pList->pHead;
-        pIterator->pList = pList;
-
-        return TRUE;
+    if (!pList) {
+        return FALSE;
     }
 
-    return FALSE;
+    _memset((char_t *)pIterator, 0x0u, sizeof(list_iterator_t));
+    if (!pList->pHead) {
+        return FALSE;
+    }
+
+    pIterator->pCurNode = pList->pHead;
+    pIterator->pList = pList;
+
+    return TRUE;
 }
 
 /**
@@ -310,14 +300,12 @@ b_t list_iterator_init(list_iterator_t* pIterator, list_t *pList)
  */
 list_node_t *list_iterator_next(list_iterator_t *pIterator)
 {
-    if (!pIterator)
-    {
+    if (!pIterator) {
         return NULL;
     }
 
     list_node_t *pCurOutNode = pIterator->pCurNode;
-    if (pIterator->pCurNode)
-    {
+    if (pIterator->pCurNode) {
         pIterator->pCurNode = pIterator->pCurNode->pNext;
     }
 
@@ -344,4 +332,3 @@ b_t list_iterator_next_condition(list_iterator_t *pIterator, list_node_t **ppOut
 #ifdef __cplusplus
 }
 #endif
-

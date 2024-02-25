@@ -17,17 +17,17 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED       PC_FAILED(PC_CMPT_THREAD)
+#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_THREAD)
 
 /**
  * The local function lists for current file internal use.
  */
-static os_id_t _thread_init_privilege_routine(arguments_t* pArgs);
-static u32_t   _thread_resume_privilege_routine(arguments_t* pArgs);
-static u32_t   _thread_suspend_privilege_routine(arguments_t* pArgs);
-static u32_t   _thread_yield_privilege_routine(arguments_t* pArgs);
-static u32_t   _thread_sleep_privilege_routine(arguments_t* pArgs);
-static u32_t   _thread_delete_privilege_routine(arguments_t* pArgs);
+static os_id_t _thread_init_privilege_routine(arguments_t *pArgs);
+static u32_t _thread_resume_privilege_routine(arguments_t *pArgs);
+static u32_t _thread_suspend_privilege_routine(arguments_t *pArgs);
+static u32_t _thread_yield_privilege_routine(arguments_t *pArgs);
+static u32_t _thread_sleep_privilege_routine(arguments_t *pArgs);
+static u32_t _thread_delete_privilege_routine(arguments_t *pArgs);
 
 /**
  * @brief Get the thread context based on provided unique id.
@@ -36,9 +36,9 @@ static u32_t   _thread_delete_privilege_routine(arguments_t* pArgs);
  *
  * @return The pointer of the current unique id thread context.
  */
-static thread_context_t* _thread_object_contextGet(os_id_t id)
+static thread_context_t *_thread_object_contextGet(os_id_t id)
 {
-    return (thread_context_t*)_impl_kernal_member_unified_id_toContainerAddress(id);
+    return (thread_context_t *)_impl_kernal_member_unified_id_toContainerAddress(id);
 }
 
 /**
@@ -56,9 +56,9 @@ static os_id_t _thread_id_runtime_get(void)
  *
  * @return The pointer of current running thread.
  */
-static thread_context_t* _thread_object_runtime_get(void)
+static thread_context_t *_thread_object_runtime_get(void)
 {
-    return (thread_context_t*)_thread_object_contextGet(_impl_kernal_thread_runIdGet());
+    return _thread_object_contextGet(_impl_kernal_thread_runIdGet());
 }
 
 /**
@@ -66,9 +66,9 @@ static thread_context_t* _thread_object_runtime_get(void)
  *
  * @return The value of the waiting list head.
  */
-static list_t* _thread_list_waitingHeadGet(void)
+static list_t *_thread_list_waitingHeadGet(void)
 {
-    return (list_t*)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_WAIT);
+    return (list_t *)_impl_kernal_member_list_get(KERNAL_MEMBER_THREAD, KERNAL_MEMBER_LIST_THREAD_WAIT);
 }
 
 /**
@@ -76,9 +76,9 @@ static list_t* _thread_list_waitingHeadGet(void)
  *
  * @return The value of the pending list head.
  */
-static list_t* _thread_list_pendingHeadGet(void)
+static list_t *_thread_list_pendingHeadGet(void)
 {
-    return (list_t*)_impl_kernal_list_pendingHeadGet();
+    return (list_t *)_impl_kernal_list_pendingHeadGet();
 }
 
 /**
@@ -143,13 +143,14 @@ static void _thread_list_transfer_toPend(linker_head_t *pCurHead)
  *
  * @return The pointer of the pending thread head.
  */
-static linker_head_t* _thread_linker_head_fromPending(void)
+static linker_head_t *_thread_linker_head_fromPending(void)
 {
     ENTER_CRITICAL_SECTION();
-    list_t *pListPending = (list_t *)_thread_list_pendingHeadGet();
-    EXIT_CRITICAL_SECTION();
 
-    return (linker_head_t*)(pListPending->pHead);
+    list_t *pListPending = (list_t *)_thread_list_pendingHeadGet();
+
+    EXIT_CRITICAL_SECTION();
+    return (linker_head_t *)(pListPending->pHead);
 }
 
 /**
@@ -157,11 +158,11 @@ static linker_head_t* _thread_linker_head_fromPending(void)
  *
  * @return The pointer of the next pending thread head.
  */
-static linker_head_t* _thread_linker_Head_next_fromPending(void)
+static linker_head_t *_thread_linker_Head_next_fromPending(void)
 {
-    linker_head_t* pHead = _thread_linker_head_fromPending();
+    linker_head_t *pHead = _thread_linker_head_fromPending();
 
-    return (linker_head_t*)((pHead) ? (pHead->linker.node.pNext) : (NULL));
+    return (linker_head_t *)((pHead) ? (pHead->linker.node.pNext) : (NULL));
 }
 
 /**
@@ -185,7 +186,7 @@ static b_t _thread_id_isInvalid(u32_t id)
  */
 static b_t _thread_object_isInit(os_id_t id)
 {
-    thread_context_t *pCurThread = (thread_context_t *)_thread_object_contextGet(id);
+    thread_context_t *pCurThread = _thread_object_contextGet(id);
 
     return ((pCurThread) ? (((pCurThread->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
 }
@@ -207,7 +208,33 @@ static void _thread_callback_fromTimeOut(os_id_t id)
  */
 u32_t _impl_thread_os_id_to_number(os_id_t id)
 {
-    return (u32_t)(_thread_id_isInvalid(id) ? (0u) : (id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD)) / sizeof(thread_context_t));
+    if (_thread_id_isInvalid(id)) {
+        return 0u;
+    }
+
+    return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD)) / sizeof(thread_context_t));
+}
+
+/**
+ * @brief Get the thread name based on provided unique id.
+ *
+ * @param id Thread unique id.
+ *
+ * @return The name of current thread.
+ */
+const char_t *_impl_thread_name_get(os_id_t id)
+{
+    if (_thread_id_isInvalid(id)) {
+        return NULL;
+    }
+
+    if (!_thread_object_isInit(id)) {
+        return NULL;
+    }
+
+    thread_context_t *pCurThread = _thread_object_contextGet(id);
+
+    return (const char_t *)((pCurThread) ? (pCurThread->head.pName) : (NULL));
 }
 
 /**
@@ -223,41 +250,32 @@ u32_t _impl_thread_os_id_to_number(os_id_t id)
  */
 os_id_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t size, u16_t priority, const char_t *pName)
 {
-    if (!pEntryFun)
-    {
+    if (!pEntryFun) {
         return OS_INVALID_ID;
     }
 
-    if (!pAddress)
-    {
+    if (!pAddress) {
         return OS_INVALID_ID;
     }
 
-    if ((size < STACK_SIZE_MINIMUM) || (size > STACK_SIZE_MAXIMUM))
-    {
+    if ((size < STACK_SIZE_MINIMUM) || (size > STACK_SIZE_MAXIMUM)) {
         return OS_INVALID_ID;
     }
 
-    if (priority > 0xFFu)
-    {
+    if (priority > 0xFFu) {
         return OS_INVALID_ID;
     }
 
-    if ((priority == OS_PRIORITY_KERNAL_THREAD_IDLE_LEVEL) || (priority == OS_PRIORITY_KERNAL_THREAD_SCHEDULE_LEVEL))
-    {
+    if ((priority == OS_PRIORITY_KERNAL_THREAD_IDLE_LEVEL) || (priority == OS_PRIORITY_KERNAL_THREAD_SCHEDULE_LEVEL)) {
         return OS_INVALID_ID;
     }
 
-    arguments_t arguments[] =
-    {
-        [0] = {.ptr_val = (void*)pEntryFun},
-        [1] = {.u32_val = (u32_t)pAddress},
-        [2] = {.u32_val = (u32_t)size},
-        [3] = {.u8_val = (u8_t)priority},
-        [4] = {.pch_val = (const void *)pName},
+    arguments_t arguments[] = {
+        [0] = {.ptr_val = (void *)pEntryFun}, [1] = {.u32_val = (u32_t)pAddress},     [2] = {.u32_val = (u32_t)size},
+        [3] = {.u8_val = (u8_t)priority},     [4] = {.pch_val = (const void *)pName},
     };
 
-    return _impl_kernal_privilege_invoke((const void*)_thread_init_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void *)_thread_init_privilege_routine, arguments);
 }
 
 /**
@@ -269,22 +287,19 @@ os_id_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t 
  */
 u32p_t _impl_thread_resume(os_id_t id)
 {
-    if (_thread_id_isInvalid(id))
-    {
+    if (_thread_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    if (!_thread_object_isInit(id))
-    {
+    if (!_thread_object_isInit(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    arguments_t arguments[] =
-    {
+    arguments_t arguments[] = {
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke((const void*)_thread_resume_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void *)_thread_resume_privilege_routine, arguments);
 }
 
 /**
@@ -296,22 +311,19 @@ u32p_t _impl_thread_resume(os_id_t id)
  */
 u32p_t _impl_thread_suspend(os_id_t id)
 {
-    if (_thread_id_isInvalid(id))
-    {
+    if (_thread_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    if (!_thread_object_isInit(id))
-    {
+    if (!_thread_object_isInit(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    arguments_t arguments[] =
-    {
+    arguments_t arguments[] = {
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke((const void*)_thread_suspend_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void *)_thread_suspend_privilege_routine, arguments);
 }
 
 /**
@@ -323,12 +335,11 @@ u32p_t _impl_thread_suspend(os_id_t id)
  */
 u32p_t _impl_thread_yield(void)
 {
-    if (!_impl_kernal_isInThreadMode())
-    {
+    if (!_impl_kernal_isInThreadMode()) {
         return _PC_CMPT_FAILED;
     }
 
-    return _impl_kernal_privilege_invoke((const void*)_thread_yield_privilege_routine, NULL);
+    return _impl_kernal_privilege_invoke((const void *)_thread_yield_privilege_routine, NULL);
 }
 
 /**
@@ -340,22 +351,19 @@ u32p_t _impl_thread_yield(void)
  */
 u32p_t _impl_thread_delete(os_id_t id)
 {
-    if (_thread_id_isInvalid(id))
-    {
+    if (_thread_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    if (!_thread_object_isInit(id))
-    {
+    if (!_thread_object_isInit(id)) {
         return _PC_CMPT_FAILED;
     }
 
-    arguments_t arguments[] =
-    {
+    arguments_t arguments[] = {
         [0] = {.u32_val = (u32_t)id},
     };
 
-    return _impl_kernal_privilege_invoke((const void*)_thread_delete_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void *)_thread_delete_privilege_routine, arguments);
 }
 
 /**
@@ -367,22 +375,19 @@ u32p_t _impl_thread_delete(os_id_t id)
  */
 u32p_t _impl_thread_sleep(u32_t timeout_ms)
 {
-    if (!timeout_ms)
-    {
+    if (!timeout_ms) {
         return _PC_CMPT_FAILED;
     }
 
-    if (!_impl_kernal_isInThreadMode())
-    {
+    if (!_impl_kernal_isInThreadMode()) {
         return _PC_CMPT_FAILED;
     }
 
-    arguments_t arguments[] =
-    {
+    arguments_t arguments[] = {
         [0] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    return _impl_kernal_privilege_invoke((const void*)_thread_sleep_privilege_routine, arguments);
+    return _impl_kernal_privilege_invoke((const void *)_thread_sleep_privilege_routine, arguments);
 }
 
 /**
@@ -392,7 +397,7 @@ u32p_t _impl_thread_sleep(u32_t timeout_ms)
  *
  * @return The result of privilege routine.
  */
-static os_id_t _thread_init_privilege_routine(arguments_t* pArgs)
+static os_id_t _thread_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -401,39 +406,44 @@ static os_id_t _thread_init_privilege_routine(arguments_t* pArgs)
     u32_t size = (u32_t)pArgs[2].u32_val;
     u8_t priority = (u8_t)pArgs[3].u8_val;
     const char_t *pName = (const char_t *)pArgs[4].pch_val;
+    u32_t internal = 0u;
+    u32_t endAddr = 0u;
+    thread_context_t *pCurThread = NULL;
 
-    u32_t offset = (sizeof(thread_context_t)*KERNAL_APPLICATION_THREAD_INSTANCE);
-    thread_context_t *pCurThread = (thread_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_THREAD) + offset);
-    os_id_t id = _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_THREAD) + offset;
-
+    internal = sizeof(thread_context_t) * KERNAL_APPLICATION_THREAD_INSTANCE;
+    pCurThread = (thread_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_THREAD) + internal);
+    endAddr = (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_THREAD);
     do {
-        if (!_thread_object_isInit(id))
-        {
-            _memset((char_t*)pCurThread, 0x0u, sizeof(thread_context_t));
-
-            pCurThread->head.id = id;
-            pCurThread->head.pName = pName;
-
-            pCurThread->priority.level = priority;
-            pCurThread->pEntryFunc = pEntryFun;
-            pCurThread->pStackAddr = pAddress;
-            pCurThread->stackSize = size;
-            _memset((char_t*)pCurThread->pStackAddr, STACT_UNUSED_DATA, size);
-            pCurThread->PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(pEntryFun, pCurThread->pStackAddr, pCurThread->stackSize);
-            _impl_thread_timer_init(_impl_kernal_member_unified_id_threadToTimer(id));
-            _thread_list_transfer_toPend((linker_head_t*)&pCurThread->head);
+        os_id_t id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurThread);
+        if (_thread_id_isInvalid(id)) {
             break;
         }
 
-        pCurThread++;
-        id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurThread);
-    } while ((u32_t)pCurThread < (u32_t)_impl_kernal_member_id_toContainerEndAddress(KERNAL_MEMBER_THREAD));
+        if (_thread_object_isInit(id)) {
+            continue;
+        }
 
-    id = ((!_thread_id_isInvalid(id)) ? (id) : (OS_INVALID_ID_VAL));
+        _memset((char_t *)pCurThread, 0x0u, sizeof(thread_context_t));
+        pCurThread->head.id = id;
+        pCurThread->head.pName = pName;
+
+        pCurThread->priority.level = priority;
+        pCurThread->pEntryFunc = pEntryFun;
+        pCurThread->pStackAddr = pAddress;
+        pCurThread->stackSize = size;
+
+        _memset((char_t *)pCurThread->pStackAddr, STACT_UNUSED_DATA, size);
+        pCurThread->PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(pEntryFun, pCurThread->pStackAddr, pCurThread->stackSize);
+        _impl_thread_timer_init(_impl_kernal_member_unified_id_threadToTimer(id));
+
+        _thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
+
+        EXIT_CRITICAL_SECTION();
+        return id;
+    } while ((u32_t)++pCurThread < endAddr);
 
     EXIT_CRITICAL_SECTION();
-
-    return id;
+    return OS_INVALID_ID;
 }
 
 /**
@@ -443,18 +453,21 @@ static os_id_t _thread_init_privilege_routine(arguments_t* pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32p_t _thread_resume_privilege_routine(arguments_t* pArgs)
+static u32p_t _thread_resume_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
     os_id_t id = (os_id_t)pArgs[0].u32_val;
+    thread_context_t *pCurThread = NULL;
     u32p_t postcode = PC_SC_SUCCESS;
 
-    if (_thread_id_runtime_get() != id)
-    {
-        thread_context_t *pCurThread = (thread_context_t *)_thread_object_contextGet(id);
-        _thread_list_transfer_toEntry((linker_head_t*)&pCurThread->head);
-        postcode = _impl_kernal_thread_schedule_request();
+    if (_thread_id_runtime_get() == id) {
+        EXIT_CRITICAL_SECTION();
+        return postcode;
     }
+
+    pCurThread = _thread_object_contextGet(id);
+    _thread_list_transfer_toEntry((linker_head_t *)&pCurThread->head);
+    postcode = _impl_kernal_thread_schedule_request();
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -467,25 +480,22 @@ static u32p_t _thread_resume_privilege_routine(arguments_t* pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32p_t _thread_suspend_privilege_routine(arguments_t* pArgs)
+static u32p_t _thread_suspend_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    u32p_t postcode = PC_SC_SUCCESS;
+    thread_context_t *pCurThread = NULL;
+    u32p_t postcode = _PC_CMPT_FAILED;
 
-    thread_context_t *pCurThread = (thread_context_t *)_thread_object_contextGet(id);
-    if (_thread_linker_Head_next_fromPending())
-    {
-        _thread_list_transfer_toWait((linker_head_t*)&pCurThread->head);
-        postcode = _impl_kernal_thread_schedule_request();
+    pCurThread = _thread_object_contextGet(id);
+    if (!_thread_linker_Head_next_fromPending()) {
+        EXIT_CRITICAL_SECTION();
+        return postcode;
     }
-    else
-    {
-        postcode = _PC_CMPT_FAILED;
-    }
+    _thread_list_transfer_toWait((linker_head_t *)&pCurThread->head);
+    postcode = _impl_kernal_thread_schedule_request();
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 
@@ -496,25 +506,23 @@ static u32p_t _thread_suspend_privilege_routine(arguments_t* pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32p_t _thread_yield_privilege_routine(arguments_t* pArgs)
+static u32p_t _thread_yield_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
     UNUSED_MSG(pArgs);
-
+    thread_context_t *pCurThread = NULL;
     u32p_t postcode = PC_SC_SUCCESS;
-    thread_context_t *pCurThread = (thread_context_t *)_thread_object_runtime_get();
-    if (_thread_linker_Head_next_fromPending())
-    {
-        _thread_list_transfer_toWait((linker_head_t*)&pCurThread->head);
-        postcode = _impl_kernal_thread_schedule_request();
+
+    pCurThread = (thread_context_t *)_thread_object_runtime_get();
+    if (!_thread_linker_Head_next_fromPending()) {
+        EXIT_CRITICAL_SECTION();
+        return postcode;
     }
-    else
-    {
-        postcode = _PC_CMPT_FAILED;
-    }
+
+    _thread_list_transfer_toWait((linker_head_t *)&pCurThread->head);
+    postcode = _impl_kernal_thread_schedule_request();
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 
@@ -525,26 +533,30 @@ static u32p_t _thread_yield_privilege_routine(arguments_t* pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32p_t _thread_delete_privilege_routine(arguments_t* pArgs)
+static u32p_t _thread_delete_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    u32p_t postcode = PC_SC_SUCCESS;
+    thread_context_t *pCurThread = NULL;
+    u32p_t postcode = _PC_CMPT_FAILED;
 
-    if (id != _thread_id_runtime_get())
-    {
-        thread_context_t *pCurThread = (thread_context_t *)_thread_object_contextGet(id);
-        if (_thread_linker_Head_next_fromPending())
-        {
-            _thread_list_transfer_toUninitialized((linker_head_t*)&pCurThread->head);
-            _memset((char_t*)pCurThread->pStackAddr, STACT_UNUSED_DATA, pCurThread->stackSize);
-            _memset((char_t*)pCurThread, 0x0u, sizeof(thread_context_t));
-            postcode = _impl_kernal_thread_schedule_request();
-        }
+    pCurThread = _thread_object_contextGet(id);
+    if (id == _thread_id_runtime_get()) {
+        EXIT_CRITICAL_SECTION();
+        return postcode;
     }
 
-    EXIT_CRITICAL_SECTION();
+    if (!_thread_linker_Head_next_fromPending()) {
+        EXIT_CRITICAL_SECTION();
+        return postcode;
+    }
 
+    _thread_list_transfer_toUninitialized((linker_head_t *)&pCurThread->head);
+    _memset((char_t *)pCurThread->pStackAddr, STACT_UNUSED_DATA, pCurThread->stackSize);
+    _memset((char_t *)pCurThread, 0x0u, sizeof(thread_context_t));
+    postcode = _impl_kernal_thread_schedule_request();
+
+    EXIT_CRITICAL_SECTION();
     return postcode;
 }
 
@@ -555,16 +567,18 @@ static u32p_t _thread_delete_privilege_routine(arguments_t* pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32p_t _thread_sleep_privilege_routine(arguments_t* pArgs)
+static u32p_t _thread_sleep_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
     u32_t timeout_ms = (u32_t)pArgs[0].u32_val;
+    thread_context_t *pCurThread = NULL;
+    u32p_t postcode = _PC_CMPT_FAILED;
 
-    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_thread_runContextGet();
-    u32p_t postcode = _impl_kernal_thread_exit_trigger(pCurThread->head.id, OS_INVALID_ID, _thread_list_waitingHeadGet(), timeout_ms, _thread_callback_fromTimeOut);
+    pCurThread = _impl_kernal_thread_runContextGet();
+    postcode = _impl_kernal_thread_exit_trigger(pCurThread->head.id, OS_INVALID_ID, _thread_list_waitingHeadGet(), timeout_ms,
+                                                _thread_callback_fromTimeOut);
 
     EXIT_CRITICAL_SECTION();
-
     return postcode;
 }
 

@@ -14,13 +14,12 @@ extern "C" {
 #endif
 
 /* Convert the microsecond to clock count */
-#define _CONVERT_MICROSENCOND_TO_COUNT(us)      ((u32_t)(us) * (PORTAL_SYSTEM_CORE_CLOCK_MHZ) - 1u)
+#define _CONVERT_MICROSENCOND_TO_COUNT(us) ((u32_t)(us) * (PORTAL_SYSTEM_CORE_CLOCK_MHZ)-1u)
 
 /* Convert the clock count to microsecond */
-#define _CONVERT_COUNT_TO_MICROSENCOND(count)   ((u32_t)(count) / (PORTAL_SYSTEM_CORE_CLOCK_MHZ))
+#define _CONVERT_COUNT_TO_MICROSENCOND(count) ((u32_t)(count) / (PORTAL_SYSTEM_CORE_CLOCK_MHZ))
 
-enum
-{
+enum {
     /* The maximum timeout setting value */
     _CLOCK_INTERVAL_MAX_US = (_CONVERT_COUNT_TO_MICROSENCOND(SysTick_LOAD_RELOAD_Msk)),
 
@@ -34,8 +33,7 @@ enum
 /**
  * Data structure for location time clock
  */
-typedef struct
-{
+typedef struct {
     /* The last load count value */
     u32_t last_load;
 
@@ -50,7 +48,7 @@ typedef struct
 
     /* The flag indicates the clock ctrl register enabled status */
     b_t ctrl_enabled;
-}_clock_resource_t;
+} _clock_resource_t;
 
 /**
  * Local clock systick resource
@@ -64,8 +62,7 @@ static _clock_resource_t g_clock_resource = {0u};
  */
 static b_t _clock_isWrap(void)
 {
-    if (SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk)
-    {
+    if (SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) {
         g_clock_resource.total += g_clock_resource.last_load;
         return TRUE;
     }
@@ -85,8 +82,7 @@ static u32_t _clock_elapsed(void)
      * The elasped time has to calculate when no wrap occur.
      */
     b_t previous, next = _clock_isWrap();
-    do
-    {
+    do {
         previous = next;
         expired = g_clock_resource.last_load - SysTick->VAL;
         next = _clock_isWrap();
@@ -102,8 +98,7 @@ static u32_t _clock_elapsed(void)
  */
 static void _clock_time_elapsed_report(u32_t us)
 {
-    if (g_clock_resource.pCallFunc)
-    {
+    if (g_clock_resource.pCallFunc) {
         g_clock_resource.pCallFunc(us);
     }
 }
@@ -135,25 +130,19 @@ void _impl_clock_isr(void)
  */
 void _impl_clock_time_interval_set(u32_t interval_us)
 {
-    if (interval_us == OS_TIME_FOREVER_VAL)
-    {
+    if (interval_us == OS_TIME_FOREVER_VAL) {
         SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
         g_clock_resource.ctrl_enabled = FALSE;
         return;
-    }
-    else if (!g_clock_resource.ctrl_enabled)
-    {
+    } else if (!g_clock_resource.ctrl_enabled) {
         SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
     }
 
     ENTER_CRITICAL_SECTION();
 
-    if (interval_us > _CLOCK_INTERVAL_MAX_US)
-    {
+    if (interval_us > _CLOCK_INTERVAL_MAX_US) {
         interval_us = _CLOCK_INTERVAL_MAX_US;
-    }
-    else if (interval_us < _CLOCK_INTERVAL_MIN_US)
-    {
+    } else if (interval_us < _CLOCK_INTERVAL_MIN_US) {
         interval_us = _CLOCK_INTERVAL_MIN_US;
     }
     u32_t set_count = _CONVERT_MICROSENCOND_TO_COUNT(interval_us);
@@ -173,17 +162,12 @@ void _impl_clock_time_interval_set(u32_t interval_us)
 
     u32_t unreported = g_clock_resource.total - g_clock_resource.reported;
 
-    if ((i32_t)unreported < 0)
-    {
+    if ((i32_t)unreported < 0) {
         g_clock_resource.last_load = _CONVERT_MICROSENCOND_TO_COUNT(100u);
-    }
-    else
-    {
-        if ((interval_us != _CLOCK_INTERVAL_MAX_US) && (set_count > unreported))
-        {
+    } else {
+        if ((interval_us != _CLOCK_INTERVAL_MAX_US) && (set_count > unreported)) {
             set_count -= unreported;
-            if (set_count < _CLOCK_INTERVAL_MIN_COUNT)
-            {
+            if (set_count < _CLOCK_INTERVAL_MIN_COUNT) {
                 set_count = _CLOCK_INTERVAL_MIN_COUNT;
             }
         }
@@ -196,13 +180,10 @@ void _impl_clock_time_interval_set(u32_t interval_us)
     SysTick->LOAD = g_clock_resource.last_load;
     SysTick->VAL = 0;
 
-    if (before < after)
-    {
+    if (before < after) {
         (void)SysTick->CTRL;
         g_clock_resource.total += (before + (last_load - after));
-    }
-    else
-    {
+    } else {
         g_clock_resource.total += (before - after);
     }
 
@@ -246,8 +227,7 @@ u32_t _impl_clock_time_get(void)
  */
 void _impl_clock_time_enable(void)
 {
-    if (!g_clock_resource.ctrl_enabled)
-    {
+    if (!g_clock_resource.ctrl_enabled) {
         g_clock_resource.ctrl_enabled = TRUE;
         SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
     }
@@ -274,10 +254,8 @@ void _impl_clock_time_init(time_report_handler_t pTime_function)
 
     SysTick->CTRL = 0x0u;
     SysTick->LOAD = g_clock_resource.last_load;
-    SysTick->VAL  = 0x0u;
-    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk |
-                    SysTick_CTRL_TICKINT_Msk   |
-                    SysTick_CTRL_ENABLE_Msk;
+    SysTick->VAL = 0x0u;
+    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
 }
 
 #ifdef __cplusplus
