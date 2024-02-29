@@ -8,7 +8,7 @@ include_directories(${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(atos_kernal
     PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}/kernal_version.h
+    ${CMAKE_CURRENT_LIST_DIR}/build_version.h
 )
 
 include(${CMAKE_CURRENT_LIST_DIR}/include/CMakeLists.txt)

@@ -9,7 +9,7 @@
 #define _CONFIGURATION_H_
 
 #include "atos_configuration.h"
-#include "kernal_version.h"
+#include "build_version.h"
 
 #ifdef __cplusplus
 extern "C" {

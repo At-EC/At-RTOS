@@ -4,7 +4,7 @@ At-RTOS([Adaptive Real-Time Operating System](https://github.com/At-EC/At-RTOS))
 
 The goal of the system is to explore and try to provide a range of features and capabilities based on the RTOS to support and simplify your embedded firmware development.
 
-I hope the At-RTOS could be a popular community-based embedded controller's real-time operating system in the future. If this project was useful to you, give it a ⭐️. It is very important for us to know it's useful to you and your attention will encourage us. 
+I hope the At-RTOS could be a popular community-based embedded controller's real-time operating system in the future. If this project was useful to you, give it a ⭐️. It is very important for us to know it is useful to you and your attention will encourage us. 
 
 Welcome PRs! If you are interested in contributing, Pls join us at [Discord](https://discord.gg/AxfF9aH58G). 
 
@@ -14,7 +14,7 @@ Welcome PRs! If you are interested in contributing, Pls join us at [Discord](htt
 
 </p>
 
-## News
+## What's news
 
    At-RTOS branch and release news as shown as the following table:
 
@@ -49,7 +49,7 @@ And the keywords of the At-RTOS is shown as following lists.
 * **Tiny footprint:** It has low ROM/RAM consumption.
 * **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack, so you can develop new features in At-RTOS without rewriting existing code.
 
-## Supported Architectures
+## Cores
 
 At-RTOS supports many architectures, and has covered the major architectures in current kernal system. It supports the following architectures, and it lists the chip that was verified.
 
@@ -58,9 +58,9 @@ At-RTOS supports many architectures, and has covered the major architectures in 
 
 There is planned support for the ARM Cortex remaining architectures though no chips are currently supported in my hand, If you perform it in your system, I'll thanks for your PRs to update the chip that verified into lists.
 
-## Supported IDE and Compiler
+## Compilers
 
-The main IDE/compilers currently is supported by At-RTOS are:
+The main compilers currently is supported by At-RTOS are:
 
 - MDK KEIL (AC5)
 - MDK KEIL (AC6)
@@ -68,7 +68,7 @@ The main IDE/compilers currently is supported by At-RTOS are:
 - ARMCLANG
 - Native CMAKE GCC
 
-## Code Structure
+## Source tree
 
 ```shell
 # At-RTOS important source code tree is shown as follow
@@ -100,7 +100,7 @@ At-RTOS
 │   ├── kernal.c
 │   ├── *.c
 │   └── CMakeLists.txt
-├── kernal_version.h
+├── build_version.h
 └── CMakeLists.txt
 ```
 
@@ -110,7 +110,7 @@ At-RTOS
 - **include :** It used to contain the At-RTOS kernal header files, Moreover it contained the portable arch, clock and port header files.
 - **kernal :** This folder was implemented for the At-RTOS kernal files.
 
-## Core Architecture
+## Invoked resources
 
 At-RTOS was designed specifically to take advantage of the powerful hardware features introduced with the ARM Cortex M architecture. The following HW resources were used in the At-RTOS kernal.
 
@@ -124,7 +124,7 @@ At-RTOS was designed specifically to take advantage of the powerful hardware fea
 
 # Getting Started
 
-## Configuration
+## User configuration
 
 At-RTOS ported a template At-RTOS configuration header file [atos_configuration.h](./include/template/atos_configuration.h). Your board support package must provide the following variable symbols to instead of this one.
 
@@ -148,7 +148,7 @@ At-RTOS ported a template At-RTOS configuration header file [atos_configuration.
  * that drives the peripheral used to generate the kernels periodic tick interrupt.
  * The default value is set to 120mhz.
  */
-#define PORTAL_SYSTEM_CORE_CLOCK_MHZ              (120u)
+#define PORTAL_SYSTEM_CORE_CLOCK_MHZ (120u)
 ```
 
 Your application will certainly need a different value so set the kernal component instance number correctly. This is very often, but not always. It's according to your system design.
@@ -163,7 +163,7 @@ The symbols in the configuration header file look like this `<kernal component>_
 
 The more details you can see the descriptions in the template file [atos_configuration.h](./include/template/atos_configuration.h).
 
-## Interface
+## User interface
 
 The [at_rtos.h](./include/kernal/at_rtos.h) is an interface of At-RTOS kernal. You can check the interface usage in this file to perform it in your embedded controller system.
 
@@ -176,7 +176,7 @@ The following sample codes illustrates how to create your first thread:
 ATOS_THREAD_DEFINE(first_thread, 1024, 7); // Set the thread stack size to 1024 bytes and the schedule prioriy level to 7.
 
 /* User thread's entry function. */
-static void first_thread_entry(void)
+static void first_thread_entry_function(void)
 {
     while(1) {
         AtOS.thread_sleep(1000u);
@@ -187,7 +187,7 @@ static void first_thread_entry(void)
 int main(void)
 {
     /* Initialize the your first thread. */
-    os_thread_id_t first_id = AtOS.thread_init(first_thread, first_thread_entry);
+    os_thread_id_t first_id = AtOS.thread_init(first_thread, first_thread_entry_function);
     if (AtOS.id_isInvalid(first_id)) {
         printf("Thread %s init failed\n", first_id.pName);
     }
@@ -196,6 +196,14 @@ int main(void)
     AtOS.at_rtos_run();
 }
 ```
+
+## Roadmap
+
+The At-EC roadmap documentation is not ready. The At-RTOS is a beginning and basic component and will be an important member of the At-EC family.
+
+## Contribution
+
+The contributing documentation is not ready, You can check the open issue right now that we're developing.
 
 ## License
 

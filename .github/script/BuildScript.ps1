@@ -12,27 +12,27 @@ $FileContent = '/**
  * LICENSE file in the root directory of this source tree.
  */
 
-#ifndef _KERNAL_VERSION_H_
-#define _KERNAL_VERSION_H_
+#ifndef _BUILD_VERSION_H_
+#define _BUILD_VERSION_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ATOS_BUILD_TIME                             "2024-01-01,01:01"
-#define ATOS_COMMIT_HEAD_ID                         "255ac3c16ac993f95ea978c7efb4fefea19e8c58"
-#define ATOS_VERSION_MAJOR_NUMBER                   (0u)
-#define ATOS_VERSION_MINOR_NUMBER                   (0u)
-#define ATOS_VERSION_PATCH_NUMBER                   (0u)
+#define ATOS_BUILD_TIME           "2023-12-29,01:01"
+#define ATOS_COMMIT_HEAD_ID       "ebfc9d062451354ebc3951085011f88813c6f599"
+#define ATOS_VERSION_MAJOR_NUMBER (0u)
+#define ATOS_VERSION_MINOR_NUMBER (0u)
+#define ATOS_VERSION_PATCH_NUMBER (0u)
 
-#define ATOS_VERSION_MAJOR_NUMBER_MASK              (0x03FFu)
-#define ATOS_VERSION_MAJOR_NUMBER_POS               (22u)
+#define ATOS_VERSION_MAJOR_NUMBER_MASK (0x03FFu)
+#define ATOS_VERSION_MAJOR_NUMBER_POS  (22u)
 
-#define ATOS_VERSION_MINOR_NUMBER_MASK              (0x03FFu)
-#define ATOS_VERSION_MINOR_NUMBER_POS               (10u)
+#define ATOS_VERSION_MINOR_NUMBER_MASK (0x03FFu)
+#define ATOS_VERSION_MINOR_NUMBER_POS  (10u)
 
-#define ATOS_VERSION_PATCH_NUMBER_MASK              (0x0FFFu)
-#define ATOS_VERSION_PATCH_NUMBER_POS               (0u)
+#define ATOS_VERSION_PATCH_NUMBER_MASK (0x0FFFu)
+#define ATOS_VERSION_PATCH_NUMBER_POS  (0u)
 
 #ifdef __cplusplus
 }
@@ -40,7 +40,7 @@ extern "C" {
 
 #endif'
 
-$TargetFile = 'kernal_version.h'
+$TargetFile = 'build_version.h'
 $PackageFile = 'package.json'
 
 <#
@@ -97,17 +97,17 @@ function BuildScript
     $ReadContent = [string](Get-Content -Path $TargetFile -Raw)
     $MatchNumber = '[0-9]+'
 
-    $MatchMajorLine = '#define ATOS_VERSION_MAJOR_NUMBER                   \([0-9]+u\)'
+    $MatchMajorLine = '#define ATOS_VERSION_MAJOR_NUMBER \([0-9]+u\)'
     $MajorLine = ($ReadContent | Select-String -Pattern $MatchMajorLine -AllMatches).Matches.Value
     $Major = ($MajorLine | Select-String -Pattern $MatchNumber -AllMatches).Matches.Value
     $Major = [int]$Major
 
-    $MatchMinorLine = '#define ATOS_VERSION_MINOR_NUMBER                   \([0-9]+u\)'
+    $MatchMinorLine = '#define ATOS_VERSION_MINOR_NUMBER \([0-9]+u\)'
     $MinorLine = ($ReadContent | Select-String -Pattern $MatchMinorLine -AllMatches).Matches.Value
     $Minor = ($MinorLine | Select-String -Pattern $MatchNumber -AllMatches).Matches.Value
     $Minor = [int]$Minor
     
-    $MatchPatchLine = '#define ATOS_VERSION_PATCH_NUMBER                   \([0-9]+u\)'
+    $MatchPatchLine = '#define ATOS_VERSION_PATCH_NUMBER \([0-9]+u\)'
     $PatchLine = ($ReadContent | Select-String -Pattern $MatchPatchLine -AllMatches).Matches.Value
     $Patch = ($PatchLine | Select-String -Pattern $MatchNumber -AllMatches).Matches.Value
     $Patch = [int]$Patch
@@ -149,13 +149,13 @@ function BuildScript
     
     $OutContent = $OutContent -replace '[0123456789abcdef]{40}', $CommitHeadID
     
-    $MatchLine = $MajorLine -replace "[0-9]", $Major
+    $MatchLine = $MajorLine -replace "[0-9]+", $Major
     $OutContent = $OutContent -replace $MatchMajorLine, $MatchLine
     
-    $MatchLine = $MinorLine -replace "[0-9]", $Minor
+    $MatchLine = $MinorLine -replace "[0-9]+", $Minor
     $OutContent = $OutContent -replace $MatchMinorLine, $MatchLine
     
-    $MatchLine = $PatchLine -replace "[0-9]", $Patch
+    $MatchLine = $PatchLine -replace "[0-9]+", $Patch
     $OutContent = $OutContent -replace $MatchPatchLine, $MatchLine
     
     $OutContent | Out-File -FilePath $TargetFile -Force -Encoding utf8 -NoNewline
