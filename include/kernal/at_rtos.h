@@ -3,18 +3,24 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */
+**/
 
 #ifndef _AT_RTOS_H_
 #define _AT_RTOS_H_
 
+#include "unique.h"
+#include "configuration.h"
+#include "postcode.h"
+#include "thread.h"
+#include "timer.h"
+#include "semaphore.h"
+#include "event.h"
+#include "mutex.h"
+#include "queue.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "basic.h"
-#include "unique.h"
-#include "configuration.h"
 
 #define ATOS_THREAD_DEFINE(thread_name, stack_size, thread_priority)                                                                       \
     static os_thread_symbol_t thread_name[((u32_t)(stack_size) / sizeof(u32_t))] = {                                                       \
@@ -26,8 +32,6 @@ extern "C" {
     S_ASSERT(                                                                                                                              \
         (((thread_priority) >= OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL) && ((thread_priority) <= OS_PRIORITY_USER_THREAD_LOWEST_LEVEL)),     \
         "The thread priority is out of the system design")
-
-#include "thread.h"
 
 /**
  * @brief Initialize a thread, and put it to pending list that are ready to run.
@@ -167,8 +171,6 @@ static inline u32p_t thread_delete(os_thread_id_t id)
     return (u32p_t)_impl_thread_delete(id.val);
 }
 
-#include "timer.h"
-
 /**
  * @brief Initialize a timer.
  *
@@ -276,8 +278,6 @@ static inline u32_t timer_system_total_ms(void)
     return (u32_t)_impl_timer_total_system_get();
 }
 
-#include "semaphore.h"
-
 /**
  * @brief Initialize a new semaphore.
  *
@@ -383,7 +383,6 @@ static inline u32p_t sem_flush(os_sem_id_t id)
     return (u32p_t)_impl_semaphore_flush(id.val);
 }
 
-#include "mutex.h"
 /**
  * @brief Initialize a new mutex.
  *
@@ -452,7 +451,6 @@ static inline u32p_t mutex_unlock(os_mutex_id_t id)
     return (u32p_t)_impl_mutex_unlock(id.val);
 }
 
-#include "event.h"
 /**
  * @brief Initialize a new event.
  *
@@ -539,7 +537,6 @@ static inline u32p_t evt_wait(os_evt_id_t id, u32_t *pEvent, u32_t trigger, u32_
     return (u32p_t)_impl_event_wait(id.val, pEvent, trigger, listen, timeout_ms);
 }
 
-#include "queue.h"
 /**
  * @brief Initialize a new queue.
  *

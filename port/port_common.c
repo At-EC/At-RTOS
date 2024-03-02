@@ -3,10 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */
+**/
 #include "clock_tick.h"
-#include "kernal.h"
-#include "basic.h"
 #include "compiler.h"
 #include "port.h"
 

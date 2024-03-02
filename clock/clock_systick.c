@@ -3,11 +3,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */
+**/
 
-#include "kernal.h"
 #include "clock_tick.h"
 #include "configuration.h"
+#include "arch.h"
+#include "unique.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -138,7 +139,7 @@ void _impl_clock_time_interval_set(u32_t interval_us)
         SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
     }
 
-    ENTER_CRITICAL_SECTION();
+    ARCH_ENTER_CRITICAL_SECTION();
 
     if (interval_us > _CLOCK_INTERVAL_MAX_US) {
         interval_us = _CLOCK_INTERVAL_MAX_US;
@@ -187,7 +188,7 @@ void _impl_clock_time_interval_set(u32_t interval_us)
         g_clock_resource.total += (before - after);
     }
 
-    EXIT_CRITICAL_SECTION();
+    ARCH_EXIT_CRITICAL_SECTION();
 }
 
 /**
@@ -197,11 +198,11 @@ void _impl_clock_time_interval_set(u32_t interval_us)
  */
 u32_t _impl_clock_time_elapsed_get(void)
 {
-    ENTER_CRITICAL_SECTION();
+    ARCH_ENTER_CRITICAL_SECTION();
 
     u32_t us = _CONVERT_COUNT_TO_MICROSENCOND(_clock_elapsed() + g_clock_resource.total - g_clock_resource.reported);
 
-    EXIT_CRITICAL_SECTION();
+    ARCH_EXIT_CRITICAL_SECTION();
 
     return us;
 }
@@ -213,11 +214,11 @@ u32_t _impl_clock_time_elapsed_get(void)
  */
 u32_t _impl_clock_time_get(void)
 {
-    ENTER_CRITICAL_SECTION();
+    ARCH_ENTER_CRITICAL_SECTION();
 
     u32_t us = _CONVERT_COUNT_TO_MICROSENCOND(g_clock_resource.total + _clock_elapsed());
 
-    EXIT_CRITICAL_SECTION();
+    ARCH_EXIT_CRITICAL_SECTION();
 
     return us;
 }

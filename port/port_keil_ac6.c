@@ -3,22 +3,21 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */
+**/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "clock_tick.h"
 #include "kernal.h"
-#include "basic.h"
+#include "arch.h"
+#include "clock_tick.h"
 #include "compiler.h"
-#include "port.h"
 
 #if defined ( __FPU_PRESENT )
-    #define FPU_ENABLED  __FPU_PRESENT
+#define FPU_ENABLED  __FPU_PRESENT
 #else
-    #define FPU_ENABLED  0
+#define FPU_ENABLED  0
 #endif
 
 /**

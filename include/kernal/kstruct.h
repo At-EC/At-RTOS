@@ -3,14 +3,13 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */
+**/
 
 #ifndef _KSTRUCT_H_
 #define _KSTRUCT_H_
 
-#include "type.h"
+#include "typedef.h"
 #include "linker.h"
-#include "configuration.h"
 #include "unique.h"
 
 #ifdef __cplusplus
@@ -265,48 +264,6 @@ typedef struct {
     /* The kernal already start to do schedule */
     b_t run;
 } kernal_context_t;
-
-typedef struct {
-    u32_t R4;
-    u32_t R5;
-    u32_t R6;
-    u32_t R7;
-    u32_t R8;
-    u32_t R9;
-    u32_t R10;
-    u32_t R11;
-} cmx_t;
-
-typedef struct {
-    u32_t R8;
-    u32_t R9;
-    u32_t R10;
-    u32_t R11;
-    u32_t R4;
-    u32_t R5;
-    u32_t R6;
-    u32_t R7;
-} cm0_t;
-
-/**
- * Data structure for svc call function arguments
- */
-typedef struct {
-    union {
-        /* The function arguments */
-        u32_t u32_val;
-
-        u16_t u16_val;
-
-        u8_t u8_val;
-
-        b_t b_val;
-
-        const void *ptr_val;
-
-        const char_t *pch_val;
-    };
-} arguments_t;
 
 typedef struct {
     union {

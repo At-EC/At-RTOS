@@ -8,7 +8,6 @@ target_sources(kernal_include
 	${KERNAL_PATH}/include/arch.h
 	
     ${KERNAL_PATH}/include/kernal/at_rtos.h
-    ${KERNAL_PATH}/include/kernal/basic.h
     ${KERNAL_PATH}/include/kernal/compiler.h
     ${KERNAL_PATH}/include/kernal/configuration.h
     ${KERNAL_PATH}/include/kernal/event.h

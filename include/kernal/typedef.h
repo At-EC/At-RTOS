@@ -3,10 +3,10 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */
+**/
 
-#ifndef _TYPE_H_
-#define _TYPE_H_
+#ifndef _TYPEDEF_H_
+#define _TYPEDEF_H_
 
 #include <stdlib.h>
 #include <string.h>
@@ -93,4 +93,4 @@ u32_t _strlen(const uchar_t *str);
 }
 #endif
 
-#endif /* _TYPE_H_ */
+#endif /* _TYPEDEF_H_ */

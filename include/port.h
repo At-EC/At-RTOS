@@ -3,22 +3,23 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */
+ **/
 
 #ifndef _PORT_H_
 #define _PORT_H_
 
-#include "type.h"
+#include "typedef.h"
 #include "arch.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * Define the privilege call function interface.
- */
-typedef u32_t (*pPrivilege_callFunc_t)(arguments_t *);
+#define STACT_UNUSED_DATA       (0xDEu)
+#define STACT_UNUSED_FRAME_MARK (0xDEDEDEDEu)
+
+#define STACK_ADDRESS_UP(address)   (u32_t)(ROUND_UP((address), STACK_ALIGN))
+#define STACK_ADDRESS_DOWN(address) (u32_t)(ROUND_DOWN((address), STACK_ALIGN))
 
 /**
  * Define the SVC number 2 for RTOS kernal use.
@@ -29,21 +30,61 @@ typedef u32_t (*pPrivilege_callFunc_t)(arguments_t *);
 #if defined(__CC_ARM)
 #pragma push
 #pragma anon_unions
-#elif (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
-/* anonymous unions are enabled by default */
 #elif defined(__ICCARM__)
 #pragma language = extended
-#elif defined(__GUNC__)
-/* anonymous unions are enabled by default */
-#elif defined(__TMS470__)
-/* anonymous unions are enabled by default */
 #elif defined(__TASKING__)
 #pragma warning 586
-#elif defined(ARCH_NATIVE_GCC)
-/* Nothing to do */
-#else
-#warning Not supported compiler type
 #endif
+
+/**
+ * Data structure for svc call function arguments
+ */
+typedef struct {
+    union {
+        /* The function arguments */
+        u32_t u32_val;
+
+        u16_t u16_val;
+
+        u8_t u8_val;
+
+        b_t b_val;
+
+        const void *ptr_val;
+
+        const char_t *pch_val;
+    };
+} arguments_t;
+
+/**
+ * Define the privilege call function interface.
+ */
+typedef u32_t (*pPrivilege_callFunc_t)(arguments_t *);
+
+/**
+ * Define the ARM core register layout.
+ */
+typedef struct {
+    u32_t R4;
+    u32_t R5;
+    u32_t R6;
+    u32_t R7;
+    u32_t R8;
+    u32_t R9;
+    u32_t R10;
+    u32_t R11;
+} cmx_t;
+
+typedef struct {
+    u32_t R8;
+    u32_t R9;
+    u32_t R10;
+    u32_t R11;
+    u32_t R4;
+    u32_t R5;
+    u32_t R6;
+    u32_t R7;
+} cm0_t;
 
 /**
  * Define the register table of ARM Core.
@@ -73,20 +114,6 @@ typedef struct {
 /* End of section using anonymous unions */
 #if defined(__CC_ARM)
 #pragma pop
-#elif (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
-/* anonymous unions are enabled by default */
-#elif defined(__ICCARM__)
-/* leave anonymous unions enabled */
-#elif defined(__GUNC__)
-/* anonymous unions are enabled by default */
-#elif defined(__TMS470__)
-/* anonymous unions are enabled by default */
-#elif defined(__TASKING__)
-#pragma warning restore
-#elif defined(ARCH_NATIVE_GCC)
-/* Nothing to do */
-#else
-#warning Not supported compiler type
 #endif
 
 /**

@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */
+**/
 
 #ifndef _KERNAL_H_
 #define _KERNAL_H_
@@ -39,12 +39,6 @@ enum {
 #else
 #define KERNAL_IDLE_THREAD_STACK_SIZE (IDLE_THREAD_STACK_SIZE)
 #endif
-
-#define STACT_UNUSED_DATA       (0xDEu)
-#define STACT_UNUSED_FRAME_MARK (0xDEDEDEDEu)
-
-#define STACK_ADDRESS_UP(address)   (u32_t)(ROUND_UP((address), STACK_ALIGN))
-#define STACK_ADDRESS_DOWN(address) (u32_t)(ROUND_DOWN((address), STACK_ALIGN))
 
 #define ENTER_CRITICAL_SECTION() ARCH_ENTER_CRITICAL_SECTION()
 #define EXIT_CRITICAL_SECTION()  ARCH_EXIT_CRITICAL_SECTION()

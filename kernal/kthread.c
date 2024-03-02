@@ -3,11 +3,13 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */
+**/
+
 #include "at_rtos.h"
 #include "unique.h"
 #include "kernal.h"
 #include "kthread.h"
+#include "postcode.h"
 
 #ifdef __cplusplus
 extern "C" {
