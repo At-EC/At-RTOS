@@ -114,6 +114,8 @@ typedef struct {
 /* End of section using anonymous unions */
 #if defined(__CC_ARM)
 #pragma pop
+#elif defined(__TASKING__)
+#pragma warning restore
 #endif
 
 /**
@@ -121,7 +123,7 @@ typedef struct {
  */
 #if defined(__CC_ARM)
 __svc(SVC_KERNAL_INVOKE_NUMBER) u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
-__ASM void _impl_port_run_theFirstThread(u32_t sp);
+__asm void _impl_port_run_theFirstThread(u32_t sp);
 
 #elif (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
 static inline u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
@@ -131,11 +133,9 @@ static inline u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args
     register u32_t r2 __asm__("r2") = args_2;
     register u32_t r3 __asm__("r3") = args_3;
 
-    __asm__ __volatile__("svc %0" ::"i"(SVC_KERNAL_INVOKE_NUMBER), "r"(r0), "r"(r1), "r"(r2), "r"(r3) : "memory");
-    /* return a operation result from the specific register r0 */
-    u32_t ret;
-    __asm__ volatile("mov %0, r0" : "=r"(ret));
-    return ret;
+    __asm __volatile("svc %1" : "+r"(r0) : "i"(SVC_KERNAL_INVOKE_NUMBER), "r"(r0), "r"(r1), "r"(r2), "r"(r3) : "memory");
+
+    return r0;
 }
 void _impl_port_run_theFirstThread(u32_t sp);
 

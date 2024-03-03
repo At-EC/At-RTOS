@@ -14,13 +14,9 @@ extern "C" {
 
 /**
  * If you are use ARM Cortex M seiral architecture, the Cortex-M Core must be specificed as the following list.
- * ARCH_ARM_CORTEX_CM0
- * ARCH_ARM_CORTEX_CM0plus
  * ARCH_ARM_CORTEX_CM3
  * ARCH_ARM_CORTEX_CM4
- * ARCH_ARM_CORTEX_CM23
  * ARCH_ARM_CORTEX_CM33
- * ARCH_ARM_CORTEX_CM7
  **/
 #define ARCH_NATIVE_GCC
 

@@ -5,10 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  **/
 
-#include "kernal.h"
-#include "arch.h"
-#include "clock_tick.h"
-#include "compiler.h"
+#include "port.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,10 +17,13 @@ extern "C" {
 #define FPU_ENABLED  0
 #endif
 
+extern void _impl_kernal_privilege_call_inSVC_c(u32_t *svc_args);
+extern void _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP);
+
 /**
  * @brief ARM core SVC interrupt handle function.
  */
-__ASM void SVC_Handler(void)
+__asm void SVC_Handler(void)
 {
     /* Before call this the [R0-R3, R12, LR, PC, PSR] store into PSP */
     TST   LR, #0x04                                             /* call from which stack pointer base on the bit 2 of EXC_RETURN (LR) */
@@ -42,7 +42,7 @@ __ASM void SVC_Handler(void)
 /**
  * @brief ARM core PendSV interrupt handle function.
  */
-__ASM void PendSV_Handler(void)
+__asm void PendSV_Handler(void)
 {
     /**
      * Save current context
@@ -116,7 +116,7 @@ Exit
 /**
  * @brief ARM core trigger the first thread to run.
  */
-__ASM void _impl_port_run_theFirstThread(u32_t sp)
+__asm void _impl_port_run_theFirstThread(u32_t sp)
 {
     /**
      * initialize R4-R11 from context frame using passed SP

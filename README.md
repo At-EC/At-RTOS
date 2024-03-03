@@ -132,13 +132,9 @@ At-RTOS ported a template At-RTOS configuration header file [atos_configuration.
 /**
  * If you are use ARM Cortex M seiral architecture, the Cortex-M Core architecture must be declared as the following list.
  * 
- * ARCH_ARM_CORTEX_CM0
- * ARCH_ARM_CORTEX_CM0plus
  * ARCH_ARM_CORTEX_CM3
  * ARCH_ARM_CORTEX_CM4
- * ARCH_ARM_CORTEX_CM23
  * ARCH_ARM_CORTEX_CM33
- * ARCH_ARM_CORTEX_CM7
  **/
 #define ARCH_ARM_CORTEX_CM33
 
