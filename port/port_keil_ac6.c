@@ -9,10 +9,7 @@
 extern "C" {
 #endif
 
-#include "kernal.h"
-#include "arch.h"
-#include "clock_tick.h"
-#include "compiler.h"
+#include "port.h"
 
 #if defined ( __FPU_PRESENT )
 #define FPU_ENABLED  __FPU_PRESENT

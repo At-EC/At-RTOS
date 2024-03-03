@@ -6,7 +6,6 @@
  **/
  
 #include "clock_tick.h"
-#include "compiler.h"
 #include "port.h"
 
 #ifdef __cplusplus

@@ -5,9 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  **/
 
+#include "typedef.h"
 #include "arch.h"
-#include "clock_tick.h"
-#include "compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
