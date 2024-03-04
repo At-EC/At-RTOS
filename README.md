@@ -202,6 +202,8 @@ The At-EC roadmap documentation is not ready. The At-RTOS is a beginning and bas
 
 The contributing documentation is not ready, You can check the open issue right now that we're developing.
 
+![Alt](https://repobeats.axiom.co/api/embed/7437f309b3c464047a0adedf4e5a2c916df10cdc.svg "Repobeats analytics image")
+
 ## License
 
 The At-RTOS is completely open-source, can be used in commercial applications for free, does not require the disclosure of code, and has no potential commercial risk. License information and copyright information can generally be seen at the beginning of the code:
@@ -216,7 +218,3 @@ The At-RTOS is completely open-source, can be used in commercial applications fo
 ```
 
 The MIT License is [here](./LICENSE).
-
-## Repo Activity
-
-![Alt](https://repobeats.axiom.co/api/embed/7437f309b3c464047a0adedf4e5a2c916df10cdc.svg "Repobeats analytics image")
