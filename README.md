@@ -216,3 +216,7 @@ The At-RTOS is completely open-source, can be used in commercial applications fo
 ```
 
 The MIT License is [here](./LICENSE).
+
+## Repo Activity
+
+![Alt](https://repobeats.axiom.co/api/embed/7437f309b3c464047a0adedf4e5a2c916df10cdc.svg "Repobeats analytics image")
