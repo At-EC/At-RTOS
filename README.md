@@ -10,7 +10,7 @@ Welcome PRs! If you are interested in contributing, Pls join us at [Discord](htt
 
 <p align="center">
 
-![At-RTOS](https://socialify.git.ci/At-EC/At-RTOS/image?description=1&descriptionEditable=Advantage%20Real-Time%20Operating%20System&font=KoHo&issues=1&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Auto)
+<img src="https://socialify.git.ci/At-EC/At-RTOS/image?description=1&descriptionEditable=Advantage%20Real-Time%20Operating%20System&font=KoHo&issues=1&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Auto" alt="At-RTOS" width="640" height="320" />
 
 </p>
 
