@@ -198,6 +198,29 @@ static void _message_send(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u
 }
 
 /**
+ * @brief Send a queue message to front.
+ *
+ * @param pCurQueue The current queue context.
+ * @param pUserBuffer The pointer of user's message buffer.
+ * @param userSize The size of user's message buffer.
+ */
+static void _message_send_front(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
+{
+    u8_t *pInBuffer = NULL;
+
+    if (pCurQueue->rightPosition) {
+        pCurQueue->rightPosition--;
+    } else {
+        pCurQueue->rightPosition = pCurQueue->elementNumber - 1;
+    }
+    pCurQueue->cacheSize++;
+
+    pInBuffer = (u8_t *)((u32_t)((pCurQueue->rightPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress));
+    _memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
+    _memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
+}
+
+/**
  * @brief Receive a queue message.
  *
  * @param pCurQueue The current queue context.
@@ -225,11 +248,12 @@ static void _message_receive(queue_context_t *pCurQueue, const u8_t *pUserBuffer
  * @param id The queue unique id.
  * @param pUserBuffer The pointer of the message buffer address.
  * @param bufferSize The queue buffer size.
+ * @param isToFront The direction of the message operation.
  * @param timeout_ms The queue send timeout option.
  *
  * @return The result of the operation.
  */
-u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u32_t timeout_ms)
+u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms)
 {
     if (_queue_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
@@ -246,10 +270,8 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},
-        [1] = {.ptr_val = (const void *)pUserBuffer},
-        [2] = {.u16_val = (u16_t)bufferSize},
-        [3] = {.u32_val = (u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)id},    [1] = {.ptr_val = (const void *)pUserBuffer}, [2] = {.u16_val = (u16_t)bufferSize},
+        [3] = {.b_val = (b_t)isToFront}, [4] = {.u32_val = (u32_t)timeout_ms},
     };
 
     u32p_t postcode = _impl_kernal_privilege_invoke((const void *)_queue_send_privilege_routine, arguments);
@@ -384,7 +406,8 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     const u8_t *pUserBuffer = (const void *)pArgs[1].ptr_val;
     u16_t bufferSize = (u16_t)pArgs[2].u16_val;
-    u32_t timeout_ms = (u32_t)pArgs[3].u32_val;
+    b_t isFront = (b_t)pArgs[3].b_val;
+    u32_t timeout_ms = (u32_t)pArgs[4].u32_val;
     queue_context_t *pCurQueue = NULL;
     thread_context_t *pCurThread = NULL;
     u32p_t postcode = PC_SC_SUCCESS;
@@ -400,19 +423,26 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
         if (timeout_ms == OS_TIME_NOWAIT_VAL) {
             EXIT_CRITICAL_SECTION();
             return _PC_CMPT_FAILED;
-        } else {
-            pCurThread->queue.pUserBufferAddress = pUserBuffer;
-            pCurThread->queue.userBufferSize = bufferSize;
+        }
 
-            postcode = _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _queue_list_inBlockingHeadGet(id), timeout_ms,
-                                                        _queue_callback_fromTimeOut);
+        _memset((char *)&pCurThread->queue, 0x0u, sizeof(action_queue_t));
 
-            if (PC_IOK(postcode)) {
-                postcode = PC_SC_UNAVAILABLE;
-            }
+        pCurThread->queue.pUserBufferAddress = pUserBuffer;
+        pCurThread->queue.userBufferSize = bufferSize;
+        pCurThread->queue.toFront = isFront;
+
+        postcode = _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _queue_list_inBlockingHeadGet(id), timeout_ms,
+                                                    _queue_callback_fromTimeOut);
+
+        if (PC_IOK(postcode)) {
+            postcode = PC_SC_UNAVAILABLE;
         }
     } else {
-        _message_send(pCurQueue, pUserBuffer, bufferSize);
+        if (pCurThread->queue.toFront) {
+            _message_send_front(pCurQueue, pUserBuffer, bufferSize);
+        } else {
+            _message_send(pCurQueue, pUserBuffer, bufferSize);
+        }
 
         /* Try to wakeup a blocking thread */
         list_iterator_t it = {0u};
@@ -457,16 +487,16 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
         if (timeout_ms == OS_TIME_NOWAIT_VAL) {
             EXIT_CRITICAL_SECTION();
             return _PC_CMPT_FAILED;
-        } else {
-            pCurThread->queue.pUserBufferAddress = pUserBuffer;
-            pCurThread->queue.userBufferSize = bufferSize;
+        }
 
-            postcode = _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _queue_list_OutBlockingHeadGet(id), timeout_ms,
-                                                        _queue_callback_fromTimeOut);
+        pCurThread->queue.pUserBufferAddress = pUserBuffer;
+        pCurThread->queue.userBufferSize = bufferSize;
 
-            if (PC_IOK(postcode)) {
-                postcode = PC_SC_UNAVAILABLE;
-            }
+        postcode = _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _queue_list_OutBlockingHeadGet(id), timeout_ms,
+                                                    _queue_callback_fromTimeOut);
+
+        if (PC_IOK(postcode)) {
+            postcode = PC_SC_UNAVAILABLE;
         }
     } else {
         _message_receive(pCurQueue, pUserBuffer, bufferSize);
@@ -542,7 +572,12 @@ static void _queue_schedule(os_id_t id)
         if (isRxAvail) {
             _message_receive((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
         } else if (isTxAvail) {
-            _message_send((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+            if (pEntryThread->queue.toFront) {
+                _message_send_front((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress,
+                                    pEntryThread->queue.userBufferSize);
+            } else {
+                _message_send((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+            }
         }
         pEntry->result = PC_SC_SUCCESS;
     }

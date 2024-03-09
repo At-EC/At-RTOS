@@ -572,6 +572,7 @@ static inline os_msgq_id_t msgq_init(const void *pQueueBufferAddr, u16_t element
  * @param id The queue unique id.
  * @param pUserBuffer The pointer of the message buffer address.
  * @param bufferSize The queue buffer size.
+ * @param isToFront The direction of the message operation.
  * @param timeout_ms The queue send timeout option.
  *
  * @return The result of the operation.
@@ -579,14 +580,14 @@ static inline os_msgq_id_t msgq_init(const void *pQueueBufferAddr, u16_t element
  * demo usage:
  *
  *     u8_t txdata = 0u;
- *     u32p_t postcode = msgq_send(sample_id, &txdata, 0x01u, OS_WAIT_FOREVER);
+ *     u32p_t postcode = msgq_send(sample_id, &txdata, 0x01u, FALSE, OS_WAIT_FOREVER);
  *     if (PC_IOK(postcode)) {
  *         printf("Message queue send successful\n");
  *     } else {
  *         printf("Message queue send error: 0x%x\n", postcode);
  *     }
  *
- *     postcode = msgq_send(sample_id, &txdata, 0x01u, 1000u);
+ *     postcode = msgq_send(sample_id, &txdata, 0x01u, TRUE, 1000u);
  *     if (PC_IOK(postcode)) {
  *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Message queue send timeout\n");
@@ -597,9 +598,9 @@ static inline os_msgq_id_t msgq_init(const void *pQueueBufferAddr, u16_t element
  *         printf("Message queue send error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t msgq_send(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u32_t timeout_ms)
+static inline u32p_t msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms)
 {
-    return (u32p_t)_impl_queue_send(id.val, pUserBuffer, bufferSize, timeout_ms);
+    return (u32p_t)_impl_queue_send(id.val, pUserBuffer, bufferSize, isToFront, timeout_ms);
 }
 
 /**
@@ -633,7 +634,7 @@ static inline u32p_t msgq_send(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t b
  *         printf("Message queue receive error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t msgq_receive(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u32_t timeout_ms)
+static inline u32p_t msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u32_t timeout_ms)
 {
     return (u32p_t)_impl_queue_receive(id.val, pUserBuffer, bufferSize, timeout_ms);
 }
@@ -739,8 +740,8 @@ typedef struct {
     u32p_t (*evt_wait)(os_evt_id_t, u32_t *, u32_t, u32_t, u32_t);
 
     os_msgq_id_t (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
-    u32p_t (*msgq_send)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
-    u32p_t (*msgq_receive)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
+    u32p_t (*msgq_put)(os_msgq_id_t, const u8_t *, u16_t, b_t, u32_t);
+    u32p_t (*msgq_get)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
 
     b_t (*id_isInvalid)(struct os_id);
     u32p_t (*at_rtos_run)(void);

@@ -53,8 +53,8 @@ const at_rtos_api_t AtOS = {
     .evt_wait = evt_wait,
 
     .msgq_init = msgq_init,
-    .msgq_send = msgq_send,
-    .msgq_receive = msgq_receive,
+    .msgq_put = msgq_put,
+    .msgq_get = msgq_get,
 
     .id_isInvalid = os_id_is_invalid,
     .at_rtos_run = kernal_atos_run,
