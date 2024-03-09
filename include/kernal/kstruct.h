@@ -94,6 +94,8 @@ typedef struct {
 typedef struct {
     const u8_t *pUserBufferAddress;
     u16_t userBufferSize;
+    b_t toFront;
+    b_t fromBack;
 } action_queue_t;
 
 typedef struct {

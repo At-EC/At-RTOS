@@ -124,8 +124,11 @@ static void _event_callback_fromTimeOut(os_id_t id)
  */
 u32_t _impl_event_os_id_to_number(os_id_t id)
 {
-    return (u32_t)(_event_id_isInvalid(id) ? (0u)
-                                           : (id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_EVENT)) / sizeof(event_context_t));
+    if (_event_id_isInvalid(id)) {
+        return 0u;
+    }
+
+    return (u32_t)((id - _impl_kernal_member_id_toUnifiedIdStart(KERNAL_MEMBER_EVENT)) / sizeof(event_context_t));
 }
 
 /**
