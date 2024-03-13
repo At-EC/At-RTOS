@@ -23,7 +23,7 @@ Welcome PRs! If you are interested in contributing, Pls join us at [Discord](htt
 | [![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS)](./release-note.md) | Welcome to At-RTOS. This production version was released which supports a stable RTOS feature was implemented in the kernal system, Pls enjoy it (: |
 | ![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/At-EC/At-RTOS/main) | The development version in the main branch was implemented which will support new features, but it probably has unknown issues. |
 
-The release note is [here](./release_note.md).
+The release note is [here](https://github.com/At-EC/At-RTOS/releases).
 
 ## Introduction
 
@@ -53,9 +53,13 @@ And the keywords of the At-RTOS is shown as following lists.
 
 At-RTOS supports many architectures, and has covered the major architectures in current kernal system. It supports the following architectures, and it lists the chip that was verified.
 
-- **Cortex-M3**: [GD32103C-START](https://www.gigadevice.com/product/mcu/arm-cortex-m3/gd32f103vct6)
-- **Cortex-M4**: [GD32F307E-START](https://www.gigadevice.com/product/mcu/arm-cortex-m4/gd32f307vet6)
-- **Cortex-M33**: [GD32W515P-EVAL](https://www.gigadevice.com/product/mcu/arm-cortex-m33/gd32w515piq6)
+- [ ] `ARM Cortex-M` lists:
+    - [x] Cortex-M3 (AC5): [GD32103C-START](https://www.gigadevice.com/product/mcu/arm-cortex-m3/gd32f103vct6)
+    - [x] Cortex-M4 (AC6): [GD32F307E-START](https://www.gigadevice.com/product/mcu/arm-cortex-m4/gd32f307vet6)
+    - [ ] Cortex-M23:
+    - [x] Cortex-M33: [GD32W515P-EVAL](https://www.gigadevice.com/product/mcu/arm-cortex-m33/gd32w515piq6)
+- [ ] `RISC-V` lists:
+    - [ ] Reserved:
 
 There is planned support for the ARM Cortex remaining architectures though no chips are currently supported in my hand, If you perform it in your system, I'll thanks for your PRs to update the chip that verified into lists.
 
@@ -63,11 +67,13 @@ There is planned support for the ARM Cortex remaining architectures though no ch
 
 The main compilers currently is supported by At-RTOS are:
 
-- MDK KEIL (AC5)
-- MDK KEIL (AC6)
-- IAR IDE
-- ARMCLANG
-- Native CMAKE GCC
+- [ ] `Compiler` lists:
+    - [x] MDK KEIL (AC5).
+    - [x] MDK KEIL (AC6).
+    - [x] IAR IDE.
+    - [x] ARMCLANG.
+    - [ ] CMAKE ARM GCC.
+    - [x] CMAKE Native GCC.
 
 ## Source tree
 
