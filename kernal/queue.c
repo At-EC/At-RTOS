@@ -243,6 +243,29 @@ static void _message_receive(queue_context_t *pCurQueue, const u8_t *pUserBuffer
 }
 
 /**
+ * @brief Receive a queue message from back.
+ *
+ * @param pCurQueue The current queue context.
+ * @param pUserBuffer The pointer of user's message buffer.
+ * @param userSize The size of user's message buffer.
+ */
+static void _message_receive_behind(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
+{
+    u8_t *pInBuffer = NULL;
+
+    if (pCurQueue->leftPosition) {
+        pCurQueue->leftPosition--;
+    } else {
+        pCurQueue->leftPosition = pCurQueue->elementNumber - 1;
+    }
+    pCurQueue->cacheSize--;
+
+    pInBuffer = (u8_t *)((u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress));
+    _memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
+    _memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
+}
+
+/**
  * @brief Send a queue message.
  *
  * @param id The queue unique id.
@@ -296,11 +319,12 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b
  * @param id The queue unique id.
  * @param pUserBuffer The pointer of the message buffer address.
  * @param bufferSize The queue buffer size.
+ * @param isFromBack The direction of the message operation.
  * @param timeout_ms The queue send timeout option.
  *
  * @return The result of the operation.
  */
-u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u32_t timeout_ms)
+u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms)
 {
     if (_queue_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
@@ -317,10 +341,8 @@ u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},
-        [1] = {.ptr_val = (const void *)pUserBuffer},
-        [2] = {.u16_val = (u16_t)bufferSize},
-        [3] = {.u32_val = (u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)id},     [1] = {.ptr_val = (const void *)pUserBuffer}, [2] = {.u16_val = (u16_t)bufferSize},
+        [3] = {.b_val = (b_t)isFromBack}, [4] = {.u32_val = (u32_t)timeout_ms},
     };
 
     u32p_t postcode = _impl_kernal_privilege_invoke((const void *)_queue_receive_privilege_routine, arguments);
@@ -471,7 +493,8 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     const u8_t *pUserBuffer = (const u8_t *)pArgs[1].ptr_val;
     u16_t bufferSize = (u16_t)pArgs[2].u16_val;
-    u32_t timeout_ms = (u32_t)pArgs[3].u32_val;
+    b_t isBack = (b_t)pArgs[3].b_val;
+    u32_t timeout_ms = (u32_t)pArgs[4].u32_val;
     queue_context_t *pCurQueue = NULL;
     thread_context_t *pCurThread = NULL;
     u32p_t postcode = PC_SC_SUCCESS;
@@ -489,8 +512,10 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
             return _PC_CMPT_FAILED;
         }
 
+        _memset((char *)&pCurThread->queue, 0x0u, sizeof(action_queue_t));
         pCurThread->queue.pUserBufferAddress = pUserBuffer;
         pCurThread->queue.userBufferSize = bufferSize;
+        pCurThread->queue.fromBack = isBack;
 
         postcode = _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _queue_list_OutBlockingHeadGet(id), timeout_ms,
                                                     _queue_callback_fromTimeOut);
@@ -499,7 +524,11 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
             postcode = PC_SC_UNAVAILABLE;
         }
     } else {
-        _message_receive(pCurQueue, pUserBuffer, bufferSize);
+        if (pCurThread->queue.fromBack) {
+            _message_receive_behind(pCurQueue, pUserBuffer, bufferSize);
+        } else {
+            _message_receive(pCurQueue, pUserBuffer, bufferSize);
+        }
 
         /* Try to wakeup a blocking thread */
         list_iterator_t it = {0u};
@@ -570,7 +599,12 @@ static void _queue_schedule(os_id_t id)
 
     if ((isRxAvail) || (isTxAvail)) {
         if (isRxAvail) {
-            _message_receive((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+            if (pEntryThread->queue.fromBack) {
+                _message_receive_behind((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress,
+                                        pEntryThread->queue.userBufferSize);
+            } else {
+                _message_receive((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+            }
         } else if (isTxAvail) {
             if (pEntryThread->queue.toFront) {
                 _message_send_front((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress,

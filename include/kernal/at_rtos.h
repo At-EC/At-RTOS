@@ -609,6 +609,7 @@ static inline u32p_t msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bu
  * @param id The queue unique id.
  * @param pUserBuffer The pointer of the message buffer address.
  * @param bufferSize The queue buffer size.
+ * @param isFromBack The direction of the message operation.
  * @param timeout_ms The queue send timeout option.
  *
  * @return The result of the operation.
@@ -616,14 +617,14 @@ static inline u32p_t msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bu
  * demo usage:
  *
  *     u8_t rxdata = 0u;
- *     u32p_t postcode = msgq_receive(sample_id, &rxdata, 0x01u, OS_WAIT_FOREVER);
+ *     u32p_t postcode = msgq_receive(sample_id, &rxdata, 0x01u, TRUE, OS_WAIT_FOREVER);
  *     if (PC_IOK(postcode)) {
  *         printf("Message queue receive successful, the rx data is 0x%x\n", rxdata);
  *     } else {
  *         printf("Message queue receive error: 0x%x\n", postcode);
  *     }
  *
- *     postcode = msgq_receive(sample_id, &rxdata, 0x01u, 1000u);
+ *     postcode = msgq_receive(sample_id, &rxdata, 0x01u, FALSE, 1000u);
  *     if (PC_IOK(postcode)) {
  *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Message queue receive timeout\n");
@@ -634,9 +635,9 @@ static inline u32p_t msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bu
  *         printf("Message queue receive error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, u32_t timeout_ms)
+static inline u32p_t msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms)
 {
-    return (u32p_t)_impl_queue_receive(id.val, pUserBuffer, bufferSize, timeout_ms);
+    return (u32p_t)_impl_queue_receive(id.val, pUserBuffer, bufferSize, isFromBack, timeout_ms);
 }
 
 /**
@@ -741,7 +742,7 @@ typedef struct {
 
     os_msgq_id_t (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
     u32p_t (*msgq_put)(os_msgq_id_t, const u8_t *, u16_t, b_t, u32_t);
-    u32p_t (*msgq_get)(os_msgq_id_t, const u8_t *, u16_t, u32_t);
+    u32p_t (*msgq_get)(os_msgq_id_t, const u8_t *, u16_t, b_t, u32_t);
 
     b_t (*id_isInvalid)(struct os_id);
     u32p_t (*at_rtos_run)(void);
