@@ -54,8 +54,8 @@ And the keywords of the At-RTOS is shown as following lists.
 At-RTOS supports many architectures, and has covered the major architectures in current kernal system. It supports the following architectures, and it lists the chip that was verified.
 
 - [ ] `ARM Cortex-M` lists:
-    - [x] Cortex-M3 (AC5): [GD32103C-START](https://www.gigadevice.com/product/mcu/arm-cortex-m3/gd32f103vct6)
-    - [x] Cortex-M4 (AC6): [GD32F307E-START](https://www.gigadevice.com/product/mcu/arm-cortex-m4/gd32f307vet6)
+    - [x] Cortex-M3: [GD32103C-START](https://www.gigadevice.com/product/mcu/arm-cortex-m3/gd32f103vct6)
+    - [x] Cortex-M4: [GD32F307E-START](https://www.gigadevice.com/product/mcu/arm-cortex-m4/gd32f307vet6)
     - [ ] Cortex-M23:
     - [x] Cortex-M33: [GD32W515P-EVAL](https://www.gigadevice.com/product/mcu/arm-cortex-m33/gd32w515piq6)
 - [ ] `RISC-V` lists:

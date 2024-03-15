@@ -764,7 +764,7 @@ static u32_t _kernal_message_arrived(void)
 void _impl_kernal_atos_schedule_thread(void)
 {
     while (1) {
-        u32p_t postcode = (_kernal_message_arrived());
+        u32p_t postcode = _kernal_message_arrived();
         if (PC_IOK(postcode)) {
             _impl_timer_reamining_elapsed_handler();
         }
