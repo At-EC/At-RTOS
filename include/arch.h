@@ -18,7 +18,7 @@ typedef enum IRQn {
     /******  Cortex-Mx Processor Exceptions Numbers
     ***************************************************/
     NonMaskableInt_IRQn = -14,   /*!< 2 Non Maskable Interrupt                         */
-    HardFault_IRQn = -13,        /*!<   3  Hard Fault, all classes of Fault            */
+    HardFault_IRQn = -13,        /*!< 3  Hard Fault, all classes of Fault              */
     MemoryManagement_IRQn = -12, /*!< 4 Cortex-Mx Memory Management Interrupt          */
     BusFault_IRQn = -11,         /*!< 5 Cortex-Mx Bus Fault Interrupt                  */
     UsageFault_IRQn = -10,       /*!< 6 Cortex-Mx Usage Fault Interrupt                */

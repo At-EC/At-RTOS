@@ -122,10 +122,55 @@ typedef struct {
  * Define the common svc call function interface.
  */
 #if defined(__CC_ARM)
+
+/**
+ * @brief Trigger system svc call.
+ */
 __svc(SVC_KERNAL_INVOKE_NUMBER) u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+
+/**
+ * @brief Schedule the first thread.
+ */
 __asm void _impl_port_run_theFirstThread(u32_t sp);
 
+#if 0 /* Disable it to use CMSIS Library */
+/**
+ * @brief To check if it's in interrupt content.
+ */
+static inline b_t _impl_port_isInInterruptContent(void)
+{
+    register u32_t reg_ipsr __asm("ipsr");
+    if (reg_ipsr) {
+        return TRUE;
+    }
+
+    register u32_t reg_primask __asm("primask");
+    if (reg_primask == 0x01u) {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief To check if it's in kernal thread content.
+ */
+static inline b_t _impl_port_isInThreadMode(void)
+{
+    register u32_t reg_ipsr __asm("ipsr");
+    if (reg_ipsr) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+#endif
+
 #elif (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+
+/**
+ * @brief Trigger system svc call.
+ */
 static inline u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
 {
     register u32_t r0 __asm__("r0") = args_0;
@@ -137,12 +182,96 @@ static inline u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args
 
     return r0;
 }
+
+/**
+ * @brief Schedule the first thread.
+ */
 void _impl_port_run_theFirstThread(u32_t sp);
+
+#if 0 /* Disable it to use CMSIS Library */
+/**
+ * @brief To check if it's in interrupt content.
+ */
+static inline b_t _impl_port_isInInterruptContent(void)
+{
+    u32_t ipsr;
+
+    __asm__ volatile("mrs %0, IPSR\n\t" : "=r"(ipsr));
+    if (ipsr) {
+        return TRUE;
+    }
+
+    u32_t primask;
+
+    __ASM volatile("MRS %0, primask" : "=r"(primask));
+    if (primask) {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief To check if it's in kernal thread content.
+ */
+static inline b_t _impl_port_isInThreadMode(void)
+{
+    u32_t ipsr;
+
+    __asm__ volatile("mrs %0, IPSR\n\t" : "=r"(ipsr));
+    if (reg_ipsr) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+#endif
 
 #elif defined(__ICCARM__)
 #pragma swi_number = SVC_KERNAL_INVOKE_NUMBER
+
+/**
+ * @brief Trigger system svc call.
+ */
 __swi u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+
+/**
+ * @brief Schedule the first thread.
+ */
 void _impl_port_run_theFirstThread(u32_t sp);
+
+#if 0 /* Disable it to use CMSIS Library */
+/**
+ * @brief To check if it's in interrupt content.
+ */
+static inline b_t _impl_port_isInInterruptContent(void)
+{
+    register u32_t reg_ipsr = __arm_rsr("IPSR");
+    if (reg_ipsr) {
+        return TRUE;
+    }
+
+    register u32_t reg_primask = __arm_rsr("PRIMASK");
+    if (reg_primask == 0x01u) {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief To check if it's in kernal thread content.
+ */
+static inline b_t _impl_port_isInThreadMode(void)
+{
+    register u32_t reg_ipsr = __arm_rsr("IPSR");
+    if (reg_ipsr) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+#endif
 
 #elif defined(__GUNC__)
 /* TODO */
@@ -164,9 +293,9 @@ void _impl_port_run_theFirstThread(u32_t sp);
 /**
  * The implement function lists for rtos kernal internal use.
  */
-void _impl_port_setPendSV(void);
 b_t _impl_port_isInInterruptContent(void);
 b_t _impl_port_isInThreadMode(void);
+void _impl_port_setPendSV(void);
 void _impl_port_interrupt_init(void);
 u32_t _impl_port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size);
 
