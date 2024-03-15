@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_TIMER)
+#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_TIMER_7)
 
 /**
  * Data structure for location timer

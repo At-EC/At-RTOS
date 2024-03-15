@@ -20,7 +20,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_KERNAL)
+#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_KERNAL_1)
 
 /**
  * Local kernal member setting container.

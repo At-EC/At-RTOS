@@ -28,10 +28,16 @@ u32p_t _impl_postcode_trace_cmpt_last_failed(u32p_t postcode)
 {
     u32_t cmpt_instance = PC_TO_CMPT_ID(postcode);
 
-    if ((cmpt_instance < POSTCODE_COMPONENT_NUMBER) && (FLAG(postcode & PC_FAILED_CODE_MASK))) {
+    if (cmpt_instance >= POSTCODE_COMPONENT_NUMBER) {
+        return postcode;
+    }
+
+    if (FLAG(postcode & PC_FAILED_CODE_MASK)) {
         g_postcode_cmpt_failed_container[cmpt_instance] = (postcode & PC_LINE_NUMBER_MASK);
+        /* Dead loop */
         while (1) {};
     }
+
     return postcode;
 }
 
