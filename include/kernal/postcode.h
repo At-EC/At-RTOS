@@ -44,15 +44,15 @@ extern "C" {
 
 /* The following table defined the At-RTOS component number */
 enum {
-    PC_CMPT_KERNAL = 1u, /* 1 */
-    PC_CMPT_THREAD,      /* 2 */
-    PC_CMPT_SEMAPHORE,   /* 3 */
-    PC_CMPT_MUTEX,       /* 4 */
-    PC_CMPT_QUEUE,       /* 5 */
-    PC_CMPT_EVENT,       /* 6 */
-    PC_CMPT_TIMER,       /* 7 */
+    PC_CMPT_KERNAL_1 = 1u,
+    PC_CMPT_THREAD_2,
+    PC_CMPT_SEMAPHORE_3,
+    PC_CMPT_MUTEX_4,
+    PC_CMPT_QUEUE_5,
+    PC_CMPT_EVENT_6,
+    PC_CMPT_TIMER_7,
 
-    PC_CMPT_ASSERT, /* 8 */
+    PC_CMPT_ASSERT_8,
 
     POSTCODE_COMPONENT_NUMBER,
 };
@@ -89,38 +89,40 @@ u32p_t _impl_postcode_trace_cmpt_last_failed(u32p_t postcode);
 #define PC_IOK(code) PC_IOK_TC(code)
 #define PC_IER(code) PC_IER_TC(code)
 
+#define _PC_CMPT_ASSERT_FAILED PC_FAILED(PC_CMPT_ASSERT_8)
+
 #define _CHECK_CONDITION(cond)                                                                                                             \
     do {                                                                                                                                   \
         if (FLAG(!((i32_t)cond))) {                                                                                                        \
-            PC_TRACE(PC_FAILED(PC_CMPT_ASSERT));                                                                                           \
+            PC_TRACE(_PC_CMPT_ASSERT_FAILED);                                                                                              \
         }                                                                                                                                  \
     } while (0)
 
 #define _CHECK_POINTER(pointer)                                                                                                            \
     do {                                                                                                                                   \
         if (FLAG(!((i32_t)pointer))) {                                                                                                     \
-            PC_TRACE(PC_FAILED(PC_CMPT_ASSERT));                                                                                           \
+            PC_TRACE(_PC_CMPT_ASSERT_FAILED);                                                                                              \
         }                                                                                                                                  \
     } while (0)
 
 #define _CHECK_INDEX(index, high)                                                                                                          \
     do {                                                                                                                                   \
         if (FLAG(!(((i32_t)index >= 0) && ((i32_t)index < high)))) {                                                                       \
-            PC_TRACE(PC_FAILED(PC_CMPT_ASSERT));                                                                                           \
+            PC_TRACE(_PC_CMPT_ASSERT_FAILED);                                                                                              \
         }                                                                                                                                  \
     } while (0)
 
 #define _CHECK_BOUND(val, high)                                                                                                            \
     do {                                                                                                                                   \
         if (FLAG(!(((i32_t)val >= 0) && ((i32_t)val <= (i32_t)high)))) {                                                                   \
-            PC_TRACE(PC_FAILED(PC_CMPT_ASSERT));                                                                                           \
+            PC_TRACE(_PC_CMPT_ASSERT_FAILED);                                                                                              \
         }                                                                                                                                  \
     } while (0)
 
 #define _CHECK_RANGE(val, low, high)                                                                                                       \
     do {                                                                                                                                   \
         if (FLAG(!(((i32_t)val >= (i32_t)low) && ((i32_t)val <= (i32_t)high)))) {                                                          \
-            PC_TRACE(PC_FAILED(PC_CMPT_ASSERT));                                                                                           \
+            PC_TRACE(_PC_CMPT_ASSERT_FAILED);                                                                                              \
         }                                                                                                                                  \
     } while (0)
 

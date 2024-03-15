@@ -81,11 +81,7 @@ The main compilers currently is supported by At-RTOS are:
 # At-RTOS important source code tree is shown as follow
 At-RTOS
 ├── arch
-│   ├── arch32
-│   │   └── arm
-│   │       └── cmsis
-│   │          └── include
-│   │              └── *.h
+│   └── arch32
 ├── clock
 │   ├── clock_systick.c
 │   └── CMakeLists.txt
@@ -111,7 +107,7 @@ At-RTOS
 └── CMakeLists.txt
 ```
 
-- **arch :** This folder was used to store all the chip architectures supported by the current At-RTOS.
+- **arch :** This folder provided the chip core architectures resource to support At-RTOS kernal feature.
 - **clock :** It was implemented for At-RTOS kernal system tick to support system timers.
 - **port :** It's used to support different compiler such as KEIL, IAR and GCC.
 - **include :** It used to contain the At-RTOS kernal header files, Moreover it contained the portable arch, clock and port header files.

@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_EVENT)
+#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_EVENT_6)
 
 /**
  * The local function lists for current file internal use.

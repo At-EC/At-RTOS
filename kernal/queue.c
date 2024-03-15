@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED        PC_FAILED(PC_CMPT_QUEUE)
+#define _PC_CMPT_FAILED        PC_FAILED(PC_CMPT_QUEUE_5)
 #define _QUEUE_WAKEUP_SENDER   PC_SC_B
 #define _QUEUE_WAKEUP_RECEIVER PC_SC_A
 
