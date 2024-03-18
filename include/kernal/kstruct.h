@@ -26,18 +26,6 @@ extern "C" {
 #pragma warning 586
 #endif
 
-/** @brief The linker structure head is to mannage the rtos context. */
-typedef struct {
-    /* The linker is an important symbol to connect with same status node */
-    linker_t linker;
-
-    /* The head id */
-    os_id_t id;
-
-    /* The head string name, NULL is available */
-    const char_t *pName;
-} linker_head_t;
-
 typedef void (*pCallbackFunc_t)(void);
 typedef void (*pTimer_callbackFunc_t)(void);
 typedef void (*pThread_callbackFunc_t)(os_id_t);

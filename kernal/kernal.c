@@ -12,6 +12,7 @@
 #include "unique.h"
 #include "kthread.h"
 #include "postcode.h"
+#include "trace.h"
 
 #ifdef __cplusplus
 extern "C" {

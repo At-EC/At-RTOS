@@ -31,6 +31,18 @@ typedef struct {
     list_t *pList;
 } linker_t;
 
+/** @brief The linker structure head is to mannage the rtos context. */
+typedef struct {
+    /* The linker is an important symbol to connect with same status node */
+    linker_t linker;
+
+    /* The head id */
+    u32_t id;
+
+    /* The head string name, NULL is available */
+    const char_t *pName;
+} linker_head_t;
+
 void linker_list_transaction_common(linker_t *pLinker, list_t *pToList, list_direction_t direction);
 void linker_list_transaction_specific(linker_t *pLinker, list_t *pToList, pLinkerSpecificConditionFunc_t pConditionFunc);
 
