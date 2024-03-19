@@ -9,6 +9,7 @@
 #include "timer.h"
 #include "event.h"
 #include "postcode.h"
+#include "trace.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -391,6 +392,54 @@ static void _event_schedule(os_id_t id)
     if (isAvail) {
         pEntry->result = PC_SC_SUCCESS;
     }
+}
+
+/**
+ * @brief Get event snapshot informations.
+ *
+ * @param instance The event instance number.
+ * @param pMsgs The kernal snapshot information pointer.
+ *
+ * @return TRUE: Operation pass, FALSE: Operation failed.
+ */
+b_t _impl_trace_event_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
+{
+    event_context_t *pCurEvent = NULL;
+    u32_t offset = 0u;
+    os_id_t id = OS_INVALID_ID;
+
+    ENTER_CRITICAL_SECTION();
+
+    offset = sizeof(event_context_t) * instance;
+    pCurEvent = (event_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_EVENT) + offset);
+    id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurEvent);
+    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernal_snapshot_t));
+
+    if (_event_id_isInvalid(id)) {
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    if (pCurEvent->head.linker.pList == _event_list_activeHeadGet()) {
+        pMsgs->pState = "init";
+    } else if (pCurEvent->head.linker.pList) {
+        pMsgs->pState = "*";
+    } else {
+        pMsgs->pState = "unused";
+
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    pMsgs->id = pCurEvent->head.id;
+    pMsgs->pName = pCurEvent->head.pName;
+
+    pMsgs->event.set = pCurEvent->set;
+    pMsgs->event.edge = pCurEvent->edge;
+    pMsgs->event.wait_list = pCurEvent->blockingThreadHead;
+
+    EXIT_CRITICAL_SECTION();
+    return TRUE;
 }
 
 #ifdef __cplusplus

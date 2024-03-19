@@ -9,6 +9,7 @@
 #include "timer.h"
 #include "mutex.h"
 #include "postcode.h"
+#include "trace.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -348,6 +349,56 @@ static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
 
     EXIT_CRITICAL_SECTION();
     return postcode;
+}
+
+/**
+ * @brief Get mutex snapshot informations.
+ *
+ * @param instance The mutex instance number.
+ * @param pMsgs The kernal snapshot information pointer.
+ *
+ * @return TRUE: Operation pass, FALSE: Operation failed.
+ */
+b_t _impl_trace_mutex_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
+{
+    mutex_context_t *pCurMutex = NULL;
+    u32_t offset = 0u;
+    os_id_t id = OS_INVALID_ID;
+
+    ENTER_CRITICAL_SECTION();
+
+    offset = sizeof(mutex_context_t) * instance;
+    pCurMutex = (mutex_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_MUTEX) + offset);
+    id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurMutex);
+    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernal_snapshot_t));
+
+    if (_mutex_id_isInvalid(id)) {
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    if (pCurMutex->head.linker.pList == _mutex_list_lockingHeadGet()) {
+        pMsgs->pState = "lock";
+    } else if (pCurMutex->head.linker.pList == _mutex_list_unlockingHeadGet()) {
+        pMsgs->pState = "unlock";
+    } else if (pCurMutex->head.linker.pList) {
+        pMsgs->pState = "*";
+    } else {
+        pMsgs->pState = "unused";
+
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    pMsgs->id = pCurMutex->head.id;
+    pMsgs->pName = pCurMutex->head.pName;
+
+    pMsgs->mutex.holdThreadId = pCurMutex->holdThreadId;
+    pMsgs->mutex.originalPriority = pCurMutex->originalPriority.level;
+    pMsgs->mutex.wait_list = pCurMutex->blockingThreadHead;
+
+    EXIT_CRITICAL_SECTION();
+    return TRUE;
 }
 
 #ifdef __cplusplus

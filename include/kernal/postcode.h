@@ -58,7 +58,7 @@ enum {
 };
 
 /* This declaration is help to allow users define the customization component number in their application system */
-#define POSTCODE_COMPONENT_USER_NUMBER POSTCODE_COMPONENT_NUMBER
+#define POSTCODE_COMPONENT_USER_NUMBER (POSTCODE_COMPONENT_NUMBER)
 
 /* The following table defined the At-RTOS pass information number */
 enum {
@@ -74,15 +74,27 @@ enum {
     POSTCODE_INFORMATION_SUCCESS_NUMBER,
 };
 
-u32p_t _impl_postcode_trace_cmpt_last_failed(u32p_t postcode);
-
 #define PC_FAILED_CODE_MASK (0x7FFFFFFu)
 #define PC_TO_CMPT_ID(code) (((code) >> PC_COMPONENT_NUMBER_POS) & PC_COMPONENT_NUMBER_MASK)
 
 #define _PC_IOK(code) UNFLAG((code) & PC_FAILED_CODE_MASK)
 #define _PC_IER(code) FLAG((code) & PC_FAILED_CODE_MASK)
 
-#define PC_TRACE(code)  _impl_postcode_trace_cmpt_last_failed(code)
+u32p_t _impl_postcode_cmpt_failed_save(u32p_t postcode);
+
+/**
+ * @brief To trace the last failed postcode.
+ *
+ * @param postcode The postcode number.
+ *
+ * @return Return the original argument postcode.
+ */
+static inline u32p_t _impl_trace_postcode_cmpt_last_failed(u32p_t postcode)
+{
+    return _impl_postcode_cmpt_failed_save(postcode);
+}
+
+#define PC_TRACE(code)  _impl_trace_postcode_cmpt_last_failed(code)
 #define PC_IOK_TC(code) _PC_IOK(PC_TRACE(code))
 #define PC_IER_TC(code) _PC_IER(PC_TRACE(code))
 

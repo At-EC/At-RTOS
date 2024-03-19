@@ -78,6 +78,14 @@ extern "C" {
 #define KERNAL_THREAD_STACK_SIZE (1024u)
 #endif
 
+#ifdef AT_RTOS_TRACE_USE_STANDARD_PRINTF_ENABLED
+#define KTRACE(frmt, ...) printf(frmt, ##__VA_ARGS__)
+#else
+#ifndef KTRACE
+// #define KTRACE(frmt, ...) UNUSED_MSG(UNUSED_ARG)
+#endif
+#endif
+
 /* Configuration of the Cortex-M Processor and Core Peripherals.
  * You should check the chip header file or datasheet to check the following declaration symbol that support ARM Cortex-M Processor and Core
  * Peripherals, and put it here. It looks like this.

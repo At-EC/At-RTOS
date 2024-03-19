@@ -11,6 +11,7 @@
 #include "unique.h"
 #include "configuration.h"
 #include "postcode.h"
+#include "trace.h"
 #include "thread.h"
 #include "timer.h"
 #include "semaphore.h"

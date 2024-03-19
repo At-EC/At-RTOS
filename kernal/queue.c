@@ -9,6 +9,7 @@
 #include "timer.h"
 #include "queue.h"
 #include "postcode.h"
+#include "trace.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -615,6 +616,54 @@ static void _queue_schedule(os_id_t id)
         }
         pEntry->result = PC_SC_SUCCESS;
     }
+}
+
+/**
+ * @brief Get queue snapshot informations.
+ *
+ * @param instance The queue instance number.
+ * @param pMsgs The kernal snapshot information pointer.
+ *
+ * @return TRUE: Operation pass, FALSE: Operation failed.
+ */
+b_t _impl_trace_queue_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
+{
+    queue_context_t *pCurQueue = NULL;
+    u32_t offset = 0u;
+    os_id_t id = OS_INVALID_ID;
+
+    ENTER_CRITICAL_SECTION();
+
+    offset = sizeof(queue_context_t) * instance;
+    pCurQueue = (queue_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_QUEUE) + offset);
+    id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurQueue);
+    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernal_snapshot_t));
+
+    if (_queue_id_isInvalid(id)) {
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    if (pCurQueue->head.linker.pList == _queue_list_initHeadGet()) {
+        pMsgs->pState = "init";
+    } else if (pCurQueue->head.linker.pList) {
+        pMsgs->pState = "*";
+    } else {
+        pMsgs->pState = "unused";
+
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    pMsgs->id = pCurQueue->head.id;
+    pMsgs->pName = pCurQueue->head.pName;
+
+    pMsgs->queue.cacheSize = pCurQueue->cacheSize;
+    pMsgs->queue.in_list = pCurQueue->inBlockingThreadListHead;
+    pMsgs->queue.out_list = pCurQueue->outBlockingThreadListHead;
+
+    EXIT_CRITICAL_SECTION();
+    return TRUE;
 }
 
 #ifdef __cplusplus

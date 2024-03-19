@@ -12,6 +12,7 @@ target_sources(atos_kernal
     ${CMAKE_CURRENT_LIST_DIR}/timer.c   
     ${CMAKE_CURRENT_LIST_DIR}/trace.c
     ${CMAKE_CURRENT_LIST_DIR}/kthread.c
+    ${CMAKE_CURRENT_LIST_DIR}/postcode.c
 )
 
 target_include_directories(atos_kernal

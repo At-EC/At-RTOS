@@ -9,6 +9,7 @@
 #include "clock_tick.h"
 #include "timer.h"
 #include "postcode.h"
+#include "trace.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -735,6 +736,61 @@ void _impl_timer_elapsed_handler(u32_t elapsed_us)
     _impl_kernal_timer_schedule_request();
 
     EXIT_CRITICAL_SECTION();
+}
+
+/**
+ * @brief Get timer snapshot informations.
+ *
+ * @param instance The timer instance number.
+ * @param pMsgs The kernal snapshot information pointer.
+ *
+ * @return TRUE: Operation pass, FALSE: Operation failed.
+ */
+b_t _impl_trace_timer_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
+{
+    timer_context_t *pCurTimer = NULL;
+    u32_t offset = 0u;
+    os_id_t id = OS_INVALID_ID;
+
+    ENTER_CRITICAL_SECTION();
+
+    offset = sizeof(timer_context_t) * instance;
+    pCurTimer = (timer_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_TIMER) + offset);
+    id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurTimer);
+    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernal_snapshot_t));
+
+    if (_timer_id_isInvalid(id)) {
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    if (pCurTimer->head.linker.pList == _timer_list_stopingHeadGet()) {
+        pMsgs->pState = "stop";
+    } else if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
+        pMsgs->pState = "wait";
+    } else if (pCurTimer->head.linker.pList == _timer_list_endingHeadGet()) {
+        pMsgs->pState = "end";
+    } else if (pCurTimer->head.linker.pList == _timer_list_pendingHeadGet()) {
+        pMsgs->pState = "pend";
+    } else if (pCurTimer->head.linker.pList == _timer_list_runningHeadGet()) {
+        pMsgs->pState = "run";
+    } else if (pCurTimer->head.linker.pList) {
+        pMsgs->pState = "*";
+    } else {
+        pMsgs->pState = "unused";
+
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    pMsgs->id = pCurTimer->head.id;
+    pMsgs->pName = pCurTimer->head.pName;
+
+    pMsgs->timer.is_cycle = pCurTimer->isCycle;
+    pMsgs->timer.timeout_ms = pCurTimer->timeout_ms;
+
+    EXIT_CRITICAL_SECTION();
+    return TRUE;
 }
 
 #ifdef __cplusplus

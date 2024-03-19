@@ -9,6 +9,7 @@
 #include "timer.h"
 #include "semaphore.h"
 #include "postcode.h"
+#include "trace.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -515,6 +516,58 @@ static void _semaphore_schedule(os_id_t id)
     } else {
         _semaphore_list_transfer_toUnlock((linker_head_t *)&pCurSemaphore->head);
     }
+}
+
+/**
+ * @brief Get semaphore snapshot informations.
+ *
+ * @param instance The semaphore instance number.
+ * @param pMsgs The kernal snapshot information pointer.
+ *
+ * @return TRUE: Operation pass, FALSE: Operation failed.
+ */
+b_t _impl_trace_semaphore_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
+{
+    semaphore_context_t *pCurSemaphore = NULL;
+    u32_t offset = 0u;
+    os_id_t id = OS_INVALID_ID;
+
+    ENTER_CRITICAL_SECTION();
+
+    offset = sizeof(semaphore_context_t) * instance;
+    pCurSemaphore = (semaphore_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_SEMAPHORE) + offset);
+    id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurSemaphore);
+    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernal_snapshot_t));
+
+    if (_semaphore_id_isInvalid(id)) {
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    if (pCurSemaphore->head.linker.pList == _semaphore_list_lockingHeadGet()) {
+        pMsgs->pState = "lock";
+    } else if (pCurSemaphore->head.linker.pList == _semaphore_list_unlockingHeadGet()) {
+        pMsgs->pState = "unlock";
+    } else if (pCurSemaphore->head.linker.pList) {
+        pMsgs->pState = "*";
+    } else {
+        pMsgs->pState = "unused";
+
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    pMsgs->id = pCurSemaphore->head.id;
+    pMsgs->pName = pCurSemaphore->head.pName;
+
+    pMsgs->semaphore.initial_count = pCurSemaphore->initialCount;
+    pMsgs->semaphore.limit_count = pCurSemaphore->limitCount;
+    pMsgs->semaphore.permit = pCurSemaphore->isPermit;
+    pMsgs->semaphore.timeout_ms = pCurSemaphore->timeout_ms;
+    pMsgs->semaphore.wait_list = pCurSemaphore->blockingThreadHead;
+
+    EXIT_CRITICAL_SECTION();
+    return TRUE;
 }
 
 #ifdef __cplusplus

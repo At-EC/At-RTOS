@@ -9,6 +9,7 @@
 #include "timer.h"
 #include "thread.h"
 #include "postcode.h"
+#include "trace.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -432,7 +433,6 @@ static os_id_t _thread_init_privilege_routine(arguments_t *pArgs)
         pCurThread->pStackAddr = pAddress;
         pCurThread->stackSize = size;
 
-        _memset((char_t *)pCurThread->pStackAddr, STACT_UNUSED_DATA, size);
         pCurThread->PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(pEntryFun, pCurThread->pStackAddr, pCurThread->stackSize);
         _impl_thread_timer_init(_impl_kernal_member_unified_id_threadToTimer(id));
 
@@ -580,6 +580,69 @@ static u32p_t _thread_sleep_privilege_routine(arguments_t *pArgs)
 
     EXIT_CRITICAL_SECTION();
     return postcode;
+}
+
+/**
+ * @brief Get thread snapshot informations.
+ *
+ * @param instance The thread instance number.
+ * @param pMsgs The kernal snapshot information pointer.
+ *
+ * @return TRUE: Operation pass, FALSE: Operation failed.
+ */
+b_t _impl_trace_thread_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
+{
+    thread_context_t *pCurThread = NULL;
+    u32_t offset = 0u;
+    os_id_t id = OS_INVALID_ID;
+
+    ENTER_CRITICAL_SECTION();
+
+    offset = sizeof(thread_context_t) * instance;
+    pCurThread = (thread_context_t *)(_impl_kernal_member_id_toContainerStartAddress(KERNAL_MEMBER_THREAD) + offset);
+    id = _impl_kernal_member_containerAddress_toUnifiedid((u32_t)pCurThread);
+    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernal_snapshot_t));
+
+    if (_thread_id_isInvalid(id)) {
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    if (pCurThread->head.linker.pList == _thread_list_waitingHeadGet()) {
+        pMsgs->pState = "wait";
+    } else if (pCurThread->head.linker.pList == _thread_list_pendingHeadGet()) {
+        if (id == _thread_id_runtime_get()) {
+            pMsgs->pState = "run";
+        } else {
+            pMsgs->pState = "pend";
+        }
+    } else if (pCurThread->head.linker.pList) {
+        pMsgs->pState = "wait";
+    } else {
+        pMsgs->pState = "unused";
+
+        EXIT_CRITICAL_SECTION();
+        return FALSE;
+    }
+
+    pMsgs->id = pCurThread->head.id;
+    pMsgs->pName = pCurThread->head.pName;
+
+    pMsgs->thread.priority = pCurThread->priority.level;
+    pMsgs->thread.current_psp = (u32_t)pCurThread->PSPStartAddr;
+
+    u32_t *pData_u32 = (u32_t *)pCurThread->pStackAddr;
+    u32_t unused = 0u;
+
+    while ((*pData_u32 == STACT_UNUSED_FRAME_MARK) && (unused < pCurThread->stackSize)) {
+        pData_u32++;
+        unused++;
+    }
+    unused *= sizeof(u32_t);
+    pMsgs->thread.usage = ((pCurThread->stackSize - unused) * 100u) / pCurThread->stackSize;
+
+    EXIT_CRITICAL_SECTION();
+    return TRUE;
 }
 
 #ifdef __cplusplus
