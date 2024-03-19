@@ -116,6 +116,18 @@ extern "C" {
  **/
 #define THREAD_PSP_WITH_PRIVILEGED (10u)
 
+/**
+ * This symbol defined your kernal trace print function, if your system implemented
+ * standard printf function, you can define this macro to use printf as the At-RTOS kernal trace use.
+ * The defaule standard printf macro is commented out. Or you can defined your customization-printf to replace
+ * the standard printf by use macro KTRACE, If you don't need the kernal trace feature, you can comment out both of them.
+ * Your application will certainly need a different value so set this correctly.
+ * This is very often, but not always, according to the security level that you want.
+ **/
+// Both of them commented out disabled the kernal trace feature
+// #define AT_RTOS_TRACE_USE_STANDARD_PRINTF_ENABLED  /* Comment out: default doesn't use the standard printf */
+// #define KTRACE                                     /* Comment out: default doesn't use the customization-printf */
+
 #ifdef __cplusplus
 }
 #endif

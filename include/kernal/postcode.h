@@ -58,7 +58,7 @@ enum {
 };
 
 /* This declaration is help to allow users define the customization component number in their application system */
-#define POSTCODE_COMPONENT_USER_NUMBER POSTCODE_COMPONENT_NUMBER
+#define POSTCODE_COMPONENT_USER_NUMBER (POSTCODE_COMPONENT_NUMBER)
 
 /* The following table defined the At-RTOS pass information number */
 enum {
