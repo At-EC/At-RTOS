@@ -201,7 +201,10 @@ static b_t _kernal_thread_exit_schedule(void)
         if (pExit->timeout_us) {
             _impl_thread_timer_start(_impl_kernal_member_unified_id_threadToTimer(pCurThread->head.id), pExit->timeout_us,
                                      pExit->pTimeoutCallFun);
-            request = (pExit->timeout_us != OS_TIME_FOREVER_VAL) ? (TRUE) : (FALSE);
+
+            if (pExit->timeout_us != OS_TIME_FOREVER_VAL) {
+                request = TRUE;
+            }
         }
 
         _kernal_thread_list_transfer_toTargetBlocking((linker_head_t *)&pCurThread->head, (list_t *)pExit->pToList);
