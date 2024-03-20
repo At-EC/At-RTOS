@@ -662,23 +662,6 @@ static inline b_t os_id_is_invalid(struct os_id id)
 }
 
 /**
- * @brief To check if the kernal OS is running.
- *
- * return The true indicates the kernal OS is running.
- **
- * demo usage:
- *
- *     if (os_kernal_is_running()) {
- *         printf("At-RTOS kernal is running\n");
- *     }
- *     ...
- */
-static inline b_t os_kernal_is_running(void)
-{
-    return (b_t)(_impl_kernal_rtos_isRun() ? (TRUE) : (FALSE));
-}
-
-/**
  * @brief Get the current running thread id.
  *
  * @return The id of current running thread.
@@ -704,12 +687,65 @@ static inline os_thread_id_t os_id_current_thread(void)
  **
  * demo usage:
  *
- *     kernal_atos_run();
+ *     os_kernal_run();
  *     // Doesn't arrive
  */
-static inline u32p_t kernal_atos_run(void)
+static inline u32p_t os_kernal_run(void)
 {
     return _impl_kernal_at_rtos_run();
+}
+
+/**
+ * @brief To check if the kernal OS is running.
+ *
+ * return The true indicates the kernal OS is running.
+ **
+ * demo usage:
+ *
+ *     if (os_kernal_is_running()) {
+ *         printf("At-RTOS kernal is running\n");
+ *     }
+ *     ...
+ */
+static inline b_t os_kernal_is_running(void)
+{
+    return (b_t)(_impl_kernal_rtos_isRun() ? (TRUE) : (FALSE));
+}
+
+/**
+ * @brief Print At-RTOS firmware information.
+ **
+ * demo usage:
+ *
+ *     os_trace_firmware_print();
+ */
+static inline void os_trace_firmware_print(void)
+{
+    _impl_trace_firmware_snapshot_print();
+}
+
+/**
+ * @brief Print At-RTOS failed postcode value.
+ **
+ * demo usage:
+ *
+ *     os_trace_postcode_print();
+ */
+static inline void os_trace_postcode_print(void)
+{
+    _impl_trace_postcode_snapshot_print();
+}
+
+/**
+ * @brief Print At-RTOS kernal information.
+ **
+ * demo usage:
+ *
+ *     os_trace_kernal_print();
+ */
+static inline void os_trace_kernal_print(void)
+{
+    _impl_trace_kernal_snapshot_print();
 }
 
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
@@ -746,9 +782,13 @@ typedef struct {
     u32p_t (*msgq_get)(os_msgq_id_t, const u8_t *, u16_t, b_t, u32_t);
 
     b_t (*id_isInvalid)(struct os_id);
-    u32p_t (*at_rtos_run)(void);
-    b_t (*kernal_is_running)(void);
     os_thread_id_t (*id_current_thread)(void);
+    u32p_t (*kernal_run)(void);
+    b_t (*kernal_is_running)(void);
+
+    void (*trace_firmware)(void);
+    void (*trace_postcode)(void);
+    void (*trace_kernal)(void);
 } at_rtos_api_t;
 
 extern const at_rtos_api_t AtOS;

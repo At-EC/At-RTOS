@@ -37,7 +37,7 @@ u32p_t _impl_postcode_cmpt_failed_save(u32p_t postcode)
     if (FLAG(postcode & PC_FAILED_CODE_MASK)) {
         g_postcode_cmpt_failed_container[cmpt_instance] = (postcode & PC_LINE_NUMBER_MASK);
 
-        _impl_trace_postcode_snapshot_take();
+        _impl_trace_postcode_snapshot_print();
         /* Dead loop */
         while (1) {};
     }
