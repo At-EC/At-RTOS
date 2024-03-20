@@ -39,7 +39,7 @@ int main(void)
     }
 
     /* At_RTOS kernal running starts */
-    AtOS.at_rtos_run();
+    AtOS.kernal_run();
     D_ASSERT(0);
 
     while(1) {};

@@ -95,15 +95,16 @@ typedef struct {
 #pragma warning restore
 #endif
 
-void _impl_trace_firmware_snapshot_take(void);
-void _impl_trace_postcode_snapshot_take(void);
-void _impl_trace_kernal_snapshot_take(void);
 b_t _impl_trace_thread_snapshot(u32_t instance, kernal_snapshot_t *pMsgs);
 b_t _impl_trace_semaphore_snapshot(u32_t instance, kernal_snapshot_t *pMsgs);
 b_t _impl_trace_mutex_snapshot(u32_t instance, kernal_snapshot_t *pMsgs);
 b_t _impl_trace_event_snapshot(u32_t instance, kernal_snapshot_t *pMsgs);
 b_t _impl_trace_queue_snapshot(u32_t instance, kernal_snapshot_t *pMsgs);
 b_t _impl_trace_timer_snapshot(u32_t instance, kernal_snapshot_t *pMsgs);
+
+void _impl_trace_firmware_snapshot_print(void);
+void _impl_trace_postcode_snapshot_print(void);
+void _impl_trace_kernal_snapshot_print(void);
 
 #ifdef __cplusplus
 }

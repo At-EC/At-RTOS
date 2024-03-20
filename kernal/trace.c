@@ -20,7 +20,7 @@ extern vu32_t g_postcode_cmpt_failed_container[POSTCODE_COMPONENT_NUMBER];
 /**
  * @brief Take firmare snapshot information.
  */
-void _impl_trace_firmware_snapshot_take(void)
+void _impl_trace_firmware_snapshot_print(void)
 {
 #if defined KTRACE
     KTRACE(">> At-RTOS Version: v%d.%d.%d snaphost!!!\n", ATOS_VERSION_MAJOR_NUMBER, ATOS_VERSION_MINOR_NUMBER, ATOS_VERSION_PATCH_NUMBER);
@@ -32,7 +32,7 @@ void _impl_trace_firmware_snapshot_take(void)
 /**
  * @brief Take postcode snapshot information.
  */
-void _impl_trace_postcode_snapshot_take(void)
+void _impl_trace_postcode_snapshot_print(void)
 {
     b_t is_failed = FALSE;
 
@@ -55,14 +55,14 @@ void _impl_trace_postcode_snapshot_take(void)
 /**
  * @brief Take kernal snapshot information.
  */
-void _impl_trace_kernal_snapshot_take(void)
+void _impl_trace_kernal_snapshot_print(void)
 {
 #if defined KTRACE
     u32_t unused[7] = {0u};
     kernal_snapshot_t snapshot_data;
 
-    _impl_trace_firmware_snapshot_take();
-    _impl_trace_postcode_snapshot_take();
+    _impl_trace_firmware_snapshot_print();
+    _impl_trace_postcode_snapshot_print();
 
     KTRACE(">> %-6s %-15s %-5s %-7s %-3s %-10s %-6s\n", "Thread", "Name", "ID", "STATE", "PRI", "PSP_ADDR", "USE(%)");
     for (u32_t i = 0u; i < THREAD_INSTANCE_SUPPORTED_NUMBER; i++) {

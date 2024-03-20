@@ -696,7 +696,7 @@ u32p_t _impl_kernal_thread_entry_trigger(os_id_t id, os_id_t release, u32_t resu
  *
  * @return The result of entry action schedule.
  */
-u32_t _impl_kernal_schedule_entry_result_read_clean(action_schedule_t *pSchedule)
+u32_t _impl_kernal_schedule_entry_result_take(action_schedule_t *pSchedule)
 {
     if (!pSchedule) {
         return 0u;

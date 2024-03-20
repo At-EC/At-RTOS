@@ -57,9 +57,13 @@ const at_rtos_api_t AtOS = {
     .msgq_get = msgq_get,
 
     .id_isInvalid = os_id_is_invalid,
-    .at_rtos_run = kernal_atos_run,
+    .kernal_run = os_kernal_run,
     .kernal_is_running = os_kernal_is_running,
     .id_current_thread = os_id_current_thread,
+
+    .trace_firmware = os_trace_firmware_print,
+    .trace_postcode = os_trace_postcode_print,
+    .trace_kernal = os_trace_kernal_print,
 };
 #endif
 
