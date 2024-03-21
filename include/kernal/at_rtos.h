@@ -276,7 +276,7 @@ static inline u32p_t timer_isBusy(os_timer_id_t id)
  */
 static inline u32_t timer_system_total_ms(void)
 {
-    return (u32_t)_impl_timer_total_system_get();
+    return (u32_t)_impl_timer_total_system_ms_get();
 }
 
 /**

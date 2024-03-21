@@ -143,10 +143,10 @@ void _impl_kernal_thread_init(void)
                     {
                         .level = OS_PRIORITY_KERNAL_THREAD_SCHEDULE_LEVEL,
                     },
-                .pEntryFunc = _impl_kernal_atos_schedule_thread,
+                .pEntryFunc = _impl_kernal_thread_schedule,
                 .pStackAddr = (u32_t *)&_kernal_schedule[0],
                 .stackSize = KERNAL_SCHEDULE_THREAD_STACK_SIZE,
-                .PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(_impl_kernal_atos_schedule_thread, (u32_t *)&_kernal_schedule[0],
+                .PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(_impl_kernal_thread_schedule, (u32_t *)&_kernal_schedule[0],
                                                                      KERNAL_SCHEDULE_THREAD_STACK_SIZE),
 
             },
@@ -163,10 +163,10 @@ void _impl_kernal_thread_init(void)
                     {
                         .level = OS_PRIORITY_KERNAL_THREAD_IDLE_LEVEL,
                     },
-                .pEntryFunc = _impl_kernal_atos_idle_thread,
+                .pEntryFunc = _impl_kernal_thread_idle,
                 .pStackAddr = (u32_t *)&_kernal_idle[0],
                 .stackSize = KERNAL_IDLE_THREAD_STACK_SIZE,
-                .PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(_impl_kernal_atos_idle_thread, (u32_t *)&_kernal_idle[0],
+                .PSPStartAddr = (u32_t)_impl_kernal_stack_frame_init(_impl_kernal_thread_idle, (u32_t *)&_kernal_idle[0],
                                                                      KERNAL_IDLE_THREAD_STACK_SIZE),
             },
     };

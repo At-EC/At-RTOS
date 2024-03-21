@@ -592,9 +592,11 @@ static u32p_t _thread_sleep_privilege_routine(arguments_t *pArgs)
  */
 b_t _impl_trace_thread_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
 {
+#if defined KTRACE
     thread_context_t *pCurThread = NULL;
     u32_t offset = 0u;
     os_id_t id = OS_INVALID_ID;
+    u32_t sv_ms = 0u;
 
     ENTER_CRITICAL_SECTION();
 
@@ -608,16 +610,21 @@ b_t _impl_trace_thread_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
         return FALSE;
     }
 
+    sv_ms = _impl_kernal_schedule_time_get();
     if (pCurThread->head.linker.pList == _thread_list_waitingHeadGet()) {
         pMsgs->pState = "wait";
+        pMsgs->thread.delay = sv_ms - pCurThread->schedule.analyze.exit_ms;
     } else if (pCurThread->head.linker.pList == _thread_list_pendingHeadGet()) {
         if (id == _thread_id_runtime_get()) {
             pMsgs->pState = "run";
+            pMsgs->thread.delay = sv_ms - pCurThread->schedule.analyze.run_ms;
         } else {
             pMsgs->pState = "pend";
+            pMsgs->thread.delay = sv_ms - pCurThread->schedule.analyze.pend_ms;
         }
     } else if (pCurThread->head.linker.pList) {
         pMsgs->pState = "wait";
+        pMsgs->thread.delay = sv_ms - pCurThread->schedule.analyze.exit_ms;
     } else {
         pMsgs->pState = "unused";
 
@@ -639,10 +646,14 @@ b_t _impl_trace_thread_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
         unused++;
     }
     unused *= sizeof(u32_t);
-    pMsgs->thread.usage = ((pCurThread->stackSize - unused) * 100u) / pCurThread->stackSize;
+    pMsgs->thread.ram = ((pCurThread->stackSize - unused) * 100u) / pCurThread->stackSize;
+    pMsgs->thread.cpu = impl_kernal_thread_use_percent_take(pCurThread->head.id);
 
     EXIT_CRITICAL_SECTION();
     return TRUE;
+#else
+    return FALSE;
+#endif
 }
 
 #ifdef __cplusplus

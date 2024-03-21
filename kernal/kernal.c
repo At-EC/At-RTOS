@@ -53,6 +53,7 @@ static kernal_context_t g_kernal_resource = {
     .current = 0u,
     .list = LIST_NULL,
     .run = FALSE,
+    .pendsv_ms = 0u,
     .member =
         {
             .pListContainer = (list_t *)&g_kernal_member_list[0],
@@ -85,13 +86,67 @@ static b_t _kernal_isInPrivilegeMode(void)
 }
 
 /**
+ * @brief Update pendsv executed time.
+ */
+static void _kernal_pendsv_time_update(void)
+{
+    g_kernal_resource.pendsv_ms = _impl_timer_total_system_ms_get();
+}
+
+/**
+ * @brief Get pendsv executed time.
+ *
+ * @return The value of pendsv executed time.
+ */
+static u32_t _kernal_pendsv_time_get(void)
+{
+    return g_kernal_resource.pendsv_ms;
+}
+
+/**
+ * @brief Kernal schedule exit time analyze.
+ */
+static void _kernal_schedule_exit_time_analyze(os_id_t id)
+{
+    /* Nothing to do */
+}
+
+/**
+ * @brief Kernal schedule entry time analyze.
+ */
+static void _kernal_schedule_entry_time_analyze(os_id_t id)
+{
+#if defined KTRACE
+    thread_context_t *pEntryThread = (thread_context_t *)_impl_kernal_member_unified_id_toContainerAddress(id);
+    pEntryThread->schedule.analyze.pend_ms = _kernal_pendsv_time_get();
+#endif
+}
+
+/**
+ * @brief Kernal schedule run time analyze.
+ */
+static void _kernal_schedule_run_time_analyze(os_id_t from, os_id_t to)
+{
+#if defined KTRACE
+    thread_context_t *pFromThread = (thread_context_t *)_impl_kernal_member_unified_id_toContainerAddress(from);
+    thread_context_t *pToThread = (thread_context_t *)_impl_kernal_member_unified_id_toContainerAddress(to);
+    u32_t sv_ms = _kernal_pendsv_time_get();
+
+    pFromThread->schedule.analyze.active_ms += (u32_t)(sv_ms - pFromThread->schedule.analyze.run_ms);
+
+    pFromThread->schedule.analyze.exit_ms = sv_ms;
+    pToThread->schedule.analyze.run_ms = sv_ms;
+#endif
+}
+
+/**
  * @brief Get the thread PSP stack address.
  *
  * @param id The thread unique id.
  *
  * @return The PSP stacke address.
  */
-u32_t *_kernal_thread_PSP_Get(os_id_t id)
+static u32_t *_kernal_thread_PSP_Get(os_id_t id)
 {
     thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_member_unified_id_toContainerAddress(id);
 
@@ -176,6 +231,7 @@ static void _kernal_thread_entry_schedule(void)
             pCurThread->schedule.hold = OS_INVALID_ID;
         }
 
+        _kernal_schedule_entry_time_analyze(pCurThread->head.id);
         _impl_kernal_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
     }
 }
@@ -207,6 +263,7 @@ static b_t _kernal_thread_exit_schedule(void)
             }
         }
 
+        _kernal_schedule_exit_time_analyze(pCurThread->head.id);
         _kernal_thread_list_transfer_toTargetBlocking((linker_head_t *)&pCurThread->head, (list_t *)pExit->pToList);
     }
 
@@ -274,6 +331,37 @@ static u32_t _kernal_member_id_toUnifiedIdRange(u8_t member_id)
 }
 
 /**
+ * @brief Get pendsv executed time.
+ *
+ * @return The value of pendsv executed time.
+ */
+u32_t _impl_kernal_schedule_time_get(void)
+{
+    return _kernal_pendsv_time_get();
+}
+
+/**
+ * @brief Kernal thread use percent value take.
+ *
+ * @return The value of thread use percent.
+ */
+u32_t impl_kernal_thread_use_percent_take(os_id_t id)
+{
+#if defined KTRACE
+    thread_context_t *pCurThread = (thread_context_t *)_impl_kernal_member_unified_id_toContainerAddress(id);
+
+    pCurThread->schedule.analyze.percent =
+        (pCurThread->schedule.analyze.active_ms * 1000u) / (_kernal_pendsv_time_get() - pCurThread->schedule.analyze.cycle_ms);
+    pCurThread->schedule.analyze.active_ms = 0u;
+    pCurThread->schedule.analyze.cycle_ms = _kernal_pendsv_time_get();
+
+    return pCurThread->schedule.analyze.percent;
+#else
+    return 0u;
+#endif
+}
+
+/**
  * @brief kernal schedule in PendSV interrupt content.
  *
  * @param ppCurThreadPsp The current thread psp address.
@@ -281,10 +369,11 @@ static u32_t _kernal_member_id_toUnifiedIdRange(u8_t member_id)
  */
 void _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
 {
+    _kernal_pendsv_time_update();
+
     if (_kernal_thread_exit_schedule()) {
         _impl_kernal_timer_schedule_request();
     }
-
     _kernal_thread_entry_schedule();
 
     os_id_t next = _kernal_thread_nextIdGet();
@@ -292,6 +381,7 @@ void _impl_kernal_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
     *ppCurPsp = (u32_t *)_kernal_thread_PSP_Get(g_kernal_resource.current);
     *ppNextPSP = (u32_t *)_kernal_thread_PSP_Get(next);
 
+    _kernal_schedule_run_time_analyze(g_kernal_resource.current, next);
     g_kernal_resource.current = next;
 }
 
@@ -765,7 +855,7 @@ static u32_t _kernal_message_arrived(void)
 /**
  * @brief The kernal thread only serve for RTOS with highest priority.
  */
-void _impl_kernal_atos_schedule_thread(void)
+void _impl_kernal_thread_schedule(void)
 {
     while (1) {
         u32p_t postcode = _kernal_message_arrived();
@@ -775,13 +865,16 @@ void _impl_kernal_atos_schedule_thread(void)
     }
 }
 
+u32_t g_idle_cnt = 0;
+
 /**
  * @brief The idle thread entry function.
  */
-void _impl_kernal_atos_idle_thread(void)
+void _impl_kernal_thread_idle(void)
 {
     while (1) {
         /* TODO: Power Management */
+        g_idle_cnt++;
     }
 }
 

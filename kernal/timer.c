@@ -42,7 +42,8 @@ _timer_resource_t g_timer_resource = {0u};
 static u32_t _timer_init_privilege_routine(arguments_t *pArgs);
 static u32_t _timer_start_privilege_routine(arguments_t *pArgs);
 static u32_t _timer_stop_privilege_routine(arguments_t *pArgs);
-static u32_t _timer_total_system_get_privilege_routine(arguments_t *pArgs);
+static u32_t _timer_total_system_ms_get_privilege_routine(arguments_t *pArgs);
+static u32_t _timer_total_system_us_get_privilege_routine(arguments_t *pArgs);
 static u32_t _kernal_timer_schedule_request_privilege_routine(arguments_t *pArgs);
 
 /**
@@ -471,9 +472,19 @@ b_t _impl_timer_status_isBusy(os_id_t id)
  *
  * @return The value of the total system time (ms).
  */
-u32_t _impl_timer_total_system_get(void)
+u32_t _impl_timer_total_system_ms_get(void)
 {
-    return _impl_kernal_privilege_invoke((const void *)_timer_total_system_get_privilege_routine, NULL);
+    return _impl_kernal_privilege_invoke((const void *)_timer_total_system_ms_get_privilege_routine, NULL);
+}
+
+/**
+ * @brief Get the kernal RTOS system time (us).
+ *
+ * @return The value of the total system time (us).
+ */
+u32_t _impl_timer_total_system_us_get(void)
+{
+    return _impl_kernal_privilege_invoke((const void *)_timer_total_system_us_get_privilege_routine, NULL);
 }
 
 /**
@@ -605,7 +616,7 @@ static u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _timer_total_system_get_privilege_routine(arguments_t *pArgs)
+static u32_t _timer_total_system_ms_get_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -619,6 +630,27 @@ static u32_t _timer_total_system_get_privilege_routine(arguments_t *pArgs)
 
     EXIT_CRITICAL_SECTION();
     return ms;
+}
+
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static u32_t _timer_total_system_us_get_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    UNUSED_MSG(pArgs);
+
+    u32_t us = (u32_t)((!g_timer_resource.remaining_us) ? (_impl_clock_time_elapsed_get()) : (0u));
+
+    us += g_timer_resource.system_us;
+
+    EXIT_CRITICAL_SECTION();
+    return us;
 }
 
 /**
@@ -748,6 +780,7 @@ void _impl_timer_elapsed_handler(u32_t elapsed_us)
  */
 b_t _impl_trace_timer_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
 {
+#if defined KTRACE
     timer_context_t *pCurTimer = NULL;
     u32_t offset = 0u;
     os_id_t id = OS_INVALID_ID;
@@ -791,6 +824,9 @@ b_t _impl_trace_timer_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
 
     EXIT_CRITICAL_SECTION();
     return TRUE;
+#else
+    return FALSE;
+#endif
 }
 
 #ifdef __cplusplus

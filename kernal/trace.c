@@ -64,11 +64,13 @@ void _impl_trace_kernal_snapshot_print(void)
     _impl_trace_firmware_snapshot_print();
     _impl_trace_postcode_snapshot_print();
 
-    KTRACE(">> %-6s %-15s %-5s %-7s %-3s %-10s %-6s\n", "Thread", "Name", "ID", "STATE", "PRI", "PSP_ADDR", "USE(%)");
+    KTRACE(">> %-6s %-15s %-5s %-7s %-3s %-10s %-7s %-9s %-10s\n", "Thread", "Name", "ID", "STATE", "PRI", "PSP_ADDR", "RAM(1%)",
+           "CPU(0.1%)", "W/P/R(ms)");
     for (u32_t i = 0u; i < THREAD_INSTANCE_SUPPORTED_NUMBER; i++) {
         if (_impl_trace_thread_snapshot(i, &snapshot_data)) {
-            KTRACE("   %-6d %-15s %-5d %-7s %-3d 0x%-8x %-3d\n", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
-                   snapshot_data.thread.priority, snapshot_data.thread.current_psp, snapshot_data.thread.usage);
+            KTRACE("   %-6d %-15s %-5d %-7s %-3d 0x%-8x %-7d %-9d %-10d\n", (i + 1u), snapshot_data.pName, snapshot_data.id,
+                   snapshot_data.pState, snapshot_data.thread.priority, snapshot_data.thread.current_psp, snapshot_data.thread.ram,
+                   snapshot_data.thread.cpu, snapshot_data.thread.delay);
         } else {
             unused[0]++;
         }

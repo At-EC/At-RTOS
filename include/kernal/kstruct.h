@@ -11,6 +11,7 @@
 #include "typedef.h"
 #include "linker.h"
 #include "unique.h"
+#include "configuration.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -154,7 +155,26 @@ typedef struct {
 } thread_entry_t;
 
 typedef struct {
+    u32_t pend_ms;
+
+    u32_t run_ms;
+
+    u32_t exit_ms;
+
+    u32_t active_ms;
+
+    u32_t cycle_ms;
+
+    u16_t percent;
+} analyze_t;
+
+typedef struct {
     os_id_t hold;
+
+#if defined KTRACE
+    analyze_t analyze;
+#endif
+
     union {
         thread_exit_t exit;
 
@@ -243,6 +263,8 @@ typedef struct {
 
     /* The kernal already start to do schedule */
     b_t run;
+
+    u32_t pendsv_ms;
 } kernal_context_t;
 
 typedef struct {

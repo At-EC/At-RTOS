@@ -361,6 +361,7 @@ static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
  */
 b_t _impl_trace_mutex_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
 {
+#if defined KTRACE
     mutex_context_t *pCurMutex = NULL;
     u32_t offset = 0u;
     os_id_t id = OS_INVALID_ID;
@@ -399,6 +400,9 @@ b_t _impl_trace_mutex_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
 
     EXIT_CRITICAL_SECTION();
     return TRUE;
+#else
+    return FALSE;
+#endif
 }
 
 #ifdef __cplusplus

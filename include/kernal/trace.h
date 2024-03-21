@@ -28,7 +28,9 @@ extern "C" {
 typedef struct {
     u32_t priority;
     u32_t current_psp;
-    u32_t usage;
+    u32_t ram;
+    u32_t cpu;
+    u32_t delay;
 } thread_snapshot_t;
 
 typedef struct {

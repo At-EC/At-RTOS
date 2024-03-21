@@ -528,6 +528,7 @@ static void _semaphore_schedule(os_id_t id)
  */
 b_t _impl_trace_semaphore_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
 {
+#if defined KTRACE
     semaphore_context_t *pCurSemaphore = NULL;
     u32_t offset = 0u;
     os_id_t id = OS_INVALID_ID;
@@ -568,6 +569,9 @@ b_t _impl_trace_semaphore_snapshot(u32_t instance, kernal_snapshot_t *pMsgs)
 
     EXIT_CRITICAL_SECTION();
     return TRUE;
+#else
+    return FALSE;
+#endif
 }
 
 #ifdef __cplusplus
