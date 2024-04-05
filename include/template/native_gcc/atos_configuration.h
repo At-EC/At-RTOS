@@ -69,45 +69,52 @@ extern "C" {
 
 /**
  * This symbol defined the thread instance number that your application is using.
- * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
+ * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual thread instance number that you created.
  **/
 #define THREAD_INSTANCE_SUPPORTED_NUMBER (20u)
 
 /**
  * This symbol defined the semaphore instance number that your application is using.
- * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
+ * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual semaphore instance number that you created.
  **/
 #define SEMAPHORE_INSTANCE_SUPPORTED_NUMBER (10u)
 
 /**
  * This symbol defined the event instance number that your application is using.
- * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
+ * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual event instance number that you created.
  **/
 #define EVENT_INSTANCE_SUPPORTED_NUMBER (10u)
 
 /**
  * This symbol defined the mutex instance number that your application is using.
- * The defaule value is set to 3. Your application will certainly need a different value so set this correctly.
+ * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual mutex instance number that you created.
  **/
 #define MUTEX_INSTANCE_SUPPORTED_NUMBER (10u)
 
 /**
  * This symbol defined the queue instance number that your application is using.
- * The defaule value is set to 5. Your application will certainly need a different value so set this correctly.
+ * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual queue instance number that you created.
  **/
 #define QUEUE_INSTANCE_SUPPORTED_NUMBER (10u)
 
 /**
  * This symbol defined the timer instance number that your application is using.
- * The defaule value is set to 5. Your application will certainly need a different value so set this correctly.
+ * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual timer instance number that you created.
  **/
 #define TIMER_INSTANCE_SUPPORTED_NUMBER (10u)
+
+/**
+ * This symbol defined the timer instance number that your application is using.
+ * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
+ * This is very often, but not always, according to the actual timer instance number that you created.
+ **/
+#define POOL_INSTANCE_SUPPORTED_NUMBER (10u)
 
 /**
  * This symbol defined your thread running mode, if the thread runs at the privileged mode.

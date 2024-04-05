@@ -170,6 +170,25 @@ void _impl_trace_kernal_snapshot_print(void)
             unused[5]++;
         }
     }
+
+    KTRACE(">> %-6s %-15s %-5s %-7s %-13s %-5s\n", "Pool", "Name", "ID", "State", "FreeBits", "Block(ID)");
+    for (u32_t i = 0u; i < POOL_INSTANCE_SUPPORTED_NUMBER; i++) {
+        if (_impl_trace_pool_snapshot(i, &snapshot_data)) {
+            KTRACE("   %-6d %-15s %-5d %-7s 0x%-11x", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
+                   snapshot_data.pool.free);
+
+            list_t *pList = (list_t *)&snapshot_data.pool.wait_list;
+            while (pList->pHead) {
+                KTRACE(" i%-5d", ((linker_head_t *)pList->pHead)->id);
+
+                pList->pHead = pList->pHead->pNext;
+            }
+            KTRACE("\n");
+        } else {
+            unused[6]++;
+        }
+    }
+
     KTRACE(">> %-9s %-6s %-6s\n", "Statistic", "Totals", "Remain");
     KTRACE("   %-9s %-6d %-6d\n", "Thread", THREAD_INSTANCE_SUPPORTED_NUMBER, unused[0]);
     KTRACE("   %-9s %-6d %-6d\n", "Semaphore", SEMAPHORE_INSTANCE_SUPPORTED_NUMBER, unused[1]);
@@ -177,6 +196,7 @@ void _impl_trace_kernal_snapshot_print(void)
     KTRACE("   %-9s %-6d %-6d\n", "Event", EVENT_INSTANCE_SUPPORTED_NUMBER, unused[3]);
     KTRACE("   %-9s %-6d %-6d\n", "Queue", QUEUE_INSTANCE_SUPPORTED_NUMBER, unused[4]);
     KTRACE("   %-9s %-6d %-6d\n", "Timer", TIMER_INSTANCE_SUPPORTED_NUMBER, unused[5]);
+    KTRACE("   %-9s %-6d %-6d\n", "Pool", POOL_INSTANCE_SUPPORTED_NUMBER, unused[6]);
 #endif
 }
 

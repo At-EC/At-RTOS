@@ -50,6 +50,8 @@ typedef struct {
 
         b_t b_val;
 
+        void *pv_val;
+
         const void *ptr_val;
 
         const char_t *pch_val;
