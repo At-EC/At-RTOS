@@ -10,7 +10,7 @@
 
 #include "kstruct.h"
 #include "arch.h"
-#include "unique.h"
+#include "ktype.h"
 #include "port.h"
 
 #ifdef __cplusplus

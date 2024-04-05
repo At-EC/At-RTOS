@@ -9,7 +9,7 @@
 #include "kernal.h"
 #include "compiler.h"
 #include "clock_tick.h"
-#include "unique.h"
+#include "ktype.h"
 #include "kthread.h"
 #include "postcode.h"
 #include "trace.h"

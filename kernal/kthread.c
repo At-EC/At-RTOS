@@ -6,7 +6,7 @@
  **/
 
 #include "at_rtos.h"
-#include "unique.h"
+#include "ktype.h"
 #include "kernal.h"
 #include "kthread.h"
 #include "postcode.h"

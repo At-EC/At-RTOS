@@ -8,7 +8,7 @@
 #include "clock_tick.h"
 #include "configuration.h"
 #include "arch.h"
-#include "unique.h"
+#include "ktype.h"
 
 #ifdef __cplusplus
 extern "C" {
