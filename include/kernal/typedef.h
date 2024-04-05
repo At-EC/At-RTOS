@@ -48,6 +48,13 @@ typedef u32_t u32p_t;
 #define TRUE true
 #endif
 
+#define U8_B  (8u)
+#define U16_B (16u)
+#define U32_B (32u)
+#define U8_V  (0xFFu)
+#define U16_V (0xFFFFu)
+#define U32_V (0xFFFFFFFFu)
+
 #define UNUSED_MSG(x) (void)(x)
 #define UNUSED_ARG    (0u)
 

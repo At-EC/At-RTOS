@@ -66,6 +66,12 @@ typedef struct {
 } queue_snapshot_t;
 
 typedef struct {
+    u32_t free;
+
+    list_t wait_list;
+} pool_snapshot_t;
+
+typedef struct {
     b_t is_cycle;
 
     u32_t timeout_ms;
@@ -86,6 +92,8 @@ typedef struct {
 
         queue_snapshot_t queue;
 
+        pool_snapshot_t pool;
+
         timer_snapshot_t timer;
     };
 } kernal_snapshot_t;
@@ -103,6 +111,7 @@ b_t _impl_trace_mutex_snapshot(u32_t instance, kernal_snapshot_t *pMsgs);
 b_t _impl_trace_event_snapshot(u32_t instance, kernal_snapshot_t *pMsgs);
 b_t _impl_trace_queue_snapshot(u32_t instance, kernal_snapshot_t *pMsgs);
 b_t _impl_trace_timer_snapshot(u32_t instance, kernal_snapshot_t *pMsgs);
+b_t _impl_trace_pool_snapshot(u32_t instance, kernal_snapshot_t *pMsgs);
 
 void _impl_trace_firmware_snapshot_print(void);
 void _impl_trace_postcode_snapshot_print(void);

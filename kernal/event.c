@@ -54,7 +54,7 @@ static list_t *_event_list_activeHeadGet(void)
 /**
  * @brief Pick up a highest priority thread that blocking by the event pending list.
  *
- * @param The semaphore unique id.
+ * @param The event unique id.
  *
  * @return The highest blocking thread head.
  */

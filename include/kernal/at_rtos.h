@@ -18,6 +18,7 @@
 #include "event.h"
 #include "mutex.h"
 #include "queue.h"
+#include "pool.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -642,6 +643,102 @@ static inline u32p_t msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bu
 }
 
 /**
+ * @brief Initialize a new pool.
+ *
+ * @param pName The pool name.
+ * @param pMemAddress The pointer of the pool buffer.
+ * @param elementLen The element size.
+ * @param elementNum The element number.
+ *
+ * @return The pool unique id.
+ **
+ * demo usage:
+ *     static u8_t g_sample_pool[3 * 10] = {0u};
+ *
+ *     os_pool_id_t sample_id = pool_init((const void*)g_sample_pool, 10u, 3u, "sample");
+ *     if (os_id_is_invalid(sample_id)) {
+ *         printf("Memory pool %s init failed\n", sample_id.pName);
+ *     }
+ */
+static inline os_pool_id_t pool_init(const void *pMemAddress, u16_t elementLen, u16_t elementNum, const char_t *pName)
+{
+    os_pool_id_t id = {0u};
+
+    id.val = _impl_pool_init(pMemAddress, elementLen, elementNum, pName);
+    id.number = _impl_pool_os_id_to_number(id.val);
+    id.pName = pName;
+
+    return id;
+}
+
+/**
+ * @brief Take a message pool resource.
+ *
+ * @param id The pool unique id.
+ * @param ppUserBuffer The dual pointer of the message memory address.
+ * @param pBufferSize The pointer of the message memory size.
+ * @param timeout_ms The pool take timeout option.
+ *
+ * @return The result of the operation.
+ **
+ * demo usage:
+ *
+ *     u8_t* pTakeMem = NULL;
+ *     u32p_t postcode = pool_take(sample_id, (void **)&pTakeMem, 10u, OS_WAIT_FOREVER);
+ *     if (PC_IOK(postcode)) {
+ *         printf("Memory pool take successful\n");
+ *     } else {
+ *         printf("Memory pool take error: 0x%x\n", postcode);
+ *     }
+ *
+ *     u32p_t postcode = pool_take(sample_id, (void **)&pTakeMem, 10u, 2000u);
+ *     if (PC_IOK(postcode)) {
+ *         if (postcode == PC_SC_TIMEOUT) {
+ *             printf("Memory pool take timeout\n");
+ *         } else {
+ *             printf("Memory pool take successful\n");
+ *         }
+ *     } else {
+ *         printf("Memory pool take error: 0x%x\n", postcode);
+ *     }
+ */
+static inline u32p_t pool_take(os_pool_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms)
+{
+    return (u32p_t)_impl_pool_take(id.val, ppUserBuffer, bufferSize, timeout_ms);
+}
+
+/**
+ * @brief Release memory pool.
+ *
+ * @param id The pool unique id.
+ * @param ppUserBuffer The dual pointer of the message memory address.
+ *
+ * @return The result of the operation.
+ **
+ * demo usage:
+ *
+ *     u8_t* pTakeMem = NULL;
+ *     u32p_t postcode = pool_take(sample_id, (void **)&pTakeMem, 10u, OS_WAIT_FOREVER);
+ *     if (PC_IOK(postcode)) {
+ *         printf("Memory pool take successful\n");
+ *
+ *         u32p_t postcode = pool_release(sample_id, (void **)&pTakeMem);
+ *         if (PC_IOK(postcode)) {
+ *             printf("Memory pool release successful\n");
+ *         } else {
+ *              printf("Memory pool release error: 0x%x\n", postcode);
+ *         }
+ *
+ *     } else {
+ *         printf("Memory pool take error: 0x%x\n", postcode);
+ *     }
+ */
+static inline u32p_t pool_release(os_pool_id_t id, void **ppUserBuffer)
+{
+    return (u32p_t)_impl_pool_release(id.val, ppUserBuffer);
+}
+
+/**
  * @brief Check if the thread unique id if is's invalid.
  *
  * @param id The provided unique id.
@@ -781,10 +878,14 @@ typedef struct {
     u32p_t (*msgq_put)(os_msgq_id_t, const u8_t *, u16_t, b_t, u32_t);
     u32p_t (*msgq_get)(os_msgq_id_t, const u8_t *, u16_t, b_t, u32_t);
 
+    os_pool_id_t (*pool_init)(const void *, u16_t, u16_t, const char_t *);
+    u32p_t (*pool_take)(os_pool_id_t, void **, u16_t, u32_t);
+    u32p_t (*pool_release)(os_pool_id_t, void **);
+
     b_t (*id_isInvalid)(struct os_id);
     os_thread_id_t (*id_current_thread)(void);
-    u32p_t (*kernal_run)(void);
-    b_t (*kernal_is_running)(void);
+    u32p_t (*schedule_run)(void);
+    b_t (*schedule_is_running)(void);
 
     void (*trace_firmware)(void);
     void (*trace_postcode)(void);

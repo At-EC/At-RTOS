@@ -44,6 +44,7 @@ And the keywords of the At-RTOS is shown as following lists.
 * **Binary and Counting Semaphores:** It provides selectable counting and binary semaphore for thread communication in the system.
 * **Queue Messages:** It's for thread-safe communication.
 * **Multiple Events:** It's for thread-safe communication.
+* **Memory Pools:** It's for thread memory pool resource management.
 * **Software Timers with callback:** It supports your varity time requirements application.
 * **Fully configurable (ROM and RAM):** No limits on number of At-RTOS objects, except your devices' available memory.
 * **Tiny footprint:** It has low ROM/RAM consumption.
@@ -158,6 +159,7 @@ The symbols in the configuration header file look like this `<kernal component>_
 - MUTEX
 - QUEUE
 - TIMER
+- POOL
 - ...
 
 The more details you can see the descriptions in the template file [atos_configuration.h](./include/template/atos_configuration.h).
@@ -172,10 +174,10 @@ The following sample codes illustrates how to create your first thread:
 #include "at_rtos.h"
 
 /* Define a thread hook to specific the stack size and prioriy of the thread */
-ATOS_THREAD_DEFINE(first_thread, 1024, 7); // Set the thread stack size to 1024 bytes and the schedule prioriy level to 7.
+ATOS_THREAD_DEFINE(your_thread_define, 1024, 7); // Set the thread stack size to 1024 bytes and the schedule prioriy level to 7.
 
 /* User thread's entry function. */
-static void first_thread_entry_function(void)
+static void your_thread_entry_function(void)
 {
     while(1) {
         AtOS.thread_sleep(1000u);
@@ -185,14 +187,14 @@ static void first_thread_entry_function(void)
 /* The main routine */
 int main(void)
 {
-    /* Initialize the your first thread. */
-    os_thread_id_t first_id = AtOS.thread_init(first_thread, first_thread_entry_function);
-    if (AtOS.id_isInvalid(first_id)) {
-        printf("Thread %s init failed\n", first_id.pName);
+    /* Initialize the your your thread. */
+    os_thread_id_t your_thread_id = AtOS.thread_init(your_thread_define, your_thread_entry_function);
+    if (AtOS.id_isInvalid(your_thread_id)) {
+        printf("Thread %s init failed\n", your_thread_id.pName);
     }
 	
     /* The At-RTOS kernal schedule starts to run. */
-    AtOS.at_rtos_run();
+    AtOS.schedule_run();
 }
 ```
 

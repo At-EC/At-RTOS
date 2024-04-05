@@ -51,6 +51,7 @@ enum {
     PC_CMPT_QUEUE_5,
     PC_CMPT_EVENT_6,
     PC_CMPT_TIMER_7,
+    PC_CMPT_POOL_8,
 
     PC_CMPT_ASSERT_8,
 

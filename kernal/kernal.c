@@ -34,6 +34,7 @@ static kernal_member_setting_t g_kernal_member_setting[KERNAL_MEMBER_NUMBER] = {
     [KERNAL_MEMBER_MUTEX] = {KERNAL_MEMBER_MAP_5, (SBITS(KERNAL_MEMBER_LIST_MUTEX_LOCK, KERNAL_MEMBER_LIST_MUTEX_UNLOCK))},
     [KERNAL_MEMBER_EVENT] = {KERNAL_MEMBER_MAP_6, (SBITS(KERNAL_MEMBER_LIST_EVENT_INACTIVE, KERNAL_MEMBER_LIST_EVENT_ACTIVE))},
     [KERNAL_MEMBER_QUEUE] = {KERNAL_MEMBER_MAP_7, (SBIT(KERNAL_MEMBER_LIST_QUEUE_INIT))},
+    [KERNAL_MEMBER_POOL] = {KERNAL_MEMBER_MAP_8, (SBIT(KERNAL_MEMBER_LIST_POOL_INIT))},
 };
 
 /**
@@ -865,8 +866,6 @@ void _impl_kernal_thread_schedule(void)
     }
 }
 
-u32_t g_idle_cnt = 0;
-
 /**
  * @brief The idle thread entry function.
  */
@@ -874,7 +873,6 @@ void _impl_kernal_thread_idle(void)
 {
     while (1) {
         /* TODO: Power Management */
-        g_idle_cnt++;
     }
 }
 

@@ -88,6 +88,10 @@ typedef struct {
 } action_queue_t;
 
 typedef struct {
+    void **ppUserMemAddress;
+} action_pool_t;
+
+typedef struct {
     /* A common struct head to link with other context */
     linker_head_t head;
 
@@ -109,6 +113,20 @@ typedef struct {
     /* The blocked thread list */
     list_t outBlockingThreadListHead;
 } queue_context_t;
+
+typedef struct {
+    linker_head_t head;
+
+    const void *pMemAddress;
+
+    u16_t elementLength;
+
+    u16_t elementNumber;
+
+    u32_t elementFreeBits;
+
+    list_t blockingThreadHead;
+} pool_context_t;
 
 typedef struct {
     /* Current thread listen which bits in the event */
@@ -200,6 +218,8 @@ typedef struct {
 
     action_queue_t queue;
 
+    action_pool_t pool;
+
     action_schedule_t schedule;
 } thread_context_t;
 
@@ -212,6 +232,7 @@ enum {
     KERNAL_MEMBER_MUTEX,
     KERNAL_MEMBER_EVENT,
     KERNAL_MEMBER_QUEUE,
+    KERNAL_MEMBER_POOL,
     KERNAL_MEMBER_NUMBER,
 };
 
@@ -236,6 +257,8 @@ enum {
     KERNAL_MEMBER_LIST_EVENT_ACTIVE,
 
     KERNAL_MEMBER_LIST_QUEUE_INIT,
+
+    KERNAL_MEMBER_LIST_POOL_INIT,
     KERNAL_MEMBER_LIST_NUMBER,
 };
 

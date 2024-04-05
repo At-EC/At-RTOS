@@ -56,9 +56,13 @@ const at_rtos_api_t AtOS = {
     .msgq_put = msgq_put,
     .msgq_get = msgq_get,
 
+    .pool_init = pool_init,
+    .pool_take = pool_take,
+    .pool_release = pool_release,
+
     .id_isInvalid = os_id_is_invalid,
-    .kernal_run = os_kernal_run,
-    .kernal_is_running = os_kernal_is_running,
+    .schedule_run = os_kernal_run,
+    .schedule_is_running = os_kernal_is_running,
     .id_current_thread = os_id_current_thread,
 
     .trace_firmware = os_trace_firmware_print,
