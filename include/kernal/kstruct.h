@@ -10,7 +10,7 @@
 
 #include "typedef.h"
 #include "linker.h"
-#include "unique.h"
+#include "ktype.h"
 #include "configuration.h"
 
 #ifdef __cplusplus

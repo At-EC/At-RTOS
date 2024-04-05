@@ -198,6 +198,16 @@ int main(void)
 }
 ```
 
+Note that: The following c/h files path must be included/contained in your project workshop.
+
+- `<root path>`\At-RTOS\
+- `<root path>`\At-RTOS\include\
+- `<root path>`\At-RTOS\include\kernal\
+- `<root path>`\At-RTOS\kernal\*.c
+- `<root path>`\At-RTOS\clock\clock_systick.c
+- `<root path>`\At-RTOS\port\port_common.c
+- `<root path>`\At-RTOS\port\<your compiler>.c
+
 ## Roadmap
 
 The At-EC roadmap documentation is not ready. The At-RTOS is a beginning and basic component and will be an important member of the At-EC family.

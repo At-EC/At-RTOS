@@ -1,7 +1,7 @@
 {
     "name":  "At-RTOS",
     "homepage":  "https://github.com/At-EC/At-RTOS",
-    "version":  "1.4.0",
-    "timestamp":  "2024-04-05,07:48",
-    "commit_id":  "d0cbaa3b6e653ecbe12e584dfdadd03e7390e313"
+    "version":  "1.4.1",
+    "timestamp":  "2024-04-05,20:05",
+    "commit_id":  "fe6628654a1cb3f630dadb8ef8b9a55b71ee238d"
 }

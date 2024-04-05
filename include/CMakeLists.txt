@@ -23,7 +23,7 @@ target_sources(kernal_include
     ${KERNAL_PATH}/include/kernal/timer.h
     ${KERNAL_PATH}/include/kernal/trace.h
     ${KERNAL_PATH}/include/kernal/typedef.h
-    ${KERNAL_PATH}/include/kernal/unique.h
+    ${KERNAL_PATH}/include/kernal/ktype.h
     ${KERNAL_PATH}/include/kernal/kthread.h
     ${KERNAL_PATH}/include/kernal/pool.h
 )

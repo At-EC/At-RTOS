@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  **/
 
-#ifndef _UNIQUE_H_
-#define _UNIQUE_H_
+#ifndef _KTYPE_H_
+#define _KTYPE_H_
 
 #include "typedef.h"
 
@@ -82,4 +82,4 @@ os_id_t _impl_kernal_thread_runIdGet(void);
 }
 #endif
 
-#endif /* _UNIQUE_H_ */
+#endif /* _KTYPE_H_ */

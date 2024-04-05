@@ -8,7 +8,7 @@
 #ifndef _AT_RTOS_H_
 #define _AT_RTOS_H_
 
-#include "unique.h"
+#include "ktype.h"
 #include "configuration.h"
 #include "postcode.h"
 #include "trace.h"
