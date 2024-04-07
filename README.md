@@ -153,7 +153,7 @@ At-RTOS ported a template At-RTOS configuration header file [atos_configuration.
 
 Your application will certainly need a different value so set the kernal component instance number correctly. This is very often, but not always. It's according to your system design.
 The symbols in the configuration header file look like this `<kernal component>_INSTANCE_SUPPORTED_NUMBER`, and the kernal component is shown as following table:
-- Thread
+- THREAD
 - SEMAPHORE
 - EVENT
 - MUTEX
@@ -203,7 +203,7 @@ Note that: The following c/h files path must be included/contained in your proje
 - `<root path>`\At-RTOS\
 - `<root path>`\At-RTOS\include\
 - `<root path>`\At-RTOS\include\kernal\
-- `<root path>`\At-RTOS\kernal\*.c
+- `<root path>`\At-RTOS\kernal\<all>.c
 - `<root path>`\At-RTOS\clock\clock_systick.c
 - `<root path>`\At-RTOS\port\port_common.c
 - `<root path>`\At-RTOS\port\<your compiler>.c

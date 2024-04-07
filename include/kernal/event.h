@@ -18,9 +18,9 @@ extern "C" {
  * The implement function lists for rtos kernal internal use.
  */
 u32_t _impl_event_os_id_to_number(os_id_t id);
-os_id_t _impl_event_init(u32_t edge, pEvent_callbackFunc_t pCallFun, const char_t *pName);
-u32p_t _impl_event_set(os_id_t id, u32_t event);
-u32p_t _impl_event_wait(os_id_t id, u32_t *pEvent, u32_t trigger, u32_t listen, u32_t timeout_ms);
+os_id_t _impl_event_init(u32_t edgeMask, u32_t clearMask, const char_t *pName);
+u32p_t _impl_event_set(os_id_t id, u32_t set, u32_t clear, u32_t toggle);
+u32p_t _impl_event_wait(os_id_t id, u32_t *pData, u32_t desired, u32_t listen, u32_t timeout_ms);
 
 #ifdef __cplusplus
 }

@@ -456,24 +456,26 @@ static inline u32p_t mutex_unlock(os_mutex_id_t id)
 /**
  * @brief Initialize a new event.
  *
+ * @param edgeMask Specific the event desired condition of edge or level.
+ * @param clrDisMask Disable automatically clear the set events.
  * @param pName The event name.
- * @param edge Callback function trigger edge condition.
  *
  * @return The event unique id.
+ *
  **
  * demo usage:
  *
- *     os_evt_id_t sample_id = evt_init(0u, NULL, "sample");
+ *     os_evt_id_t sample_id = evt_init(0u, 0u, "sample");
  *     if (os_id_is_invalid(sample_id)) {
  *         printf("Event %s init failed\n", sample_id.pName);
  *     }
  *     ...
  */
-static inline os_evt_id_t evt_init(u32_t edge, pEvent_callbackFunc_t pCallFun, const char_t *pName)
+static inline os_evt_id_t evt_init(u32_t edgeMask, u32_t clrDisMask, const char_t *pName)
 {
     os_msgq_id_t id = {0u};
 
-    id.val = _impl_event_init(edge, pCallFun, pName);
+    id.val = _impl_event_init(edgeMask, clrDisMask, pName);
     id.number = _impl_event_os_id_to_number(id.val);
     id.pName = pName;
 
@@ -481,33 +483,35 @@ static inline os_evt_id_t evt_init(u32_t edge, pEvent_callbackFunc_t pCallFun, c
 }
 
 /**
- * @brief Set a event value.
+ * @brief Set/clear/toggle a event bits.
  *
  * @param id The event unique id.
- * @param id The event value.
+ * @param set The event value bits set.
+ * @param clear The event value bits clear.
+ * @param toggle The event value bits toggle.
  *
  * @return The result of the operation.
  **
  * demo usage:
  *
- *     u32p_t postcode = evt_set(sample_id, 0x01u);
+ *     u32p_t postcode = evt_set(sample_id, 0x01u, 0u, 0u);
  *     if (PC_IOK(postcode)) {
  *         printf("Event set successful\n");
  *     } else {
  *         printf("Event set error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t evt_set(os_evt_id_t id, u32_t event)
+static inline u32p_t evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t toggle)
 {
-    return (u32p_t)_impl_event_set(id.val, event);
+    return (u32p_t)_impl_event_set(id.val, set, clear, toggle);
 }
 
 /**
- * @brief Wait a target event.
+ * @brief Wait a desired single or group event bits.
  *
  * @param id The event unique id.
- * @param pEvent The pointer of event value.
- * @param trigger If the trigger is not zero, All changed bits seen can wake up the thread to handle event.
+ * @param pEvtData The pointer of event value.
+ * @param desired If the desired is not zero, All changed bits seen can wake up the thread to handle event.
  * @param listen Current thread listen which bits in the event.
  * @param timeout_ms The event wait timeout setting.
  *
@@ -534,9 +538,9 @@ static inline u32p_t evt_set(os_evt_id_t id, u32_t event)
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t evt_wait(os_evt_id_t id, u32_t *pEvent, u32_t trigger, u32_t listen, u32_t timeout_ms)
+static inline u32p_t evt_wait(os_evt_id_t id, u32_t *pEvtData, u32_t desired, u32_t listen, u32_t timeout_ms)
 {
-    return (u32p_t)_impl_event_wait(id.val, pEvent, trigger, listen, timeout_ms);
+    return (u32p_t)_impl_event_wait(id.val, pEvtData, desired, listen, timeout_ms);
 }
 
 /**
@@ -870,8 +874,8 @@ typedef struct {
     u32p_t (*mutex_lock)(os_mutex_id_t);
     u32p_t (*mutex_unlock)(os_mutex_id_t);
 
-    os_evt_id_t (*evt_init)(u32_t, pEvent_callbackFunc_t, const char_t *);
-    u32p_t (*evt_set)(os_evt_id_t, u32_t);
+    os_evt_id_t (*evt_init)(u32_t, u32_t, const char_t *);
+    u32p_t (*evt_set)(os_evt_id_t, u32_t, u32_t, u32_t);
     u32p_t (*evt_wait)(os_evt_id_t, u32_t *, u32_t, u32_t, u32_t);
 
     os_msgq_id_t (*msgq_init)(const void *, u16_t, u16_t, const char_t *);

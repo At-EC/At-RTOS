@@ -129,14 +129,17 @@ typedef struct {
 } pool_context_t;
 
 typedef struct {
+    /* The event last value */
+    u32_t last;
+
     /* Current thread listen which bits in the event */
     u32_t listen;
 
     /* If the trigger is not zero, All changed bits seen can wake up the thread to handle event */
-    u32_t trigger;
+    u32_t desired;
 
     /* The value store which bits store until it's meet with the group setting it's can be clean */
-    u32_t *pStore;
+    u32_t *pEvtData;
 } action_event_t;
 
 typedef struct {
@@ -144,13 +147,19 @@ typedef struct {
     linker_head_t head;
 
     /* The event value */
-    u32_t set;
+    u32_t value;
 
-    /* Indicate which bit change can trigger event callback function */
-    u32_t edge;
+    /* Specific the event trigger condition of edge or level. */
+    u32_t edgeMask;
+
+    /* Automatically clear the event value. */
+    u32_t clearMask;
 
     /* When the event change that meet with edge setting, the function will be called */
-    pEvent_callbackFunc_t pCallbackFunc;
+    struct callFun {
+        list_node_t node;
+        pEvent_callbackFunc_t pCallbackFunc;
+    } call;
 
     /* The blocked thread list */
     list_t blockingThreadHead;
@@ -253,7 +262,7 @@ enum {
     KERNAL_MEMBER_LIST_MUTEX_LOCK,
     KERNAL_MEMBER_LIST_MUTEX_UNLOCK,
 
-    KERNAL_MEMBER_LIST_EVENT_INACTIVE,
+    KERNAL_MEMBER_LIST_EVENT_INIT,
     KERNAL_MEMBER_LIST_EVENT_ACTIVE,
 
     KERNAL_MEMBER_LIST_QUEUE_INIT,
