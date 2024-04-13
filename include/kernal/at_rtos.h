@@ -511,8 +511,9 @@ static inline u32p_t evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t toggl
  *
  * @param id The event unique id.
  * @param pEvtData The pointer of event value.
- * @param desired If the desired is not zero, All changed bits seen can wake up the thread to handle event.
- * @param listen Current thread listen which bits in the event.
+ * @param desired_val If the desired is not zero, All changed bits seen can wake up the thread to handle event.
+ * @param listen_mask Current thread listen which bits in the event.
+ * @param group_mask To define a group event.
  * @param timeout_ms The event wait timeout setting.
  *
  * @return The result of the operation.
@@ -520,14 +521,14 @@ static inline u32p_t evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t toggl
  * demo usage:
  *
  *     u32_t event = 0u;
- *     u32p_t postcode = evt_wait(sample_id, &event, 0x01u, 0x01u, OS_WAIT_FOREVER);
+ *     u32p_t postcode = evt_wait(sample_id, &event, 0xFFFFFFFu, 0x01u, 0x01u, OS_WAIT_FOREVER);
  *     if (PC_IOK(postcode)) {
  *         printf("Event wait successful, The event value is 0x%x\n", event);
  *     } else {
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  *
- *     u32p_t postcode = evt_wait(sample_id, &event, 0x01u, 0x01u, 1000u);
+ *     u32p_t postcode = evt_wait(sample_id, &event, 0xFFFFFFFu, 0x03u, 0x03u, 1000u);
  *     if (PC_IOK(postcode)) {
  *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Event wait timeout\n");
@@ -538,9 +539,10 @@ static inline u32p_t evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t toggl
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t evt_wait(os_evt_id_t id, u32_t *pEvtData, u32_t desired, u32_t listen, u32_t timeout_ms)
+static inline u32p_t evt_wait(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t desired_val, u32_t listen_mask, u32_t group_mask,
+                              u32_t timeout_ms)
 {
-    return (u32p_t)_impl_event_wait(id.val, pEvtData, desired, listen, timeout_ms);
+    return (u32p_t)_impl_event_wait(id.val, pEvtData, desired_val, listen_mask, group_mask, timeout_ms);
 }
 
 /**
@@ -876,7 +878,7 @@ typedef struct {
 
     os_evt_id_t (*evt_init)(u32_t, u32_t, const char_t *);
     u32p_t (*evt_set)(os_evt_id_t, u32_t, u32_t, u32_t);
-    u32p_t (*evt_wait)(os_evt_id_t, u32_t *, u32_t, u32_t, u32_t);
+    u32p_t (*evt_wait)(os_evt_id_t, os_evt_val_t *, u32_t, u32_t, u32_t, u32_t);
 
     os_msgq_id_t (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
     u32p_t (*msgq_put)(os_msgq_id_t, const u8_t *, u16_t, b_t, u32_t);

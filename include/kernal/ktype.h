@@ -41,6 +41,11 @@ typedef struct os_id os_pool_id_t;
 typedef struct os_priority os_priority_t;
 typedef struct os_time os_time_t;
 
+typedef struct {
+    u32_t value;
+    u32_t defer;
+} os_evt_val_t;
+
 #define OS_INVALID_ID_VAL (0xFFFFFFFFu)
 
 #define OS_TIME_INVALID_VAL (0xFFFFFFFFu)

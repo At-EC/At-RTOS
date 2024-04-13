@@ -129,17 +129,17 @@ typedef struct {
 } pool_context_t;
 
 typedef struct {
-    /* The event last value */
-    u32_t last;
-
-    /* Current thread listen which bits in the event */
-    u32_t listen;
-
-    /* If the trigger is not zero, All changed bits seen can wake up the thread to handle event */
+    /* the desired bits*/
     u32_t desired;
 
-    /* The value store which bits store until it's meet with the group setting it's can be clean */
-    u32_t *pEvtData;
+    /* the listen bits*/
+    u32_t listen;
+
+    /* If the group bits are not zero, all correspond changed bits seen can wake up the thread to handle event */
+    u32_t group;
+
+    /* The user value pointer, the user only can access it until it meets with the group setting so that it can be clean */
+    os_evt_val_t *pEvtVal;
 } action_event_t;
 
 typedef struct {
@@ -148,6 +148,9 @@ typedef struct {
 
     /* The event value */
     u32_t value;
+
+    /* The event defer value */
+    u32_t defer;
 
     /* Specific the event trigger condition of edge or level. */
     u32_t edgeMask;

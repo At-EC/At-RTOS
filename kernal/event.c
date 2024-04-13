@@ -216,14 +216,15 @@ u32p_t _impl_event_set(os_id_t id, u32_t set, u32_t clear, u32_t toggle)
  * @brief Wait a target event.
  *
  * @param id The event unique id.
- * @param pData The pointer of event value.
- * @param desired If the desired is not zero, All changed bits seen can wake up the thread to handle event.
- * @param listen Current thread listen which bits in the event.
+ * @param pEvtData The pointer of event value.
+ * @param desired_val If the desired is not zero, All changed bits seen can wake up the thread to handle event.
+ * @param listen_mask Current thread listen which bits in the event.
+ * @param group_mask To define a group event.
  * @param timeout_ms The event wait timeout setting.
  *
  * @return The result of the operation.
  */
-u32p_t _impl_event_wait(os_id_t id, u32_t *pEvtData, u32_t desired, u32_t listen, u32_t timeout_ms)
+u32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t desired_val, u32_t listen_mask, u32_t group_mask, u32_t timeout_ms)
 {
     if (_event_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
@@ -246,8 +247,8 @@ u32p_t _impl_event_wait(os_id_t id, u32_t *pEvtData, u32_t desired, u32_t listen
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},     [1] = {.u32_val = (u32_t)pEvtData},   [2] = {.u32_val = (u32_t)desired},
-        [3] = {.u32_val = (u32_t)listen}, [4] = {.u32_val = (u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)id},          [1] = {.pv_val = (void *)pEvtData},   [2] = {.u32_val = (u32_t)desired_val},
+        [3] = {.u32_val = (u32_t)listen_mask}, [4] = {.u32_val = (u32_t)group_mask}, [5] = {.u32_val = (u32_t)timeout_ms},
     };
 
     u32p_t postcode = _impl_kernal_privilege_invoke((const void *)_event_wait_privilege_routine, arguments);
@@ -335,8 +336,9 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
     u32p_t postcode = PC_SC_SUCCESS;
     event_context_t *pCurEvent = NULL;
     u32_t value = 0u;
-    u32_t change = 0u;
-    u32_t trigger = 0u;
+    u32_t defer = 0u;
+    u32_t report = 0u;
+    u32_t reported = 0u;
 
     pCurEvent = _event_object_contextGet(id);
 
@@ -347,36 +349,34 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
     value |= set;
     /* toggle bits */
     value ^= toggle;
-    change = (u32_t)(value ^ pCurEvent->value);
 
-    /* edge trigger */
-    trigger = (u32_t)(change & pCurEvent->edgeMask);
+    /* Calculate defer bits */
+    defer = pCurEvent->defer;
+    defer |= (u32_t)(value ^ pCurEvent->value);
 
-    /* level trigger */
-    trigger |= (u32_t)(value & (~pCurEvent->edgeMask));
+    /* Calculate triggered report bits */
+    report = (u32_t)(defer & pCurEvent->edgeMask);     // Edge trigger
+    report |= (u32_t)(value & (~pCurEvent->edgeMask)); // Level trigger
 
     list_iterator_t it = {0u};
     list_iterator_init(&it, _event_list_blockingHeadGet(id));
     thread_context_t *pCurThread = (thread_context_t *)list_iterator_next(&it);
     while (pCurThread) {
-        b_t isTrigger = FALSE;
+        u32_t unreported = ~(report ^ pCurThread->event.desired) & pCurThread->event.listen;
 
-        *pCurThread->event.pEvtData |= (u32_t)(trigger & pCurThread->event.listen);
+        if (unreported) {
+            pCurThread->event.pEvtVal->value |= unreported;
+            reported |= unreported;
 
-        if (pCurThread->event.desired) {
-            if (pCurThread->event.desired == (*pCurThread->event.pEvtData & pCurThread->event.desired)) {
-                /* Group trigger */
-                isTrigger = TRUE;
+            if (pCurThread->event.group) { // Group event
+                if (pCurThread->event.group == (pCurThread->event.pEvtVal->value & pCurThread->event.group)) {
+                    _impl_kernal_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _event_schedule);
+                }
+            } else {
+                if (pCurThread->event.pEvtVal->value) { // Single event
+                    _impl_kernal_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _event_schedule);
+                }
             }
-        } else {
-            if (*pCurThread->event.pEvtData) {
-                /* Single trigger */
-                isTrigger = TRUE;
-            }
-        }
-
-        if (isTrigger) {
-            postcode = _impl_kernal_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _event_schedule);
         }
 
         if (PC_IER(postcode)) {
@@ -386,7 +386,10 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
     }
 
     pCurEvent->value = value;
-    pCurEvent->value &= ~(trigger & pCurEvent->clearMask);
+    pCurEvent->value &= ~(reported & pCurEvent->clearMask); // Clear reported value
+
+    pCurEvent->defer = defer;
+    pCurEvent->defer &= ~reported; // Clear reported defer
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -404,18 +407,43 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    u32_t *pEvtData = (u32_t *)pArgs[1].u32_val;
-    u32_t trigger = (u32_t)pArgs[2].u32_val;
+    os_evt_val_t *pEvtData = (os_evt_val_t *)pArgs[1].pv_val;
+    u32_t desired = (u32_t)pArgs[2].u32_val;
     u32_t listen = (u32_t)pArgs[3].u32_val;
-    u32_t timeout_ms = (u32_t)pArgs[4].u32_val;
+    u32_t group = (u32_t)pArgs[4].u32_val;
+    u32_t timeout_ms = (u32_t)pArgs[5].u32_val;
     thread_context_t *pCurThread = NULL;
+    event_context_t *pCurEvent = NULL;
+    u32_t report = 0u;
+    u32_t reported = 0u;
     u32p_t postcode = PC_SC_SUCCESS;
 
+    pCurEvent = _event_object_contextGet(id);
     pCurThread = _impl_kernal_thread_runContextGet();
     pCurThread->event.listen = listen;
-    pCurThread->event.desired = trigger;
-    pCurThread->event.pEvtData = pEvtData;
-    *pCurThread->event.pEvtData = 0u;
+    pCurThread->event.desired = desired;
+    pCurThread->event.group = group;
+    pCurThread->event.pEvtVal = pEvtData;
+
+    report = (u32_t)(pCurEvent->defer & pCurEvent->edgeMask);     // Edge trigger
+    report |= (u32_t)(pCurEvent->value & (~pCurEvent->edgeMask)); // Level trigger
+
+    reported = ~(report ^ desired) & listen;
+    if (reported) {
+        pCurThread->event.pEvtVal->value = reported;
+        pCurEvent->defer &= ~reported;                          // Clear reported defer
+        pCurEvent->value &= ~(reported & pCurEvent->clearMask); // Clear reported value
+
+        if (!group) {
+            EXIT_CRITICAL_SECTION();
+            return postcode;
+        }
+
+        if (group == (reported & group)) {
+            EXIT_CRITICAL_SECTION();
+            return postcode;
+        }
+    }
 
     postcode =
         _impl_kernal_thread_exit_trigger(pCurThread->head.id, id, _event_list_blockingHeadGet(id), timeout_ms, _event_callback_fromTimeOut);
