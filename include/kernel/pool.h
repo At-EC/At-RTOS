@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 /**
- * The implement function lists for rtos kernal internal use.
+ * The implement function lists for rtos kernel internal use.
  */
 u32_t _impl_pool_os_id_to_number(os_id_t id);
 os_id_t _impl_pool_init(const void *pMemAddr, u16_t elementLen, u16_t elementNum, const char_t *pName);

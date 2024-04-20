@@ -9,7 +9,7 @@ jobs:
         path:
           - check: './include'
             exclude: ''              # Nothing to exclude
-          - check: './kernal'
+          - check: './kernel'
             exclude: ''              # Nothing to exclude
           - check: './clock'
             exclude: ''              # Nothing to exclude

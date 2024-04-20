@@ -235,72 +235,72 @@ typedef struct {
     action_schedule_t schedule;
 } thread_context_t;
 
-/** @brief The kernal object type enum. */
+/** @brief The kernel object type enum. */
 enum {
-    KERNAL_MEMBER_THREAD = 0u,
-    KERNAL_MEMBER_TIMER_INTERNAL,
-    KERNAL_MEMBER_TIMER,
-    KERNAL_MEMBER_SEMAPHORE,
-    KERNAL_MEMBER_MUTEX,
-    KERNAL_MEMBER_EVENT,
-    KERNAL_MEMBER_QUEUE,
-    KERNAL_MEMBER_POOL,
-    KERNAL_MEMBER_NUMBER,
+    KERNEL_MEMBER_THREAD = 0u,
+    KERNEL_MEMBER_TIMER_INTERNAL,
+    KERNEL_MEMBER_TIMER,
+    KERNEL_MEMBER_SEMAPHORE,
+    KERNEL_MEMBER_MUTEX,
+    KERNEL_MEMBER_EVENT,
+    KERNEL_MEMBER_QUEUE,
+    KERNEL_MEMBER_POOL,
+    KERNEL_MEMBER_NUMBER,
 };
 
 enum {
-    KERNAL_MEMBER_LIST_THREAD_WAIT = 0u,
-    KERNAL_MEMBER_LIST_THREAD_ENTRY,
-    KERNAL_MEMBER_LIST_THREAD_EXIT,
+    KERNEL_MEMBER_LIST_THREAD_WAIT = 0u,
+    KERNEL_MEMBER_LIST_THREAD_ENTRY,
+    KERNEL_MEMBER_LIST_THREAD_EXIT,
 
-    KERNAL_MEMBER_LIST_TIMER_STOP,
-    KERNAL_MEMBER_LIST_TIMER_WAIT,
-    KERNAL_MEMBER_LIST_TIMER_END,
-    KERNAL_MEMBER_LIST_TIMER_PEND,
-    KERNAL_MEMBER_LIST_TIMER_RUN,
+    KERNEL_MEMBER_LIST_TIMER_STOP,
+    KERNEL_MEMBER_LIST_TIMER_WAIT,
+    KERNEL_MEMBER_LIST_TIMER_END,
+    KERNEL_MEMBER_LIST_TIMER_PEND,
+    KERNEL_MEMBER_LIST_TIMER_RUN,
 
-    KERNAL_MEMBER_LIST_SEMAPHORE_LOCK,
-    KERNAL_MEMBER_LIST_SEMAPHORE_UNLOCK,
+    KERNEL_MEMBER_LIST_SEMAPHORE_LOCK,
+    KERNEL_MEMBER_LIST_SEMAPHORE_UNLOCK,
 
-    KERNAL_MEMBER_LIST_MUTEX_LOCK,
-    KERNAL_MEMBER_LIST_MUTEX_UNLOCK,
+    KERNEL_MEMBER_LIST_MUTEX_LOCK,
+    KERNEL_MEMBER_LIST_MUTEX_UNLOCK,
 
-    KERNAL_MEMBER_LIST_EVENT_INIT,
-    KERNAL_MEMBER_LIST_EVENT_ACTIVE,
+    KERNEL_MEMBER_LIST_EVENT_INIT,
+    KERNEL_MEMBER_LIST_EVENT_ACTIVE,
 
-    KERNAL_MEMBER_LIST_QUEUE_INIT,
+    KERNEL_MEMBER_LIST_QUEUE_INIT,
 
-    KERNAL_MEMBER_LIST_POOL_INIT,
-    KERNAL_MEMBER_LIST_NUMBER,
+    KERNEL_MEMBER_LIST_POOL_INIT,
+    KERNEL_MEMBER_LIST_NUMBER,
 };
 
 typedef struct {
     u32_t mem;
     u32_t list;
-} kernal_member_setting_t;
+} kernel_member_setting_t;
 
 typedef struct {
     const u8_t *pMemoryContainer;
 
     const list_t *pListContainer;
 
-    kernal_member_setting_t *pSetting;
-} kernal_member_t;
+    kernel_member_setting_t *pSetting;
+} kernel_member_t;
 
-/** @brief The rtos kernal structure. */
+/** @brief The rtos kernel structure. */
 typedef struct {
     /* The current running thread */
     os_id_t current;
 
     list_t list;
 
-    kernal_member_t member;
+    kernel_member_t member;
 
-    /* The kernal already start to do schedule */
+    /* The kernel already start to do schedule */
     b_t run;
 
     u32_t pendsv_ms;
-} kernal_context_t;
+} kernel_context_t;
 
 typedef struct {
     union {

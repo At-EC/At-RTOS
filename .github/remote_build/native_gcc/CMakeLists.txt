@@ -45,4 +45,4 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-pointer-to-int-cast>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-cast-align> )
 
-target_link_libraries(${PROJECT_NAME} atos_kernal)
+target_link_libraries(${PROJECT_NAME} atos_kernel)

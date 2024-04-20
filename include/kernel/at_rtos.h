@@ -41,7 +41,7 @@ extern "C" {
  * @param pEntryFun The pointer of the thread entry function. Thread function must be designed to never return.
  * @param pStackAddr The pointer of the thread stack address. The stack memory must be predefined and allocated in your system.
  * @param stackSize The size of the the stack is base on your specified variable.
- * @param priority The thread priority specified the thread's priority when the AtOS do kernal schedule.
+ * @param priority The thread priority specified the thread's priority when the AtOS do kernel schedule.
  * @param pName The thread name.
  *
  * @return The value of thread unique id.
@@ -267,7 +267,7 @@ static inline u32p_t timer_isBusy(os_timer_id_t id)
 }
 
 /**
- * @brief Get the kernal RTOS system time (ms).
+ * @brief Get the kernel RTOS system time (ms).
  *
  * @return The value of the total system time (ms).
  **
@@ -761,7 +761,7 @@ static inline u32p_t pool_release(os_pool_id_t id, void **ppUserBuffer)
  */
 static inline b_t os_id_is_invalid(struct os_id id)
 {
-    return (b_t)_impl_kernal_os_id_is_invalid(id);
+    return (b_t)_impl_kernel_os_id_is_invalid(id);
 }
 
 /**
@@ -772,13 +772,13 @@ static inline b_t os_id_is_invalid(struct os_id id)
  * demo usage:
  *
  *     os_thread_id_t current = os_id_current_thread();
- *     printf("At-RTOS kernal current running thread is %s\n", current.pName);
+ *     printf("At-RTOS kernel current running thread is %s\n", current.pName);
  *     ...
  */
 static inline os_thread_id_t os_id_current_thread(void)
 {
     os_thread_id_t id = {0u};
-    id.val = _impl_kernal_thread_runIdGet();
+    id.val = _impl_kernel_thread_runIdGet();
     id.number = _impl_thread_os_id_to_number(id.val);
     id.pName = _impl_thread_name_get(id.val);
 
@@ -786,33 +786,33 @@ static inline os_thread_id_t os_id_current_thread(void)
 }
 
 /**
- * @brief The kernal OS start to run.
+ * @brief The kernel OS start to run.
  **
  * demo usage:
  *
- *     os_kernal_run();
+ *     os_kernel_run();
  *     // Doesn't arrive
  */
-static inline u32p_t os_kernal_run(void)
+static inline u32p_t os_kernel_run(void)
 {
-    return _impl_kernal_at_rtos_run();
+    return _impl_kernel_at_rtos_run();
 }
 
 /**
- * @brief To check if the kernal OS is running.
+ * @brief To check if the kernel OS is running.
  *
- * return The true indicates the kernal OS is running.
+ * return The true indicates the kernel OS is running.
  **
  * demo usage:
  *
- *     if (os_kernal_is_running()) {
- *         printf("At-RTOS kernal is running\n");
+ *     if (os_kernel_is_running()) {
+ *         printf("At-RTOS kernel is running\n");
  *     }
  *     ...
  */
-static inline b_t os_kernal_is_running(void)
+static inline b_t os_kernel_is_running(void)
 {
-    return (b_t)(_impl_kernal_rtos_isRun() ? (TRUE) : (FALSE));
+    return (b_t)(_impl_kernel_rtos_isRun() ? (TRUE) : (FALSE));
 }
 
 /**
@@ -840,15 +840,15 @@ static inline void os_trace_postcode_print(void)
 }
 
 /**
- * @brief Print At-RTOS kernal information.
+ * @brief Print At-RTOS kernel information.
  **
  * demo usage:
  *
- *     os_trace_kernal_print();
+ *     os_trace_kernel_print();
  */
-static inline void os_trace_kernal_print(void)
+static inline void os_trace_kernel_print(void)
 {
-    _impl_trace_kernal_snapshot_print();
+    _impl_trace_kernel_snapshot_print();
 }
 
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
@@ -895,7 +895,7 @@ typedef struct {
 
     void (*trace_firmware)(void);
     void (*trace_postcode)(void);
-    void (*trace_kernal)(void);
+    void (*trace_kernel)(void);
 } at_rtos_api_t;
 
 extern const at_rtos_api_t AtOS;

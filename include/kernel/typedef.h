@@ -89,7 +89,7 @@ typedef u32_t u32p_t;
     (((u32_t)(address) >= (u32_t)(pool)) && ((u32_t)(address) < ((u32_t)(pool) + (u16_t)SIZEOF(pool))))
 
 /**
- * The implement string operation function lists for rtos kernal internal use.
+ * The implement string operation function lists for rtos kernel internal use.
  */
 void _memcpy(void *dst, const void *src, u32_t cnt);
 void _memset(void *dst, u8_t val, u32_t cnt);

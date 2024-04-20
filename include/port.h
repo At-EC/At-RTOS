@@ -22,9 +22,9 @@ extern "C" {
 #define STACK_ADDRESS_DOWN(address) (u32_t)(ROUND_DOWN((address), STACK_ALIGN))
 
 /**
- * Define the SVC number 2 for RTOS kernal use.
+ * Define the SVC number 2 for RTOS kernel use.
  */
-#define SVC_KERNAL_INVOKE_NUMBER 2
+#define SVC_KERNEL_INVOKE_NUMBER 2
 
 /* Start of section using anonymous unions */
 #if defined(__CC_ARM)
@@ -128,7 +128,7 @@ typedef struct {
 /**
  * @brief Trigger system svc call.
  */
-__svc(SVC_KERNAL_INVOKE_NUMBER) u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+__svc(SVC_KERNEL_INVOKE_NUMBER) u32_t _impl_kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
 
 /**
  * @brief Schedule the first thread.
@@ -155,7 +155,7 @@ static inline b_t _impl_port_isInInterruptContent(void)
 }
 
 /**
- * @brief To check if it's in kernal thread content.
+ * @brief To check if it's in kernel thread content.
  */
 static inline b_t _impl_port_isInThreadMode(void)
 {
@@ -173,14 +173,14 @@ static inline b_t _impl_port_isInThreadMode(void)
 /**
  * @brief Trigger system svc call.
  */
-static inline u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
+static inline u32_t _impl_kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
 {
     register u32_t r0 __asm__("r0") = args_0;
     register u32_t r1 __asm__("r1") = args_1;
     register u32_t r2 __asm__("r2") = args_2;
     register u32_t r3 __asm__("r3") = args_3;
 
-    __asm __volatile("svc %1" : "+r"(r0) : "i"(SVC_KERNAL_INVOKE_NUMBER), "r"(r0), "r"(r1), "r"(r2), "r"(r3) : "memory");
+    __asm __volatile("svc %1" : "+r"(r0) : "i"(SVC_KERNEL_INVOKE_NUMBER), "r"(r0), "r"(r1), "r"(r2), "r"(r3) : "memory");
 
     return r0;
 }
@@ -214,7 +214,7 @@ static inline b_t _impl_port_isInInterruptContent(void)
 }
 
 /**
- * @brief To check if it's in kernal thread content.
+ * @brief To check if it's in kernel thread content.
  */
 static inline b_t _impl_port_isInThreadMode(void)
 {
@@ -230,12 +230,12 @@ static inline b_t _impl_port_isInThreadMode(void)
 #endif
 
 #elif defined(__ICCARM__)
-#pragma swi_number = SVC_KERNAL_INVOKE_NUMBER
+#pragma swi_number = SVC_KERNEL_INVOKE_NUMBER
 
 /**
  * @brief Trigger system svc call.
  */
-__swi u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+__swi u32_t _impl_kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
 
 /**
  * @brief Schedule the first thread.
@@ -262,7 +262,7 @@ static inline b_t _impl_port_isInInterruptContent(void)
 }
 
 /**
- * @brief To check if it's in kernal thread content.
+ * @brief To check if it's in kernel thread content.
  */
 static inline b_t _impl_port_isInThreadMode(void)
 {
@@ -285,7 +285,7 @@ static inline b_t _impl_port_isInThreadMode(void)
 /* TODO */
 
 #elif defined(ARCH_NATIVE_GCC)
-u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+u32_t _impl_kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
 void _impl_port_run_theFirstThread(u32_t sp);
 
 #else
@@ -293,7 +293,7 @@ void _impl_port_run_theFirstThread(u32_t sp);
 #endif
 
 /**
- * The implement function lists for rtos kernal internal use.
+ * The implement function lists for rtos kernel internal use.
  */
 b_t _impl_port_isInInterruptContent(void);
 b_t _impl_port_isInThreadMode(void);

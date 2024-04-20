@@ -1,29 +1,29 @@
-add_library(kernal_include INTERFACE)
+add_library(kernel_include INTERFACE)
 
-include_directories(${KERNAL_PATH}/include)
-include_directories(${KERNAL_PATH}/include/kernal)
+include_directories(${KERNEL_PATH}/include)
+include_directories(${KERNEL_PATH}/include/kernel)
 
-target_sources(kernal_include
+target_sources(kernel_include
 	PUBLIC
-	${KERNAL_PATH}/include/arch.h
+	${KERNEL_PATH}/include/arch.h
 	
-    ${KERNAL_PATH}/include/kernal/at_rtos.h
-    ${KERNAL_PATH}/include/kernal/compiler.h
-    ${KERNAL_PATH}/include/kernal/configuration.h
-    ${KERNAL_PATH}/include/kernal/event.h
-    ${KERNAL_PATH}/include/kernal/kernal.h
-    ${KERNAL_PATH}/include/kernal/linker.h
-    ${KERNAL_PATH}/include/kernal/list.h
-    ${KERNAL_PATH}/include/kernal/kstruct.h
-    ${KERNAL_PATH}/include/kernal/mutex.h
-    ${KERNAL_PATH}/include/kernal/postcode.h
-    ${KERNAL_PATH}/include/kernal/queue.h
-    ${KERNAL_PATH}/include/kernal/semaphore.h
-    ${KERNAL_PATH}/include/kernal/thread.h
-    ${KERNAL_PATH}/include/kernal/timer.h
-    ${KERNAL_PATH}/include/kernal/trace.h
-    ${KERNAL_PATH}/include/kernal/typedef.h
-    ${KERNAL_PATH}/include/kernal/ktype.h
-    ${KERNAL_PATH}/include/kernal/kthread.h
-    ${KERNAL_PATH}/include/kernal/pool.h
+    ${KERNEL_PATH}/include/kernel/at_rtos.h
+    ${KERNEL_PATH}/include/kernel/compiler.h
+    ${KERNEL_PATH}/include/kernel/configuration.h
+    ${KERNEL_PATH}/include/kernel/event.h
+    ${KERNEL_PATH}/include/kernel/kernel.h
+    ${KERNEL_PATH}/include/kernel/linker.h
+    ${KERNEL_PATH}/include/kernel/list.h
+    ${KERNEL_PATH}/include/kernel/kstruct.h
+    ${KERNEL_PATH}/include/kernel/mutex.h
+    ${KERNEL_PATH}/include/kernel/postcode.h
+    ${KERNEL_PATH}/include/kernel/queue.h
+    ${KERNEL_PATH}/include/kernel/semaphore.h
+    ${KERNEL_PATH}/include/kernel/thread.h
+    ${KERNEL_PATH}/include/kernel/timer.h
+    ${KERNEL_PATH}/include/kernel/trace.h
+    ${KERNEL_PATH}/include/kernel/typedef.h
+    ${KERNEL_PATH}/include/kernel/ktype.h
+    ${KERNEL_PATH}/include/kernel/kthread.h
+    ${KERNEL_PATH}/include/kernel/pool.h
 )

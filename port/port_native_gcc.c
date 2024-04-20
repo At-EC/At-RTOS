@@ -15,7 +15,7 @@ extern "C" {
 /**
  * @brief ARM core trigger the svc call interrupt.
  */
-u32_t _impl_kernal_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
+u32_t _impl_kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
 {
     /* TODO */
 }
@@ -47,7 +47,7 @@ b_t _impl_port_isInInterruptContent(void)
 }
 
 /**
- * @brief To check if it's in kernal thread content.
+ * @brief To check if it's in kernel thread content.
  */
 b_t _impl_port_isInThreadMode(void)
 {
@@ -64,7 +64,7 @@ void _impl_port_setPendSV(void)
 }
 
 /**
- * @brief ARM core config kernal thread interrupt priority.
+ * @brief ARM core config kernel thread interrupt priority.
  */
 void _impl_port_interrupt_init(void)
 {

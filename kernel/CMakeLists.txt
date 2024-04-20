@@ -1,8 +1,8 @@
-target_sources(atos_kernal
+target_sources(atos_kernel
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/basic.c
     ${CMAKE_CURRENT_LIST_DIR}/event.c
-    ${CMAKE_CURRENT_LIST_DIR}/kernal.c
+    ${CMAKE_CURRENT_LIST_DIR}/kernel.c
     ${CMAKE_CURRENT_LIST_DIR}/linker.c
     ${CMAKE_CURRENT_LIST_DIR}/list.c
     ${CMAKE_CURRENT_LIST_DIR}/mutex.c
@@ -16,9 +16,9 @@ target_sources(atos_kernal
     ${CMAKE_CURRENT_LIST_DIR}/pool.c
 )
 
-target_include_directories(atos_kernal
+target_include_directories(atos_kernel
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
 )
 
-target_link_libraries(atos_kernal kernal_include)
+target_link_libraries(atos_kernel kernel_include)

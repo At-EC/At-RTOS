@@ -45,7 +45,7 @@ b_t _impl_port_isInInterruptContent(void)
 }
 
 /**
- * @brief To check if it's in kernal thread content.
+ * @brief To check if it's in kernel thread content.
  */
 b_t _impl_port_isInThreadMode(void)
 {
@@ -64,7 +64,7 @@ void _impl_port_setPendSV(void)
 }
 
 /**
- * @brief ARM core config kernal thread interrupt priority.
+ * @brief ARM core config kernel thread interrupt priority.
  */
 void _impl_port_interrupt_init(void)
 {

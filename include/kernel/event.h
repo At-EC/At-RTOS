@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 /**
- * The implement function lists for rtos kernal internal use.
+ * The implement function lists for rtos kernel internal use.
  */
 u32_t _impl_event_os_id_to_number(os_id_t id);
 os_id_t _impl_event_init(u32_t edgeMask, u32_t clearMask, const char_t *pName);

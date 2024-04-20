@@ -15,9 +15,9 @@ extern "C" {
 #endif
 
 /**
- * The implement function lists for rtos kernal internal use.
+ * The implement function lists for rtos kernel internal use.
  */
-u32p_t _impl_kernal_timer_schedule_request(void);
+u32p_t _impl_kernel_timer_schedule_request(void);
 void _impl_thread_timer_init(os_id_t id);
 void _impl_thread_timer_start(os_id_t id, u32_t timeout_ms, void (*pCallback)(os_id_t));
 u32_t _impl_timer_os_id_to_number(os_id_t id);

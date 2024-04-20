@@ -44,7 +44,7 @@ extern "C" {
 
 /* The following table defined the At-RTOS component number */
 enum {
-    PC_CMPT_KERNAL_1 = 1u,
+    PC_CMPT_KERNEL_1 = 1u,
     PC_CMPT_THREAD_2,
     PC_CMPT_SEMAPHORE_3,
     PC_CMPT_MUTEX_4,

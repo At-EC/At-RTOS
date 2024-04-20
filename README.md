@@ -20,7 +20,7 @@ Welcome PRs! If you are interested in contributing, Pls join us at [Discord](htt
 
 | Version Name          | Description                                                                  |
 | ------------- | ------------------------------------------------------------------------------------ |
-| [![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS)](./release-note.md) | Welcome to At-RTOS. This production version was released which supports a stable RTOS feature was implemented in the kernal system, Pls enjoy it (: |
+| [![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS)](./release-note.md) | Welcome to At-RTOS. This production version was released which supports a stable RTOS feature was implemented in the kernel system, Pls enjoy it (: |
 | ![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/At-EC/At-RTOS/main) | The development version in the main branch was implemented which will support new features, but it probably has unknown issues. |
 
 The release note is [here](https://github.com/At-EC/At-RTOS/releases).
@@ -31,7 +31,7 @@ At-RTOS is a type of Real-Time Operating System that focuses on adaptability and
 
 It provides a range of features and capabilities such as thread scheduling, messages routing and interrupt handling, and more, to meet the requirements of embedded systems for real-time performance and reliability. It supports concurrent execution of multiple threads, enabling the management of multiple threads while ensuring synchronization and communication between them. 
 
-It's also offers extensive APIs(Application Programming Interfaces) that allow developers to configure the system, create threads, communicate betwwen threads, customize kernal clock, and more, with ease. Additionally At-RTOS supports various hardware platforms and compiilers specifically for the ARM Cortex M seiral architecture, offering good portability and scalability.
+It's also offers extensive APIs(Application Programming Interfaces) that allow developers to configure the system, create threads, communicate betwwen threads, customize kernel clock, and more, with ease. Additionally At-RTOS supports various hardware platforms and compiilers specifically for the ARM Cortex M seiral architecture, offering good portability and scalability.
 
 Overall, At-RTOS is powerful, flexible, and scalable real-time operating system suitable for the development and deployment of various embbedded systems. For more information on At-RTOS, it is recommended to refer to relevant technical documentation and sample codes.
 
@@ -52,7 +52,7 @@ And the keywords of the At-RTOS is shown as following lists.
 
 ## Cores
 
-At-RTOS supports many architectures, and has covered the major architectures in current kernal system. It supports the following architectures, and it lists the chip that was verified.
+At-RTOS supports many architectures, and has covered the major architectures in current kernel system. It supports the following architectures, and it lists the chip that was verified.
 
 - [ ] `ARM Cortex-M` lists:
     - [x] Cortex-M3: [GD32103C-START](https://www.gigadevice.com/product/mcu/arm-cortex-m3/gd32f103vct6)
@@ -93,30 +93,30 @@ At-RTOS
 │   ├── port_iar.s
 │   └── CMakeLists.txt
 ├── include
-│   ├── kernal
+│   ├── kernel
 │   │   ├── at_rtos.h
 │   │   └── *.h
 │   ├── arch.h
 │   ├── port.h
 │   ├── clock_tick.h
 │   └── CMakeLists.txt
-├── kernal
-│   ├── kernal.c
+├── kernel
+│   ├── kernel.c
 │   ├── *.c
 │   └── CMakeLists.txt
 ├── build_version.h
 └── CMakeLists.txt
 ```
 
-- **arch :** This folder provided the chip core architectures resource to support At-RTOS kernal feature.
-- **clock :** It was implemented for At-RTOS kernal system tick to support system timers.
+- **arch :** This folder provided the chip core architectures resource to support At-RTOS kernel feature.
+- **clock :** It was implemented for At-RTOS kernel system tick to support system timers.
 - **port :** It's used to support different compiler such as KEIL, IAR and GCC.
-- **include :** It used to contain the At-RTOS kernal header files, Moreover it contained the portable arch, clock and port header files.
-- **kernal :** This folder was implemented for the At-RTOS kernal files.
+- **include :** It used to contain the At-RTOS kernel header files, Moreover it contained the portable arch, clock and port header files.
+- **kernel :** This folder was implemented for the At-RTOS kernel files.
 
 ## Invoked resources
 
-At-RTOS was designed specifically to take advantage of the powerful hardware features introduced with the ARM Cortex M architecture. The following HW resources were used in the At-RTOS kernal.
+At-RTOS was designed specifically to take advantage of the powerful hardware features introduced with the ARM Cortex M architecture. The following HW resources were used in the At-RTOS kernel.
 
 - Nested Vectored Interrupt Controller (NVIC)
 - Service Call (SVC instruction)
@@ -143,7 +143,7 @@ At-RTOS ported a template At-RTOS configuration header file [atos_configuration.
 #define ARCH_ARM_CORTEX_CM33
 
 /**
- * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
+ * If you are use ARM Cortex M seiral architecture and use the system tick as the kernel timer.
  * In most cases, PORTAL_SYSTEM_CORE_CLOCK_MHZ must be set to the frequency of the clock
  * that drives the peripheral used to generate the kernels periodic tick interrupt.
  * The default value is set to 120mhz.
@@ -151,8 +151,8 @@ At-RTOS ported a template At-RTOS configuration header file [atos_configuration.
 #define PORTAL_SYSTEM_CORE_CLOCK_MHZ (120u)
 ```
 
-Your application will certainly need a different value so set the kernal component instance number correctly. This is very often, but not always. It's according to your system design.
-The symbols in the configuration header file look like this `<kernal component>_INSTANCE_SUPPORTED_NUMBER`, and the kernal component is shown as following table:
+Your application will certainly need a different value so set the kernel component instance number correctly. This is very often, but not always. It's according to your system design.
+The symbols in the configuration header file look like this `<kernel component>_INSTANCE_SUPPORTED_NUMBER`, and the kernel component is shown as following table:
 - THREAD
 - SEMAPHORE
 - EVENT
@@ -166,7 +166,7 @@ The more details you can see the descriptions in the template file [atos_configu
 
 ## User interface
 
-The [at_rtos.h](./include/kernal/at_rtos.h) is an interface of At-RTOS kernal. You can check the interface usage in this file to perform it in your embedded controller system.
+The [at_rtos.h](./include/kernel/at_rtos.h) is an interface of At-RTOS kernel. You can check the interface usage in this file to perform it in your embedded controller system.
 
 The following sample codes illustrates how to create your first thread:
 ```c
@@ -193,7 +193,7 @@ int main(void)
         printf("Thread %s init failed\n", your_thread_id.pName);
     }
 	
-    /* The At-RTOS kernal schedule starts to run. */
+    /* The At-RTOS kernel schedule starts to run. */
     AtOS.schedule_run();
 }
 ```
@@ -202,8 +202,8 @@ Note that: The following c/h files path must be included/contained in your proje
 
 - `<root path>`\At-RTOS\
 - `<root path>`\At-RTOS\include\
-- `<root path>`\At-RTOS\include\kernal\
-- `<root path>`\At-RTOS\kernal\<all>.c
+- `<root path>`\At-RTOS\include\kernel\
+- `<root path>`\At-RTOS\kernel\<all>.c
 - `<root path>`\At-RTOS\clock\clock_systick.c
 - `<root path>`\At-RTOS\port\port_common.c
 - `<root path>`\At-RTOS\port\<your compiler>.c

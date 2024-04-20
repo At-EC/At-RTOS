@@ -93,7 +93,7 @@ static u32_t _clock_elapsed(void)
 }
 
 /**
- * @brief Report the elasped time for rtos kernal timer using, through the hook interface.
+ * @brief Report the elasped time for rtos kernel timer using, through the hook interface.
  *
  * @param Value of the elapsed time.
  */
@@ -125,7 +125,7 @@ void _impl_clock_isr(void)
 }
 
 /**
- * @brief The interface for kernal rtos set the next timeout.
+ * @brief The interface for kernel rtos set the next timeout.
  *
  * @param Value of the next timeout.
  */

@@ -51,7 +51,7 @@ extern "C" {
 #define ARCH_DSP_PRESENT          (1u) // DSP extension present
 
 /**
- * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
+ * If you are use ARM Cortex M seiral architecture and use the system tick as the kernel timer.
  * In most cases, PORTAL_SYSTEM_CORE_CLOCK_MHZ must be set to the frequency of the clock
  * that drives the peripheral used to generate the kernels periodic tick interrupt.
  * The default value is set to 120mhz. Your application will certainly need a different value so set this correctly.
@@ -60,8 +60,8 @@ extern "C" {
 #define PORTAL_SYSTEM_CORE_CLOCK_MHZ (120u)
 
 /**
- * If you are use ARM Cortex M seiral architecture and use the system tick as the kernal timer.
- * The kernals periodic tick interrupt scheduler needs a minimum time to handle the kernal time function,
+ * If you are use ARM Cortex M seiral architecture and use the system tick as the kernel timer.
+ * The kernels periodic tick interrupt scheduler needs a minimum time to handle the kernel time function,
  * The defaule value is set ot 50us when the frequency is 120mhz. Your application will certainly need a different value so set this
  *correctly. This is very often, but not always, according to the main system clock frequency.
  **/
@@ -124,14 +124,14 @@ extern "C" {
 #define THREAD_PSP_WITH_PRIVILEGED (10u)
 
 /**
- * This symbol defined your kernal trace print function, if your system implemented
- * standard printf function, you can define this macro to use printf as the At-RTOS kernal trace use.
+ * This symbol defined your kernel trace print function, if your system implemented
+ * standard printf function, you can define this macro to use printf as the At-RTOS kernel trace use.
  * The defaule standard printf macro is commented out. Or you can defined your customization-printf to replace
- * the standard printf by use macro KTRACE, If you don't need the kernal trace feature, you can comment out both of them.
+ * the standard printf by use macro KTRACE, If you don't need the kernel trace feature, you can comment out both of them.
  * Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the security level that you want.
  **/
-// Both of them commented out disabled the kernal trace feature
+// Both of them commented out disabled the kernel trace feature
 // #define AT_RTOS_TRACE_USE_STANDARD_PRINTF_ENABLED  /* Comment out: default doesn't use the standard printf */
 // #define KTRACE                                     /* Comment out: default doesn't use the customization-printf */
 

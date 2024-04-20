@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 /**
- * The implement function lists for rtos kernal internal use.
+ * The implement function lists for rtos kernel internal use.
  */
 u32_t _impl_semaphore_os_id_to_number(os_id_t id);
 os_id_t _impl_semaphore_init(u8_t initialCount, u8_t limitCount, b_t permit, const char_t *pName);

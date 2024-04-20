@@ -11,8 +11,8 @@
 extern "C" {
 #endif
 
-/* Local defined the kernal thread stack and error postcode */
-#define _PC_CMPT_FAILED                 PC_FAILED(PC_CMPT_KERNAL)
+/* Local defined the kernel thread stack and error postcode */
+#define _PC_CMPT_FAILED                 PC_FAILED(PC_CMPT_KERNEL)
 #define SAMPLE_THREAD_STACK_SIZE        (1024u)
 
 ATOS_THREAD_DEFINE(sample_thread, SAMPLE_THREAD_STACK_SIZE, 5);
@@ -20,7 +20,7 @@ ATOS_THREAD_DEFINE(sample_thread, SAMPLE_THREAD_STACK_SIZE, 5);
 static os_thread_id_t g_sample_thread_id;
 
 /*
- * @brief The kernal sample entry function.
+ * @brief The kernel sample entry function.
  **/
 static void sample_entry_thread(void)
 {
@@ -38,7 +38,7 @@ int main(void)
        /* return _PC_CMPT_FAILED; */
     }
 
-    /* At_RTOS kernal running starts */
+    /* At_RTOS kernel running starts */
     AtOS.schedule_run();
     D_ASSERT(0);
 

@@ -26,13 +26,13 @@ void SVC_Handler( void )
     __asm volatile
     (
         "   .syntax unified                                 \n"
-        "   .extern _impl_kernal_privilege_call_inSVC_c     \n"
+        "   .extern _impl_kernel_privilege_call_inSVC_c     \n"
         "                                                   \n"
         "   tst   lr, #4                                    \n" /* call from which stack pointer base on the bit 2 of EXC_RETURN (LR) */
         "   ite   eq                                        \n"
         "   mrseq r0, msp                                   \n" /* Set R0 = MSP */
         "   mrsne r0, psp                                   \n" /* Set R0 = PSP */
-        "   b     _impl_kernal_privilege_call_inSVC_c       \n" /* call _impl_kernal_privilege_call_inSVC_c */
+        "   b     _impl_kernel_privilege_call_inSVC_c       \n" /* call _impl_kernel_privilege_call_inSVC_c */
         "                                                   \n"
         "   .align 4                                        \n"
     );
@@ -53,18 +53,18 @@ void PendSV_Handler(void)
     __asm volatile
     (
         "   .syntax unified                                 \n"
-        "   .extern _impl_kernal_scheduler_inPendSV_c       \n"
+        "   .extern _impl_kernel_scheduler_inPendSV_c       \n"
         "                                                   \n"
         "    cpsid    i                                     \n"  /* Disable interrupts */
         "    isb                                            \n"
         "                                                   \n"
         /**
-         * Call kernal_scheduler_inPendSV_c
+         * Call kernel_scheduler_inPendSV_c
          */
         "    push     {r0, r1, r12, lr}                     \n"
         "    mov      r0, sp                                \n" /* R0 points to the argument ppCurPsp  */
         "    add      r1, sp, #4                            \n" /* R1 points to the argument ppNextPSP */
-        "    bl       _impl_kernal_scheduler_inPendSV_c     \n" /* Call _impl_kernal_scheduler_inPendSV_c */
+        "    bl       _impl_kernel_scheduler_inPendSV_c     \n" /* Call _impl_kernel_scheduler_inPendSV_c */
         "    pop      {r0, r1, r12, lr}                     \n" /* R0 = ppCurPsp, R1 = ppNextPSP */
         "                                                   \n"
         "    cmp      r0, r1                                \n" /* if R0 = R1 */

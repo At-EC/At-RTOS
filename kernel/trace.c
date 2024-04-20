@@ -53,13 +53,13 @@ void _impl_trace_postcode_snapshot_print(void)
 }
 
 /**
- * @brief Take kernal snapshot information.
+ * @brief Take kernel snapshot information.
  */
-void _impl_trace_kernal_snapshot_print(void)
+void _impl_trace_kernel_snapshot_print(void)
 {
 #if defined KTRACE
     u32_t unused[7] = {0u};
-    kernal_snapshot_t snapshot_data;
+    kernel_snapshot_t snapshot_data;
 
     _impl_trace_firmware_snapshot_print();
     _impl_trace_postcode_snapshot_print();

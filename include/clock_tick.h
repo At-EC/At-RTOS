@@ -20,7 +20,7 @@ extern "C" {
 typedef void (*time_report_handler_t)(u32_t);
 
 /**
- * The implement function lists for rtos kernal internal use.
+ * The implement function lists for rtos kernel internal use.
  */
 void _impl_clock_isr(void);
 void _impl_clock_time_interval_set(u32_t interval_us);

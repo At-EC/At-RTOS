@@ -1,14 +1,14 @@
-include_directories(${KERNAL_PATH}/include)
+include_directories(${KERNEL_PATH}/include)
 
-target_sources(atos_kernal
+target_sources(atos_kernel
 	PUBLIC
-    ${KERNAL_PATH}/include/port.h
+    ${KERNEL_PATH}/include/port.h
 
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/port_native_gcc.c
 )
 
-target_include_directories(atos_kernal
+target_include_directories(atos_kernel
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
 )

@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 /**
- * The implement function lists for rtos kernal internal use.
+ * The implement function lists for rtos kernel internal use.
  */
 const char_t *_impl_thread_name_get(os_id_t id);
 u32_t _impl_thread_os_id_to_number(os_id_t id);

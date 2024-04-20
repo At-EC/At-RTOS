@@ -12,8 +12,8 @@
         
         SECTION .text : CODE
         
-        EXTERN _impl_kernal_privilege_call_inSVC_c
-        EXTERN _impl_kernal_scheduler_inPendSV_c
+        EXTERN _impl_kernel_privilege_call_inSVC_c
+        EXTERN _impl_kernel_scheduler_inPendSV_c
 
         EXPORT _impl_port_run_theFirstThread
         EXPORT PendSV_Handler
@@ -46,11 +46,11 @@ PendSV_Handler:
         CPSID    I                                                   ; Disable interrupts
         ISB
 
-        ; Call kernal_scheduler_inPendSV_c
+        ; Call kernel_scheduler_inPendSV_c
         PUSH     {R0, R1, R12, LR}
         MOV      R0, SP                                              ; R0 points to the argument ppCurPsp
         ADD      R1, SP, #4                                          ; R1 points to the argument ppNextPSP
-        BL       _impl_kernal_scheduler_inPendSV_c                   ; Call _impl_kernal_scheduler_inPendSV_c
+        BL       _impl_kernel_scheduler_inPendSV_c                   ; Call _impl_kernel_scheduler_inPendSV_c
         POP      {R0, R1, R12, LR}                                   ; R0 = ppCurPsp, R1 = ppNextPSP
 
         CMP      R0, R1                                              ; if R0 = R1
@@ -107,7 +107,7 @@ SVC_Handler:
         MRSEQ   R0, MSP                                              ; Set R0 = MSP
         MRSNE   R0, PSP                                              ; Set R0 = PSP
 
-        B       _impl_kernal_privilege_call_inSVC_c                  ; call _impl_kernal_privilege_call_inSVC_c
+        B       _impl_kernel_privilege_call_inSVC_c                  ; call _impl_kernel_privilege_call_inSVC_c
     
         ; return from exception, restoring {R0-R3, R12, LR, PC, PSR}
         END
