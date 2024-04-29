@@ -9,6 +9,7 @@
 #define _KTYPE_H_
 
 #include "typedef.h"
+#include "linker.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,8 +43,20 @@ typedef struct os_priority os_priority_t;
 typedef struct os_time os_time_t;
 
 typedef struct {
+
+    linker_t linker;
+
+    os_id_t id;
+
+    u32_t desired;
+
     u32_t value;
-    u32_t defer;
+} evt_cushion_t;
+
+typedef struct {
+    evt_cushion_t cushion;
+
+    u32_t value;
 } os_evt_val_t;
 
 #define OS_INVALID_ID_VAL (0xFFFFFFFFu)
@@ -68,20 +81,18 @@ typedef struct {
 
 #define OS_INVALID_ID OS_INVALID_ID_VAL
 
-u8_t *_impl_kernel_member_unified_id_toContainerAddress(u32_t unified_id);
-u32_t _impl_kernel_member_containerAddress_toUnifiedid(u32_t container_address);
-u32_t _impl_kernel_member_id_toUnifiedIdStart(u8_t member_id);
-u8_t *_impl_kernel_member_id_toContainerStartAddress(u32_t member_id);
-u8_t *_impl_kernel_member_id_toContainerEndAddress(u32_t member_id);
-b_t _impl_kernel_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id);
-u8_t _impl_kernel_member_unified_id_toId(u32_t unified_id);
-u32_t _impl_kernel_member_unified_id_threadToTimer(u32_t unified_id);
-u32_t _impl_kernel_member_unified_id_timerToThread(u32_t unified_id);
-u32_t _impl_kernel_member_id_unifiedConvert(u8_t member_id, u32_t unified_id);
-b_t _impl_kernel_os_id_is_invalid(struct os_id id);
-u32p_t _impl_kernel_at_rtos_run(void);
-b_t _impl_kernel_rtos_isRun(void);
-os_id_t _impl_kernel_thread_runIdGet(void);
+u8_t *kernel_member_unified_id_toContainerAddress(u32_t unified_id);
+u32_t kernel_member_containerAddress_toUnifiedid(u32_t container_address);
+u32_t kernel_member_id_toUnifiedIdStart(u8_t member_id);
+u8_t *kernel_member_id_toContainerStartAddress(u32_t member_id);
+u8_t *kernel_member_id_toContainerEndAddress(u32_t member_id);
+b_t kernel_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id);
+u8_t kernel_member_unified_id_toId(u32_t unified_id);
+u32_t kernel_member_unified_id_threadToTimer(u32_t unified_id);
+u32_t kernel_member_unified_id_timerToThread(u32_t unified_id);
+u32_t kernel_member_id_unifiedConvert(u8_t member_id, u32_t unified_id);
+os_id_t kernel_thread_runIdGet(void);
+b_t kernel_os_id_is_invalid(struct os_id id);
 
 #ifdef __cplusplus
 }

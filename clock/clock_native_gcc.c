@@ -74,7 +74,7 @@ static void _clock_time_elapsed_report(u32_t us)
 /**
  * @brief It's invoked in the SysTick_Handler to maintain the clock system.
  */
-void _impl_clock_isr(void)
+void clock_isr(void)
 {
     /* Nothing need to do for kernel cmake sample build. */
 }
@@ -84,7 +84,7 @@ void _impl_clock_isr(void)
  *
  * @param Value of the next timeout.
  */
-void _impl_clock_time_interval_set(u32_t interval_us)
+void clock_time_interval_set(u32_t interval_us)
 {
     /* Nothing need to do for kernel cmake sample build. */
 }
@@ -94,7 +94,7 @@ void _impl_clock_time_interval_set(u32_t interval_us)
  *
  * @return Value of the unreported elapse time.
  */
-u32_t _impl_clock_time_elapsed_get(void)
+u32_t clock_time_elapsed_get(void)
 {
     /* Nothing need to do for kernel cmake sample build. */
     return 0u;
@@ -105,7 +105,7 @@ u32_t _impl_clock_time_elapsed_get(void)
  *
  * @return Value of the current clock time.
  */
-u32_t _impl_clock_time_get(void)
+u32_t clock_time_get(void)
 {
     /* Nothing need to do for kernel cmake sample build. */
     return 0u;
@@ -114,7 +114,7 @@ u32_t _impl_clock_time_get(void)
 /**
  * @brief Enable the time clock.
  */
-void _impl_clock_time_enable(void)
+void clock_time_enable(void)
 {
     /* Nothing need to do for kernel cmake sample build. */
 }
@@ -122,7 +122,7 @@ void _impl_clock_time_enable(void)
 /**
  * @brief Disable the time clock.
  */
-void _impl_clock_time_disable(void)
+void clock_time_disable(void)
 {
     /* Nothing need to do for kernel cmake sample build. */
 }
@@ -130,7 +130,7 @@ void _impl_clock_time_disable(void)
 /**
  * @brief Init the time clock.
  */
-void _impl_clock_time_init(time_report_handler_t pTime_function)
+void clock_time_init(time_report_handler_t pTime_function)
 {
     g_clock_resource.pCallFunc = pTime_function;
 

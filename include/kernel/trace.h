@@ -105,13 +105,13 @@ typedef struct {
 #pragma warning restore
 #endif
 
-b_t _impl_trace_thread_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
-b_t _impl_trace_semaphore_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
-b_t _impl_trace_mutex_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
-b_t _impl_trace_event_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
-b_t _impl_trace_queue_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
-b_t _impl_trace_timer_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
-b_t _impl_trace_pool_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
+b_t thread_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
+b_t semaphore_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
+b_t mutex_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
+b_t event_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
+b_t queue_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
+b_t pool_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
+b_t timer_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
 
 void _impl_trace_firmware_snapshot_print(void);
 void _impl_trace_postcode_snapshot_print(void);

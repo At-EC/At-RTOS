@@ -17,8 +17,8 @@ extern "C" {
 #define FPU_ENABLED  0
 #endif
 
-extern void _impl_kernel_privilege_call_inSVC_c(u32_t *svc_args);
-extern void _impl_kernel_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP);
+extern void kernel_privilege_call_inSVC_c(u32_t *svc_args);
+extern void kernel_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP);
 
 /**
  * @brief ARM core SVC interrupt handle function.
@@ -31,7 +31,7 @@ __asm void SVC_Handler(void)
     MRSEQ R0, MSP                                               /* Set R0 = MSP */
     MRSNE R0, PSP                                               /* Set R0 = PSP */
 
-    B     __cpp(_impl_kernel_privilege_call_inSVC_c)            /* call _impl_kernel_privilege_call_inSVC_c */
+    B     __cpp(kernel_privilege_call_inSVC_c)            /* call kernel_privilege_call_inSVC_c */
 
     /**
      * return from exception, restoring {R0-R3, R12, LR, PC, PSR}
@@ -58,7 +58,7 @@ __asm void PendSV_Handler(void)
     PUSH     {R0, R1, R12, LR}
     MOV      R0, SP                                              /* R0 points to the argument ppCurPsp  */
     ADD      R1, SP, #4                                          /* R1 points to the argument ppNextPSP */
-    BL       __cpp(_impl_kernel_scheduler_inPendSV_c)            /* Call _impl_kernel_scheduler_inPendSV_c */
+    BL       __cpp(kernel_scheduler_inPendSV_c)                  /* Call kernel_scheduler_inPendSV_c */
     POP      {R0, R1, R12, LR}                                   /* R0 = ppCurPsp, R1 = ppNextPSP */
 
     CMP      R0, R1                                              /* if R0 = R1 */
@@ -116,7 +116,7 @@ Exit
 /**
  * @brief ARM core trigger the first thread to run.
  */
-__asm void _impl_port_run_theFirstThread(u32_t sp)
+__asm void port_run_theFirstThread(u32_t sp)
 {
     /**
      * initialize R4-R11 from context frame using passed SP

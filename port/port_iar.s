@@ -12,8 +12,8 @@
         
         SECTION .text : CODE
         
-        EXTERN _impl_kernel_privilege_call_inSVC_c
-        EXTERN _impl_kernel_scheduler_inPendSV_c
+        EXTERN kernel_privilege_call_inSVC_c
+        EXTERN kernel_scheduler_inPendSV_c
 
         EXPORT _impl_port_run_theFirstThread
         EXPORT PendSV_Handler
@@ -50,7 +50,7 @@ PendSV_Handler:
         PUSH     {R0, R1, R12, LR}
         MOV      R0, SP                                              ; R0 points to the argument ppCurPsp
         ADD      R1, SP, #4                                          ; R1 points to the argument ppNextPSP
-        BL       _impl_kernel_scheduler_inPendSV_c                   ; Call _impl_kernel_scheduler_inPendSV_c
+        BL       kernel_scheduler_inPendSV_c                         ; Call kernel_scheduler_inPendSV_c
         POP      {R0, R1, R12, LR}                                   ; R0 = ppCurPsp, R1 = ppNextPSP
 
         CMP      R0, R1                                              ; if R0 = R1
@@ -58,11 +58,11 @@ PendSV_Handler:
 
         MRS      R2, PSP                                             ; Get current process stack pointer value */
 
-#if ( FPU_ENABLED )                                          ; If the Cortex-M is not supported, the ASM instruction will not support VSTMDBEQ 
+#if ( FPU_ENABLED )                                                  ; If the Cortex-M is not supported, the ASM instruction will not support VSTMDBEQ 
         TST      LR, #0x10                                           ; Test bit 4 of EXC_RETURN (0: FPU active on exception entry, 1: FPU not active)
-        IT       EQ                                                  ; if (LR[4] == 0) */
+        IT       EQ                                                  ; if (LR[4] == 0)
         VSTMDBEQ R2!, {S16 - S31}                                    ; Save floating point registers, EQ suffix will save FPU registers {s16 - S31}
-                                                                     ; if bit of LR was zero (S0-S15, FPSCR alread saved by MCU) */
+                                                                     ; if bit of LR was zero (S0-S15, FPSCR alread saved by MCU)
         MRS      R3, CONTROL                                         ; Save CONTROL register in R3 to be pushed on stack - bit 2 (FPCA) indicates floating-point is active
 
         STMDB    R2!, {R3 - R11}                                     ; Save CONTROL, {R4 - R11}
@@ -94,7 +94,7 @@ PendSV_Handler:
        ; End of Context switching code
 
 exit
-        CPSIE    I                                                ; Enable interrupts
+        CPSIE    I                                                   ; Enable interrupts
         ISB
 
         BX       LR                                                  ; return from exception, restoring {R0 - R3, R12, LR, PC, PSR}
@@ -107,7 +107,7 @@ SVC_Handler:
         MRSEQ   R0, MSP                                              ; Set R0 = MSP
         MRSNE   R0, PSP                                              ; Set R0 = PSP
 
-        B       _impl_kernel_privilege_call_inSVC_c                  ; call _impl_kernel_privilege_call_inSVC_c
+        B       kernel_privilege_call_inSVC_c                        ; call kernel_privilege_call_inSVC_c
     
         ; return from exception, restoring {R0-R3, R12, LR, PC, PSR}
         END

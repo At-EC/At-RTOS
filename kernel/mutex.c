@@ -7,7 +7,6 @@
 
 #include "kernel.h"
 #include "timer.h"
-#include "mutex.h"
 #include "postcode.h"
 #include "trace.h"
 
@@ -21,13 +20,6 @@ extern "C" {
 #define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_MUTEX_4)
 
 /**
- * The local function lists for current file internal use.
- */
-static u32_t _mutex_init_privilege_routine(arguments_t *pArgs);
-static u32_t _mutex_lock_privilege_routine(arguments_t *pArgs);
-static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs);
-
-/**
  * @brief Get the mutex context based on provided unique id.
  *
  * @param id The mutex unique id.
@@ -36,7 +28,7 @@ static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs);
  */
 static mutex_context_t *_mutex_object_contextGet(os_id_t id)
 {
-    return (mutex_context_t *)(_impl_kernel_member_unified_id_toContainerAddress(id));
+    return (mutex_context_t *)(kernel_member_unified_id_toContainerAddress(id));
 }
 
 /**
@@ -46,7 +38,7 @@ static mutex_context_t *_mutex_object_contextGet(os_id_t id)
  */
 static list_t *_mutex_list_lockingHeadGet(void)
 {
-    return (list_t *)_impl_kernel_member_list_get(KERNEL_MEMBER_MUTEX, KERNEL_MEMBER_LIST_MUTEX_LOCK);
+    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_MUTEX, KERNEL_MEMBER_LIST_MUTEX_LOCK);
 }
 
 /**
@@ -56,7 +48,7 @@ static list_t *_mutex_list_lockingHeadGet(void)
  */
 static list_t *_mutex_list_unlockingHeadGet(void)
 {
-    return (list_t *)_impl_kernel_member_list_get(KERNEL_MEMBER_MUTEX, KERNEL_MEMBER_LIST_MUTEX_UNLOCK);
+    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_MUTEX, KERNEL_MEMBER_LIST_MUTEX_UNLOCK);
 }
 
 /**
@@ -127,7 +119,7 @@ static linker_head_t *_mutex_linker_head_fromBlocking(os_id_t id)
  */
 static b_t _mutex_id_isInvalid(u32_t id)
 {
-    return _impl_kernel_member_unified_id_isInvalid(KERNEL_MEMBER_MUTEX, id);
+    return kernel_member_unified_id_isInvalid(KERNEL_MEMBER_MUTEX, id);
 }
 
 /**
@@ -145,90 +137,6 @@ static b_t _mutex_object_isInit(i32_t id)
 }
 
 /**
- * @brief Convert the internal os id to kernel member number.
- *
- * @param id The provided unique id.
- *
- * @return The value of member number.
- */
-u32_t _impl_mutex_os_id_to_number(os_id_t id)
-{
-    if (_mutex_id_isInvalid(id)) {
-        return 0u;
-    }
-
-    return (u32_t)((id - _impl_kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_MUTEX)) / sizeof(mutex_context_t));
-}
-
-/**
- * @brief Initialize a new mutex.
- *
- * @param pName The mutex name.
- *
- * @return The mutex unique id.
- */
-os_id_t _impl_mutex_init(const char_t *pName)
-{
-    arguments_t arguments[] = {
-        [0] = {.pch_val = (const char_t *)pName},
-    };
-
-    return _impl_kernel_privilege_invoke((const void *)_mutex_init_privilege_routine, arguments);
-}
-
-/**
- * @brief Mutex lock to avoid another thread access this resource.
- *
- * @param id The mutex unique id.
- *
- * @return The result of the operation.
- */
-u32p_t _impl_mutex_lock(os_id_t id)
-{
-    if (_mutex_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
-    }
-
-    if (!_mutex_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
-    }
-
-    if (!_impl_kernel_isInThreadMode()) {
-        return _PC_CMPT_FAILED;
-    }
-
-    arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},
-    };
-
-    return _impl_kernel_privilege_invoke((const void *)_mutex_lock_privilege_routine, arguments);
-}
-
-/**
- * @brief Mutex unlock to allow another access the resource.
- *
- * @param id The mutex unique id.
- *
- * @return The result of the operation.
- */
-u32p_t _impl_mutex_unlock(os_id_t id)
-{
-    if (_mutex_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
-    }
-
-    if (!_mutex_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
-    }
-
-    arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},
-    };
-
-    return _impl_kernel_privilege_invoke((const void *)_mutex_unlock_privilege_routine, arguments);
-}
-
-/**
  * @brief It's sub-routine running at privilege mode.
  *
  * @param pArgs The function argument packages.
@@ -243,10 +151,10 @@ static u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
     u32_t endAddr = 0u;
     mutex_context_t *pCurMutex = NULL;
 
-    pCurMutex = (mutex_context_t *)_impl_kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_MUTEX);
-    endAddr = (u32_t)_impl_kernel_member_id_toContainerEndAddress(KERNEL_MEMBER_MUTEX);
+    pCurMutex = (mutex_context_t *)kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_MUTEX);
+    endAddr = (u32_t)kernel_member_id_toContainerEndAddress(KERNEL_MEMBER_MUTEX);
     do {
-        os_id_t id = _impl_kernel_member_containerAddress_toUnifiedid((u32_t)pCurMutex);
+        os_id_t id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurMutex);
         if (_mutex_id_isInvalid(id)) {
             break;
         }
@@ -290,14 +198,14 @@ static u32_t _mutex_lock_privilege_routine(arguments_t *pArgs)
     u32p_t postcode = PC_SC_SUCCESS;
 
     pCurMutex = _mutex_object_contextGet(id);
-    pCurThread = _impl_kernel_thread_runContextGet();
+    pCurThread = kernel_thread_runContextGet();
     if (pCurMutex->head.linker.pList == _mutex_list_lockingHeadGet()) {
-        pLockThread = (thread_context_t *)_impl_kernel_member_unified_id_toContainerAddress(pCurMutex->holdThreadId);
+        pLockThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(pCurMutex->holdThreadId);
 
         if (pCurThread->priority.level < pLockThread->priority.level) {
             pLockThread->priority = pCurThread->priority;
         }
-        postcode = _impl_kernel_thread_exit_trigger(pCurThread->head.id, id, _mutex_list_blockingHeadGet(id), 0u, NULL);
+        postcode = kernel_thread_exit_trigger(pCurThread->head.id, id, _mutex_list_blockingHeadGet(id), 0u, NULL);
 
         EXIT_CRITICAL_SECTION();
         return postcode;
@@ -331,7 +239,7 @@ static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
 
     pCurMutex = _mutex_object_contextGet(id);
     pMutexHighestBlockingThread = (thread_context_t *)_mutex_linker_head_fromBlocking(id);
-    pLockThread = (thread_context_t *)_impl_kernel_member_unified_id_toContainerAddress(pCurMutex->holdThreadId);
+    pLockThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(pCurMutex->holdThreadId);
     /* priority recovery */
     pLockThread->priority = pCurMutex->originalPriority;
     if (!pMutexHighestBlockingThread) {
@@ -344,11 +252,95 @@ static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
         /* The next thread take the ticket */
         pCurMutex->holdThreadId = pMutexHighestBlockingThread->head.id;
         pCurMutex->originalPriority = pMutexHighestBlockingThread->priority;
-        postcode = _impl_kernel_thread_entry_trigger(pMutexHighestBlockingThread->head.id, id, PC_SC_SUCCESS, NULL);
+        postcode = kernel_thread_entry_trigger(pMutexHighestBlockingThread->head.id, id, PC_SC_SUCCESS, NULL);
     }
 
     EXIT_CRITICAL_SECTION();
     return postcode;
+}
+
+/**
+ * @brief Convert the internal os id to kernel member number.
+ *
+ * @param id The provided unique id.
+ *
+ * @return The value of member number.
+ */
+u32_t _impl_mutex_os_id_to_number(os_id_t id)
+{
+    if (_mutex_id_isInvalid(id)) {
+        return 0u;
+    }
+
+    return (u32_t)((id - kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_MUTEX)) / sizeof(mutex_context_t));
+}
+
+/**
+ * @brief Initialize a new mutex.
+ *
+ * @param pName The mutex name.
+ *
+ * @return The mutex unique id.
+ */
+os_id_t _impl_mutex_init(const char_t *pName)
+{
+    arguments_t arguments[] = {
+        [0] = {.pch_val = (const char_t *)pName},
+    };
+
+    return kernel_privilege_invoke((const void *)_mutex_init_privilege_routine, arguments);
+}
+
+/**
+ * @brief Mutex lock to avoid another thread access this resource.
+ *
+ * @param id The mutex unique id.
+ *
+ * @return The result of the operation.
+ */
+u32p_t _impl_mutex_lock(os_id_t id)
+{
+    if (_mutex_id_isInvalid(id)) {
+        return _PC_CMPT_FAILED;
+    }
+
+    if (!_mutex_object_isInit(id)) {
+        return _PC_CMPT_FAILED;
+    }
+
+    if (!kernel_isInThreadMode()) {
+        return _PC_CMPT_FAILED;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (u32_t)id},
+    };
+
+    return kernel_privilege_invoke((const void *)_mutex_lock_privilege_routine, arguments);
+}
+
+/**
+ * @brief Mutex unlock to allow another access the resource.
+ *
+ * @param id The mutex unique id.
+ *
+ * @return The result of the operation.
+ */
+u32p_t _impl_mutex_unlock(os_id_t id)
+{
+    if (_mutex_id_isInvalid(id)) {
+        return _PC_CMPT_FAILED;
+    }
+
+    if (!_mutex_object_isInit(id)) {
+        return _PC_CMPT_FAILED;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (u32_t)id},
+    };
+
+    return kernel_privilege_invoke((const void *)_mutex_unlock_privilege_routine, arguments);
 }
 
 /**
@@ -359,7 +351,7 @@ static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
  *
  * @return TRUE: Operation pass, FALSE: Operation failed.
  */
-b_t _impl_trace_mutex_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
+b_t mutex_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
 {
 #if defined KTRACE
     mutex_context_t *pCurMutex = NULL;
@@ -369,8 +361,8 @@ b_t _impl_trace_mutex_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     ENTER_CRITICAL_SECTION();
 
     offset = sizeof(mutex_context_t) * instance;
-    pCurMutex = (mutex_context_t *)(_impl_kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_MUTEX) + offset);
-    id = _impl_kernel_member_containerAddress_toUnifiedid((u32_t)pCurMutex);
+    pCurMutex = (mutex_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_MUTEX) + offset);
+    id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurMutex);
     _memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
 
     if (_mutex_id_isInvalid(id)) {

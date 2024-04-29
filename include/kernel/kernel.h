@@ -64,27 +64,29 @@ enum {
 #define KERNEL_MEMBER_MAP_8      (KERNEL_MEMBER_MAP_7 + KERNEL_POOL_MEMORY_SIZE)
 #define KERNEL_MEMBER_MAP_NUMBER (KERNEL_MEMBER_MAP_8 + 1u)
 
-list_t *_impl_kernel_member_list_get(u8_t member_id, u8_t list_id);
-u32_t _impl_kernel_member_id_unifiedConvert(u8_t member_id, u32_t unified_id);
-void _impl_kernel_thread_list_transfer_toEntry(linker_head_t *pCurHead);
-u32p_t _impl_kernel_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToList, u32_t timeout_us, void (*pCallback)(os_id_t));
-u32p_t _impl_kernel_thread_entry_trigger(os_id_t id, os_id_t release, u32_t result, void (*pCallback)(os_id_t));
-u32_t _impl_kernel_schedule_entry_result_take(action_schedule_t *pSchedule);
-void _impl_kernel_thread_list_transfer_toPend(linker_head_t *pCurHead);
-list_t *_impl_kernel_list_pendingHeadGet(void);
-u32_t _impl_kernel_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size);
-b_t _impl_kernel_isInThreadMode(void);
-u32_t _impl_kernel_thread_schedule_request(void);
-void _impl_kernel_message_notification(void);
-void _impl_kernel_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP);
-u32_t _impl_kernel_schedule_time_get(void);
-u32_t impl_kernel_thread_use_percent_take(os_id_t id);
-void _impl_kernel_privilege_call_inSVC_c(u32_t *svc_args);
-u32_t _impl_kernel_privilege_invoke(const void *pCallFun, arguments_t *pArgs);
-void _impl_kernel_thread_schedule(void);
-void _impl_kernel_thread_idle(void);
-void _impl_kernel_semaphore_list_transfer_toLock(linker_head_t *pCurHead);
-thread_context_t *_impl_kernel_thread_runContextGet(void);
+thread_context_t *kernel_thread_runContextGet(void);
+list_t *kernel_member_list_get(u8_t member_id, u8_t list_id);
+void kernel_thread_list_transfer_toEntry(linker_head_t *pCurHead);
+u32p_t kernel_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToList, u32_t timeout_us, void (*pCallback)(os_id_t));
+u32p_t kernel_thread_entry_trigger(os_id_t id, os_id_t release, u32_t result, void (*pCallback)(os_id_t));
+u32_t kernel_schedule_entry_result_take(action_schedule_t *pSchedule);
+void kernel_thread_list_transfer_toPend(linker_head_t *pCurHead);
+list_t *kernel_list_pendingHeadGet(void);
+u32_t kernel_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size);
+b_t kernel_isInThreadMode(void);
+u32_t kernel_thread_schedule_request(void);
+void kernel_message_notification(void);
+void kernel_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP);
+u32_t kernel_schedule_time_get(void);
+u32_t kernel_thread_use_percent_take(os_id_t id);
+void kernel_privilege_call_inSVC_c(u32_t *svc_args);
+u32_t kernel_privilege_invoke(const void *pCallFun, arguments_t *pArgs);
+void kernel_semaphore_list_transfer_toLock(linker_head_t *pCurHead);
+void kernel_schedule_thread(void);
+void kernel_idle_thread(void);
+void kthread_init(void);
+void kthread_message_notification(void);
+u32_t kthread_message_arrived(void);
 
 #ifdef __cplusplus
 }

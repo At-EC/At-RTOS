@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
- 
+
 #include "clock_tick.h"
 #include "port.h"
 
@@ -17,7 +17,7 @@ extern "C" {
  */
 void SysTick_Handler(void)
 {
-    _impl_clock_isr();
+    clock_isr();
 }
 
 /**
@@ -31,7 +31,7 @@ void HardFault_Handler(void)
 /**
  * @brief To check if it's in interrupt content.
  */
-b_t _impl_port_isInInterruptContent(void)
+b_t port_isInInterruptContent(void)
 {
     if (__get_IPSR()) {
         return TRUE;
@@ -47,7 +47,7 @@ b_t _impl_port_isInInterruptContent(void)
 /**
  * @brief To check if it's in kernel thread content.
  */
-b_t _impl_port_isInThreadMode(void)
+b_t port_isInThreadMode(void)
 {
     if (__get_IPSR()) {
         return FALSE;
@@ -58,7 +58,7 @@ b_t _impl_port_isInThreadMode(void)
 /**
  * @brief ARM core trigger the pendsv interrupt.
  */
-void _impl_port_setPendSV(void)
+void port_setPendSV(void)
 {
     SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
@@ -66,7 +66,7 @@ void _impl_port_setPendSV(void)
 /**
  * @brief ARM core config kernel thread interrupt priority.
  */
-void _impl_port_interrupt_init(void)
+void port_interrupt_init(void)
 {
     NVIC_SetPriority(PendSV_IRQn, 0xFFu); // Set PendSV to lowest possible priority
     NVIC_SetPriority(SVCall_IRQn, 0u); // Set SV to lowest possible priority
@@ -82,7 +82,7 @@ void _impl_port_interrupt_init(void)
  *
  * @return The PSP stack address.
  */
-u32_t _impl_port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
+u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
 {
     _memset((uchar_t *)pAddress, STACT_UNUSED_DATA, size);
 

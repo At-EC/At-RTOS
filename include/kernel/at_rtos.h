@@ -9,22 +9,16 @@
 #define _AT_RTOS_H_
 
 #include "ktype.h"
+#include "kstruct.h"
 #include "configuration.h"
 #include "postcode.h"
 #include "trace.h"
-#include "thread.h"
-#include "timer.h"
-#include "semaphore.h"
-#include "event.h"
-#include "mutex.h"
-#include "queue.h"
-#include "pool.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ATOS_THREAD_DEFINE(thread_name, stack_size, thread_priority)                                                                       \
+#define OS_THREAD_DEFINE(thread_name, stack_size, thread_priority)                                                                         \
     static os_thread_symbol_t thread_name[((u32_t)(stack_size) / sizeof(u32_t))] = {                                                       \
         [0] = {.size = stack_size},                                                                                                        \
         [1] = {.priority = thread_priority},                                                                                               \
@@ -49,18 +43,18 @@ extern "C" {
  * demo usage:
  *#include "at_rtos.h"
  *
- *ATOS_THREAD_DEFINE(sample_thread, 512, 5);
+ * OS_THREAD_DEFINE(sample_thread, 512, 5);
  *
  * void thread_sample_function(void)
  * {
  *     while(1) {
- *         AtOS.thread_sleep(1000u);
+ *         os.thread_sleep(1000u);
  *     }
  * }
  *
  * int main(void)
  * {
- *     os_thread_id_t sample_id = thread_init(sample_thread, thread_sample_function);
+ *     os_thread_id_t sample_id = os_thread_init(sample_thread, thread_sample_function);
  *     if (os_id_is_invalid(sample_id)) {
  *         printf("Thread %s init failed\n", sample_id.pName);
  *     }
@@ -68,8 +62,11 @@ extern "C" {
  * }
  *
  */
-static inline os_thread_id_t thread_init(os_thread_symbol_t *pThread_symbol, pThread_entryFunc_t pEntryFun)
+static inline os_thread_id_t os_thread_init(os_thread_symbol_t *pThread_symbol, pThread_entryFunc_t pEntryFun)
 {
+    extern u32_t _impl_thread_os_id_to_number(os_id_t id);
+    extern os_id_t _impl_thread_init(void (*pThread_entryFunc_t)(void), u32_t *pAddress, u32_t size, u16_t priority, const char_t *pName);
+
     os_thread_id_t id = {0u};
     u32_t *pStackAddress = (u32_t *)pThread_symbol;
     u32_t stackSize = (u32_t)pThread_symbol[0].size;
@@ -95,12 +92,14 @@ static inline os_thread_id_t thread_init(os_thread_symbol_t *pThread_symbol, pTh
  * void thread_sample_function(void)
  * {
  *     while(1) {
- *          thread_sleep(1000); // Put the thread to sleep mode 1 sec.
+ *          os_thread_sleep(1000); // Put the thread to sleep mode 1 sec.
  *     }
  * }
  */
-static inline u32p_t thread_sleep(u32_t ms)
+static inline u32p_t os_thread_sleep(u32_t ms)
 {
+    extern u32p_t _impl_thread_sleep(u32_t ms);
+
     return (u32p_t)_impl_thread_sleep(ms);
 }
 
@@ -113,10 +112,12 @@ static inline u32p_t thread_sleep(u32_t ms)
  **
  * demo usage:
  *
- *    thread_resume(sample_id); // The variable sample_id created in above thread init demo.
+ *    os_thread_resume(sample_id); // The variable sample_id created in above thread init demo.
  */
-static inline u32p_t thread_resume(os_thread_id_t id)
+static inline u32p_t os_thread_resume(os_thread_id_t id)
 {
+    extern u32p_t _impl_thread_resume(os_id_t id);
+
     return (u32p_t)_impl_thread_resume(id.val);
 }
 
@@ -129,10 +130,12 @@ static inline u32p_t thread_resume(os_thread_id_t id)
  **
  * demo usage:
  *
- *    thread_suspend(sample_id); // The variable sample_id created in above thread init demo.
+ *    os_thread_suspend(sample_id); // The variable sample_id created in above thread init demo.
  */
-static inline u32p_t thread_suspend(os_thread_id_t id)
+static inline u32p_t os_thread_suspend(os_thread_id_t id)
 {
+    extern u32p_t _impl_thread_suspend(os_id_t id);
+
     return (u32p_t)_impl_thread_suspend(id.val);
 }
 
@@ -148,12 +151,14 @@ static inline u32p_t thread_suspend(os_thread_id_t id)
  * void thread_sample_function(void)
  * {
  *     while(1) {
- *          thread_yield(); // Put current thread to sleep mode manually.
+ *          os_thread_yield(); // Put current thread to sleep mode manually.
  *     }
  * }
  */
-static inline u32p_t thread_yield(void)
+static inline u32p_t os_thread_yield(void)
 {
+    extern u32p_t _impl_thread_yield(void);
+
     return (u32p_t)_impl_thread_yield();
 }
 
@@ -166,10 +171,12 @@ static inline u32p_t thread_yield(void)
  **
  * demo usage:
  *
- *    thread_delete(sample_id); // The variable sample_id created in above thread init demo.
+ *    os_thread_delete(sample_id); // The variable sample_id created in above thread init demo.
  */
-static inline u32p_t thread_delete(os_thread_id_t id)
+static inline u32p_t os_thread_delete(os_thread_id_t id)
 {
+    extern u32p_t _impl_thread_delete(os_id_t id);
+
     return (u32p_t)_impl_thread_delete(id.val);
 }
 
@@ -190,14 +197,17 @@ static inline u32p_t thread_delete(os_thread_id_t id)
  *        // The function will be called per 1 seconds.
  *    }
  *
- *    os_timer_id_t sample_id = timer_init(sample_timer_function, TRUE, 1000u, "sample");
+ *    os_timer_id_t sample_id = os_timer_init(sample_timer_function, TRUE, 1000u, "sample");
  *     if (os_id_is_invalid(sample_id)) {
  *         printf("Timer %s init failed\n", sample_id.pName);
  *     }
  *     ...
  */
-static inline os_timer_id_t timer_init(pTimer_callbackFunc_t pEntryFun, b_t isCycle, u32_t timeout_ms, const char_t *pName)
+static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, b_t isCycle, u32_t timeout_ms, const char_t *pName)
 {
+    extern u32_t _impl_timer_os_id_to_number(u32_t id);
+    extern os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t timeout_ms, const char_t *pName);
+
     os_timer_id_t id = {0u};
 
     id.val = _impl_timer_init(pEntryFun, isCycle, timeout_ms, pName);
@@ -219,13 +229,15 @@ static inline os_timer_id_t timer_init(pTimer_callbackFunc_t pEntryFun, b_t isCy
  **
  * demo usage:
  *
- *     u32p_t postcode = timer_start(sample_id, FALSE, 1000u);
+ *     u32p_t postcode = os_timer_start(sample_id, FALSE, 1000u);
  *     if (PC_IOK(postcode)) {
  *         printf("Timer start successful\n");
  *     }
  */
-static inline u32p_t timer_start(os_timer_id_t id, b_t isCycle, u32_t timeout_ms)
+static inline u32p_t os_timer_start(os_timer_id_t id, b_t isCycle, u32_t timeout_ms)
 {
+    extern u32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms);
+
     return (u32p_t)_impl_timer_start(id.val, isCycle, timeout_ms);
 }
 
@@ -238,13 +250,15 @@ static inline u32p_t timer_start(os_timer_id_t id, b_t isCycle, u32_t timeout_ms
  **
  * demo usage:
  *
- *     u32p_t postcode = timer_stop(sample_id);
+ *     u32p_t postcode = os_timer_stop(sample_id);
  *     if (PC_IOK(postcode)) {
  *         printf("Timer stop successful\n");
  *     }
  */
-static inline u32p_t timer_stop(os_timer_id_t id)
+static inline u32p_t os_timer_stop(os_timer_id_t id)
 {
+    extern u32p_t _impl_timer_stop(os_id_t id);
+
     return (u32p_t)_impl_timer_stop(id.val);
 }
 
@@ -257,13 +271,15 @@ static inline u32p_t timer_stop(os_timer_id_t id)
  **
  * demo usage:
  *
- *    if(timer_isBusy(sample_id)) {
+ *    if(os_timer_busy(sample_id)) {
  *        printf("Timer %s is busy\n", sample_id.pName);
  *    }
  */
-static inline u32p_t timer_isBusy(os_timer_id_t id)
+static inline u32p_t os_timer_busy(os_timer_id_t id)
 {
-    return (u32p_t)_impl_timer_status_isBusy(id.val);
+    extern b_t _impl_timer_busy(os_id_t id);
+
+    return (u32p_t)_impl_timer_busy(id.val);
 }
 
 /**
@@ -273,10 +289,12 @@ static inline u32p_t timer_isBusy(os_timer_id_t id)
  **
  * demo usage:
  *
- *    printf("The system consume time: %d\n", timer_system_total_ms());
+ *    printf("The system consume time: %d\n", os_timer_system_total_ms());
  */
-static inline u32_t timer_system_total_ms(void)
+static inline u32_t os_timer_system_total_ms(void)
 {
+    extern u32_t _impl_timer_total_system_ms_get(void);
+
     return (u32_t)_impl_timer_total_system_ms_get();
 }
 
@@ -294,14 +312,17 @@ static inline u32_t timer_system_total_ms(void)
  * demo usage:
  *
  *    // Init a binary semaphore count.
- *     os_sem_id_t sample_id = sem_init(0u, 1u, FALSE, "sample");
+ *     os_sem_id_t sample_id = os_sem_init(0u, 1u, FALSE, "sample");
  *     if (os_id_is_invalid(sample_id)) {
  *         printf("Semaphore %s init failed\n", sample_id.pName);
  *     }
  *     ...
  */
-static inline os_sem_id_t sem_init(u8_t initial, u8_t limit, b_t permit, const char_t *pName)
+static inline os_sem_id_t os_sem_init(u8_t initial, u8_t limit, b_t permit, const char_t *pName)
 {
+    u32_t _impl_semaphore_os_id_to_number(os_id_t id);
+    os_id_t _impl_semaphore_init(u8_t initialCount, u8_t limitCount, b_t permit, const char_t *pName);
+
     os_sem_id_t id = {0u};
 
     id.val = _impl_semaphore_init(initial, limit, permit, pName);
@@ -320,7 +341,7 @@ static inline os_sem_id_t sem_init(u8_t initial, u8_t limit, b_t permit, const c
  **
  * demo usage:
  *
- *     u32p_t postcode = sem_take(sample_id, 1000u);
+ *     u32p_t postcode = os_sem_take(sample_id, 1000u);
  *     if (PC_IOK(postcode)) {
  *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Semaphore take wait timeout\n");
@@ -331,15 +352,17 @@ static inline os_sem_id_t sem_init(u8_t initial, u8_t limit, b_t permit, const c
  *         printf("Semaphore take error: 0x%x\n", postcode);
  *     }
  *
- *     u32p_t postcode = sem_take(sample_id, OS_WAIT_FOREVER);
+ *     u32p_t postcode = os_sem_take(sample_id, OS_WAIT_FOREVER);
  *     if (PC_IOK(postcode)) {
  *        printf("Semaphore take successful\n");
  *     } else {
  *         printf("Semaphore take error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t sem_take(os_sem_id_t id, u32_t timeout_ms)
+static inline u32p_t os_sem_take(os_sem_id_t id, u32_t timeout_ms)
 {
+    extern u32p_t _impl_semaphore_take(os_id_t id, u32_t timeout_ms);
+
     return (u32p_t)_impl_semaphore_take(id.val, timeout_ms);
 }
 
@@ -352,15 +375,17 @@ static inline u32p_t sem_take(os_sem_id_t id, u32_t timeout_ms)
  **
  * demo usage:
  *
- *     u32p_t postcode = sem_give(sample_id);
+ *     u32p_t postcode = os_sem_give(sample_id);
  *     if (PC_IOK(postcode)) {
  *         printf("Semaphore give successful\n");
  *     } else {
  *         printf("Semaphore give error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t sem_give(os_sem_id_t id)
+static inline u32p_t os_sem_give(os_sem_id_t id)
 {
+    extern u32_t _impl_semaphore_give(os_id_t id);
+
     return (u32p_t)_impl_semaphore_give(id.val);
 }
 
@@ -373,15 +398,17 @@ static inline u32p_t sem_give(os_sem_id_t id)
  **
  * demo usage:
  *
- *     u32p_t postcode = sem_flush(sample_id);
+ *     u32p_t postcode = os_sem_flush(sample_id);
  *     if (PC_IOK(postcode)) {
  *         printf("Semaphore flush successful\n");
  *     } else {
  *         printf("Semaphore flush error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t sem_flush(os_sem_id_t id)
+static inline u32p_t os_sem_flush(os_sem_id_t id)
 {
+    extern u32_t _impl_semaphore_flush(os_id_t id);
+
     return (u32p_t)_impl_semaphore_flush(id.val);
 }
 
@@ -394,14 +421,17 @@ static inline u32p_t sem_flush(os_sem_id_t id)
  **
  * demo usage:
  *
- *     os_mutex_id_t sample_id = mutex_init("sample");
+ *     os_mutex_id_t sample_id = os_mutex_init("sample");
  *     if (os_id_is_invalid(sample_id)) {
  *         printf("Mutex %s init failed\n", sample_id.pName);
  *     }
  *     ...
  */
-static inline os_mutex_id_t mutex_init(const char_t *pName)
+static inline os_mutex_id_t os_mutex_init(const char_t *pName)
 {
+    extern u32_t _impl_mutex_os_id_to_number(os_id_t id);
+    extern os_id_t _impl_mutex_init(const char_t *pName);
+
     os_mutex_id_t id = {0u};
 
     id.val = _impl_mutex_init(pName);
@@ -420,15 +450,17 @@ static inline os_mutex_id_t mutex_init(const char_t *pName)
  **
  * demo usage:
  *
- *     u32p_t postcode = mutex_lock(sample_id);
+ *     u32p_t postcode = os_mutex_lock(sample_id);
  *     if (PC_IOK(postcode)) {
  *         printf("Mutex lock successful\n");
  *     } else {
  *         printf("Mutex lock error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t mutex_lock(os_mutex_id_t id)
+static inline u32p_t os_mutex_lock(os_mutex_id_t id)
 {
+    extern u32p_t _impl_mutex_lock(os_id_t id);
+
     return (u32p_t)_impl_mutex_lock(id.val);
 }
 
@@ -441,15 +473,17 @@ static inline u32p_t mutex_lock(os_mutex_id_t id)
  **
  * demo usage:
  *
- *     u32p_t postcode = mutex_unlock(sample_id);
+ *     u32p_t postcode = os_mutex_unlock(sample_id);
  *     if (PC_IOK(postcode)) {
  *         printf("Mutex unlock successful\n");
  *     } else {
  *         printf("Mutex unlock error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t mutex_unlock(os_mutex_id_t id)
+static inline u32p_t os_mutex_unlock(os_mutex_id_t id)
 {
+    extern u32p_t _impl_mutex_unlock(os_id_t id);
+
     return (u32p_t)_impl_mutex_unlock(id.val);
 }
 
@@ -465,14 +499,17 @@ static inline u32p_t mutex_unlock(os_mutex_id_t id)
  **
  * demo usage:
  *
- *     os_evt_id_t sample_id = evt_init(0u, 0u, "sample");
+ *     os_evt_id_t sample_id = os_evt_init(0u, 0u, "sample");
  *     if (os_id_is_invalid(sample_id)) {
  *         printf("Event %s init failed\n", sample_id.pName);
  *     }
  *     ...
  */
-static inline os_evt_id_t evt_init(u32_t edgeMask, u32_t clrDisMask, const char_t *pName)
+static inline os_evt_id_t os_evt_init(u32_t edgeMask, u32_t clrDisMask, const char_t *pName)
 {
+    extern u32_t _impl_event_os_id_to_number(os_id_t id);
+    extern os_id_t _impl_event_init(u32_t edgeMask, u32_t clrDisMask, const char_t *pName);
+
     os_msgq_id_t id = {0u};
 
     id.val = _impl_event_init(edgeMask, clrDisMask, pName);
@@ -494,15 +531,17 @@ static inline os_evt_id_t evt_init(u32_t edgeMask, u32_t clrDisMask, const char_
  **
  * demo usage:
  *
- *     u32p_t postcode = evt_set(sample_id, 0x01u, 0u, 0u);
+ *     u32p_t postcode = os_evt_set(sample_id, 0x01u, 0u, 0u);
  *     if (PC_IOK(postcode)) {
  *         printf("Event set successful\n");
  *     } else {
  *         printf("Event set error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t toggle)
+static inline u32p_t os_evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t toggle)
 {
+    extern u32p_t _impl_event_set(os_id_t id, u32_t set, u32_t clear, u32_t toggle);
+
     return (u32p_t)_impl_event_set(id.val, set, clear, toggle);
 }
 
@@ -521,14 +560,14 @@ static inline u32p_t evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t toggl
  * demo usage:
  *
  *     u32_t event = 0u;
- *     u32p_t postcode = evt_wait(sample_id, &event, 0xFFFFFFFu, 0x01u, 0x01u, OS_WAIT_FOREVER);
+ *     u32p_t postcode = os_evt_wait(sample_id, &event, 0xFFFFFFFu, 0x01u, 0x01u, OS_WAIT_FOREVER);
  *     if (PC_IOK(postcode)) {
  *         printf("Event wait successful, The event value is 0x%x\n", event);
  *     } else {
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  *
- *     u32p_t postcode = evt_wait(sample_id, &event, 0xFFFFFFFu, 0x03u, 0x03u, 1000u);
+ *     u32p_t postcode = os_evt_wait(sample_id, &event, 0xFFFFFFFu, 0x03u, 0x03u, 1000u);
  *     if (PC_IOK(postcode)) {
  *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Event wait timeout\n");
@@ -539,9 +578,12 @@ static inline u32p_t evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t toggl
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t evt_wait(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t desired_val, u32_t listen_mask, u32_t group_mask,
-                              u32_t timeout_ms)
+static inline u32p_t os_evt_wait(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t desired_val, u32_t listen_mask, u32_t group_mask,
+                                 u32_t timeout_ms)
 {
+    extern u32p_t _impl_event_wait(os_id_t id, os_evt_val_t * pEvtData, u32_t desired_val, u32_t listen_mask, u32_t group_mask,
+                                   u32_t timeout_ms);
+
     return (u32p_t)_impl_event_wait(id.val, pEvtData, desired_val, listen_mask, group_mask, timeout_ms);
 }
 
@@ -558,13 +600,16 @@ static inline u32p_t evt_wait(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t desi
  * demo usage:
  *     static u8_t g_sample_msgq[3 * 10] = {0u};
  *
- *     os_msgq_id_t sample_id = msgq_init((u8_t*)g_sample_msgq, 3u, 10u, "sample");
+ *     os_msgq_id_t sample_id = os_msgq_init((u8_t*)g_sample_msgq, 3u, 10u, "sample");
  *     if (os_id_is_invalid(sample_id)) {
  *         printf("Message queue %s init failed\n", sample_id.pName);
  *     }
  */
-static inline os_msgq_id_t msgq_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
+static inline os_msgq_id_t os_msgq_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
 {
+    extern u32_t _impl_queue_os_id_to_number(os_id_t id);
+    extern os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t elementNum, const char_t *pName);
+
     os_msgq_id_t id = {0u};
 
     id.val = _impl_queue_init(pQueueBufferAddr, elementLen, elementNum, pName);
@@ -588,14 +633,14 @@ static inline os_msgq_id_t msgq_init(const void *pQueueBufferAddr, u16_t element
  * demo usage:
  *
  *     u8_t txdata = 0u;
- *     u32p_t postcode = msgq_send(sample_id, &txdata, 0x01u, FALSE, OS_WAIT_FOREVER);
+ *     u32p_t postcode = os_msgq_put(sample_id, &txdata, 0x01u, FALSE, OS_WAIT_FOREVER);
  *     if (PC_IOK(postcode)) {
  *         printf("Message queue send successful\n");
  *     } else {
  *         printf("Message queue send error: 0x%x\n", postcode);
  *     }
  *
- *     postcode = msgq_send(sample_id, &txdata, 0x01u, TRUE, 1000u);
+ *     postcode = os_msgq_put(sample_id, &txdata, 0x01u, TRUE, 1000u);
  *     if (PC_IOK(postcode)) {
  *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Message queue send timeout\n");
@@ -606,8 +651,10 @@ static inline os_msgq_id_t msgq_init(const void *pQueueBufferAddr, u16_t element
  *         printf("Message queue send error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms)
+static inline u32p_t os_msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms)
 {
+    extern u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms);
+
     return (u32p_t)_impl_queue_send(id.val, pUserBuffer, bufferSize, isToFront, timeout_ms);
 }
 
@@ -625,14 +672,14 @@ static inline u32p_t msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bu
  * demo usage:
  *
  *     u8_t rxdata = 0u;
- *     u32p_t postcode = msgq_receive(sample_id, &rxdata, 0x01u, TRUE, OS_WAIT_FOREVER);
+ *     u32p_t postcode = os_msgq_get(sample_id, &rxdata, 0x01u, TRUE, OS_WAIT_FOREVER);
  *     if (PC_IOK(postcode)) {
  *         printf("Message queue receive successful, the rx data is 0x%x\n", rxdata);
  *     } else {
  *         printf("Message queue receive error: 0x%x\n", postcode);
  *     }
  *
- *     postcode = msgq_receive(sample_id, &rxdata, 0x01u, FALSE, 1000u);
+ *     postcode = os_msgq_get(sample_id, &rxdata, 0x01u, FALSE, 1000u);
  *     if (PC_IOK(postcode)) {
  *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Message queue receive timeout\n");
@@ -643,8 +690,10 @@ static inline u32p_t msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bu
  *         printf("Message queue receive error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms)
+static inline u32p_t os_msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms)
 {
+    extern u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms);
+
     return (u32p_t)_impl_queue_receive(id.val, pUserBuffer, bufferSize, isFromBack, timeout_ms);
 }
 
@@ -661,13 +710,16 @@ static inline u32p_t msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bu
  * demo usage:
  *     static u8_t g_sample_pool[3 * 10] = {0u};
  *
- *     os_pool_id_t sample_id = pool_init((const void*)g_sample_pool, 10u, 3u, "sample");
+ *     os_pool_id_t sample_id = os_pool_init((const void*)g_sample_pool, 10u, 3u, "sample");
  *     if (os_id_is_invalid(sample_id)) {
  *         printf("Memory pool %s init failed\n", sample_id.pName);
  *     }
  */
-static inline os_pool_id_t pool_init(const void *pMemAddress, u16_t elementLen, u16_t elementNum, const char_t *pName)
+static inline os_pool_id_t os_pool_init(const void *pMemAddress, u16_t elementLen, u16_t elementNum, const char_t *pName)
 {
+    extern u32_t _impl_pool_os_id_to_number(os_id_t id);
+    extern os_id_t _impl_pool_init(const void *pMemAddr, u16_t elementLen, u16_t elementNum, const char_t *pName);
+
     os_pool_id_t id = {0u};
 
     id.val = _impl_pool_init(pMemAddress, elementLen, elementNum, pName);
@@ -690,14 +742,14 @@ static inline os_pool_id_t pool_init(const void *pMemAddress, u16_t elementLen, 
  * demo usage:
  *
  *     u8_t* pTakeMem = NULL;
- *     u32p_t postcode = pool_take(sample_id, (void **)&pTakeMem, 10u, OS_WAIT_FOREVER);
+ *     u32p_t postcode = os_pool_take(sample_id, (void **)&pTakeMem, 10u, OS_WAIT_FOREVER);
  *     if (PC_IOK(postcode)) {
  *         printf("Memory pool take successful\n");
  *     } else {
  *         printf("Memory pool take error: 0x%x\n", postcode);
  *     }
  *
- *     u32p_t postcode = pool_take(sample_id, (void **)&pTakeMem, 10u, 2000u);
+ *     u32p_t postcode = os_pool_take(sample_id, (void **)&pTakeMem, 10u, 2000u);
  *     if (PC_IOK(postcode)) {
  *         if (postcode == PC_SC_TIMEOUT) {
  *             printf("Memory pool take timeout\n");
@@ -708,8 +760,10 @@ static inline os_pool_id_t pool_init(const void *pMemAddress, u16_t elementLen, 
  *         printf("Memory pool take error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t pool_take(os_pool_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms)
+static inline u32p_t os_pool_take(os_pool_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms)
 {
+    extern u32p_t _impl_pool_take(os_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms);
+
     return (u32p_t)_impl_pool_take(id.val, ppUserBuffer, bufferSize, timeout_ms);
 }
 
@@ -724,11 +778,11 @@ static inline u32p_t pool_take(os_pool_id_t id, void **ppUserBuffer, u16_t buffe
  * demo usage:
  *
  *     u8_t* pTakeMem = NULL;
- *     u32p_t postcode = pool_take(sample_id, (void **)&pTakeMem, 10u, OS_WAIT_FOREVER);
+ *     u32p_t postcode = os_pool_take(sample_id, (void **)&pTakeMem, 10u, OS_WAIT_FOREVER);
  *     if (PC_IOK(postcode)) {
  *         printf("Memory pool take successful\n");
  *
- *         u32p_t postcode = pool_release(sample_id, (void **)&pTakeMem);
+ *         u32p_t postcode = os_pool_release(sample_id, (void **)&pTakeMem);
  *         if (PC_IOK(postcode)) {
  *             printf("Memory pool release successful\n");
  *         } else {
@@ -739,8 +793,10 @@ static inline u32p_t pool_take(os_pool_id_t id, void **ppUserBuffer, u16_t buffe
  *         printf("Memory pool take error: 0x%x\n", postcode);
  *     }
  */
-static inline u32p_t pool_release(os_pool_id_t id, void **ppUserBuffer)
+static inline u32p_t os_pool_release(os_pool_id_t id, void **ppUserBuffer)
 {
+    extern u32p_t _impl_pool_release(os_id_t id, void **ppUserBuffer);
+
     return (u32p_t)_impl_pool_release(id.val, ppUserBuffer);
 }
 
@@ -761,7 +817,7 @@ static inline u32p_t pool_release(os_pool_id_t id, void **ppUserBuffer)
  */
 static inline b_t os_id_is_invalid(struct os_id id)
 {
-    return (b_t)_impl_kernel_os_id_is_invalid(id);
+    return (b_t)kernel_os_id_is_invalid(id);
 }
 
 /**
@@ -777,8 +833,12 @@ static inline b_t os_id_is_invalid(struct os_id id)
  */
 static inline os_thread_id_t os_id_current_thread(void)
 {
+    extern const char_t *_impl_thread_name_get(os_id_t id);
+    extern os_id_t kernel_thread_runIdGet(void);
+    extern u32_t _impl_thread_os_id_to_number(os_id_t id);
+
     os_thread_id_t id = {0u};
-    id.val = _impl_kernel_thread_runIdGet();
+    id.val = kernel_thread_runIdGet();
     id.number = _impl_thread_os_id_to_number(id.val);
     id.pName = _impl_thread_name_get(id.val);
 
@@ -795,6 +855,8 @@ static inline os_thread_id_t os_id_current_thread(void)
  */
 static inline u32p_t os_kernel_run(void)
 {
+    extern u32p_t _impl_kernel_at_rtos_run(void);
+
     return _impl_kernel_at_rtos_run();
 }
 
@@ -812,6 +874,8 @@ static inline u32p_t os_kernel_run(void)
  */
 static inline b_t os_kernel_is_running(void)
 {
+    extern b_t _impl_kernel_rtos_isRun(void);
+
     return (b_t)(_impl_kernel_rtos_isRun() ? (TRUE) : (FALSE));
 }
 
@@ -864,7 +928,7 @@ typedef struct {
     os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, b_t, u32_t, const char_t *);
     u32p_t (*timer_start)(os_timer_id_t, b_t, u32_t);
     u32p_t (*timer_stop)(os_timer_id_t);
-    u32p_t (*timer_isBusy)(os_timer_id_t);
+    u32p_t (*timer_busy)(os_timer_id_t);
     u32_t (*timer_system_total_ms)(void);
 
     os_sem_id_t (*sem_init)(u8_t, u8_t, b_t, const char_t *);
@@ -898,7 +962,7 @@ typedef struct {
     void (*trace_kernel)(void);
 } at_rtos_api_t;
 
-extern const at_rtos_api_t AtOS;
+extern const at_rtos_api_t os;
 #endif
 
 #ifdef __cplusplus

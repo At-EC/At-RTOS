@@ -15,7 +15,7 @@ extern "C" {
 /**
  * @brief ARM core trigger the svc call interrupt.
  */
-u32_t _impl_kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
+u32_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
 {
     /* TODO */
 }
@@ -39,7 +39,7 @@ void HardFault_Handler(void)
 /**
  * @brief To check if it's in interrupt content.
  */
-b_t _impl_port_isInInterruptContent(void)
+b_t port_isInInterruptContent(void)
 {
     /* TODO */
 
@@ -49,7 +49,7 @@ b_t _impl_port_isInInterruptContent(void)
 /**
  * @brief To check if it's in kernel thread content.
  */
-b_t _impl_port_isInThreadMode(void)
+b_t port_isInThreadMode(void)
 {
     /* TODO */
     return TRUE;
@@ -58,7 +58,7 @@ b_t _impl_port_isInThreadMode(void)
 /**
  * @brief ARM core trigger the pendsv interrupt.
  */
-void _impl_port_setPendSV(void)
+void port_setPendSV(void)
 {
     /* TODO */
 }
@@ -66,7 +66,7 @@ void _impl_port_setPendSV(void)
 /**
  * @brief ARM core config kernel thread interrupt priority.
  */
-void _impl_port_interrupt_init(void)
+void port_interrupt_init(void)
 {
     /* TODO */
 }
@@ -90,7 +90,7 @@ void PendSV_Handler(void)
 /**
  * @brief ARM core trigger the first thread to run.
  */
-void _impl_port_run_theFirstThread(u32_t sp)
+void port_run_theFirstThread(u32_t sp)
 {
     /* TODO */
 }
@@ -104,7 +104,7 @@ void _impl_port_run_theFirstThread(u32_t sp)
  *
  * @return The PSP stack address.
  */
-u32_t _impl_port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
+u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
 {
     /* TODO */
 }

@@ -107,7 +107,7 @@ static void _clock_time_elapsed_report(u32_t us)
 /**
  * @brief It's invoked in the SysTick_Handler to maintain the clock system.
  */
-void _impl_clock_isr(void)
+void clock_isr(void)
 {
     /**
      * For maintain purpose.
@@ -129,7 +129,7 @@ void _impl_clock_isr(void)
  *
  * @param Value of the next timeout.
  */
-void _impl_clock_time_interval_set(u32_t interval_us)
+void clock_time_interval_set(u32_t interval_us)
 {
     if (interval_us == OS_TIME_FOREVER_VAL) {
         SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
@@ -196,7 +196,7 @@ void _impl_clock_time_interval_set(u32_t interval_us)
  *
  * @return Value of the unreported elapse time.
  */
-u32_t _impl_clock_time_elapsed_get(void)
+u32_t clock_time_elapsed_get(void)
 {
     ARCH_ENTER_CRITICAL_SECTION();
 
@@ -212,7 +212,7 @@ u32_t _impl_clock_time_elapsed_get(void)
  *
  * @return Value of the current clock time.
  */
-u32_t _impl_clock_time_get(void)
+u32_t clock_time_get(void)
 {
     ARCH_ENTER_CRITICAL_SECTION();
 
@@ -226,7 +226,7 @@ u32_t _impl_clock_time_get(void)
 /**
  * @brief Enable the time clock.
  */
-void _impl_clock_time_enable(void)
+void clock_time_enable(void)
 {
     if (!g_clock_resource.ctrl_enabled) {
         g_clock_resource.ctrl_enabled = TRUE;
@@ -237,7 +237,7 @@ void _impl_clock_time_enable(void)
 /**
  * @brief Disable the time clock.
  */
-void _impl_clock_time_disable(void)
+void clock_time_disable(void)
 {
     SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
 }
@@ -245,7 +245,7 @@ void _impl_clock_time_disable(void)
 /**
  * @brief Init the time clock.
  */
-void _impl_clock_time_init(time_report_handler_t pTime_function)
+void clock_time_init(time_report_handler_t pTime_function)
 {
     g_clock_resource.pCallFunc = pTime_function;
 

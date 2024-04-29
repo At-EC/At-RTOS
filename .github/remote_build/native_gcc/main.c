@@ -15,7 +15,7 @@ extern "C" {
 #define _PC_CMPT_FAILED                 PC_FAILED(PC_CMPT_KERNEL)
 #define SAMPLE_THREAD_STACK_SIZE        (1024u)
 
-ATOS_THREAD_DEFINE(sample_thread, SAMPLE_THREAD_STACK_SIZE, 5);
+OS_THREAD_DEFINE(sample_thread, SAMPLE_THREAD_STACK_SIZE, 5);
 
 static os_thread_id_t g_sample_thread_id;
 
@@ -26,20 +26,20 @@ static void sample_entry_thread(void)
 {
     while(1) {
         /* Put the current thread into sleep state */
-        AtOS.thread_sleep(1000);
+        os.thread_sleep(1000);
     }
 }
 
 int main(void)
 {
-    g_sample_thread_id = AtOS.thread_init(sample_thread, sample_entry_thread);
+    g_sample_thread_id = os.thread_init(sample_thread, sample_entry_thread);
 
-    if (AtOS.id_isInvalid(g_sample_thread_id)) {
+    if (os.id_isInvalid(g_sample_thread_id)) {
        /* return _PC_CMPT_FAILED; */
     }
 
     /* At_RTOS kernel running starts */
-    AtOS.schedule_run();
+    os.schedule_run();
     D_ASSERT(0);
 
     while(1) {};

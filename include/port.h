@@ -128,18 +128,18 @@ typedef struct {
 /**
  * @brief Trigger system svc call.
  */
-__svc(SVC_KERNEL_INVOKE_NUMBER) u32_t _impl_kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+__svc(SVC_KERNEL_INVOKE_NUMBER) u32_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
 
 /**
  * @brief Schedule the first thread.
  */
-__asm void _impl_port_run_theFirstThread(u32_t sp);
+__asm void port_run_theFirstThread(u32_t sp);
 
 #if 0 /* Disable it to use CMSIS Library */
 /**
  * @brief To check if it's in interrupt content.
  */
-static inline b_t _impl_port_isInInterruptContent(void)
+static inline b_t port_isInInterruptContent(void)
 {
     register u32_t reg_ipsr __asm("ipsr");
     if (reg_ipsr) {
@@ -157,7 +157,7 @@ static inline b_t _impl_port_isInInterruptContent(void)
 /**
  * @brief To check if it's in kernel thread content.
  */
-static inline b_t _impl_port_isInThreadMode(void)
+static inline b_t port_isInThreadMode(void)
 {
     register u32_t reg_ipsr __asm("ipsr");
     if (reg_ipsr) {
@@ -173,7 +173,7 @@ static inline b_t _impl_port_isInThreadMode(void)
 /**
  * @brief Trigger system svc call.
  */
-static inline u32_t _impl_kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
+static inline u32_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
 {
     register u32_t r0 __asm__("r0") = args_0;
     register u32_t r1 __asm__("r1") = args_1;
@@ -188,13 +188,13 @@ static inline u32_t _impl_kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args
 /**
  * @brief Schedule the first thread.
  */
-void _impl_port_run_theFirstThread(u32_t sp);
+void port_run_theFirstThread(u32_t sp);
 
 #if 0 /* Disable it to use CMSIS Library */
 /**
  * @brief To check if it's in interrupt content.
  */
-static inline b_t _impl_port_isInInterruptContent(void)
+static inline b_t port_isInInterruptContent(void)
 {
     u32_t ipsr;
 
@@ -216,7 +216,7 @@ static inline b_t _impl_port_isInInterruptContent(void)
 /**
  * @brief To check if it's in kernel thread content.
  */
-static inline b_t _impl_port_isInThreadMode(void)
+static inline b_t port_isInThreadMode(void)
 {
     u32_t ipsr;
 
@@ -235,18 +235,18 @@ static inline b_t _impl_port_isInThreadMode(void)
 /**
  * @brief Trigger system svc call.
  */
-__swi u32_t _impl_kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+__swi u32_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
 
 /**
  * @brief Schedule the first thread.
  */
-void _impl_port_run_theFirstThread(u32_t sp);
+void port_run_theFirstThread(u32_t sp);
 
 #if 0 /* Disable it to use CMSIS Library */
 /**
  * @brief To check if it's in interrupt content.
  */
-static inline b_t _impl_port_isInInterruptContent(void)
+static inline b_t port_isInInterruptContent(void)
 {
     register u32_t reg_ipsr = __arm_rsr("IPSR");
     if (reg_ipsr) {
@@ -264,7 +264,7 @@ static inline b_t _impl_port_isInInterruptContent(void)
 /**
  * @brief To check if it's in kernel thread content.
  */
-static inline b_t _impl_port_isInThreadMode(void)
+static inline b_t port_isInThreadMode(void)
 {
     register u32_t reg_ipsr = __arm_rsr("IPSR");
     if (reg_ipsr) {
@@ -285,8 +285,8 @@ static inline b_t _impl_port_isInThreadMode(void)
 /* TODO */
 
 #elif defined(ARCH_NATIVE_GCC)
-u32_t _impl_kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
-void _impl_port_run_theFirstThread(u32_t sp);
+u32_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+void port_run_theFirstThread(u32_t sp);
 
 #else
 #warning Not supported compiler type
@@ -295,11 +295,11 @@ void _impl_port_run_theFirstThread(u32_t sp);
 /**
  * The implement function lists for rtos kernel internal use.
  */
-b_t _impl_port_isInInterruptContent(void);
-b_t _impl_port_isInThreadMode(void);
-void _impl_port_setPendSV(void);
-void _impl_port_interrupt_init(void);
-u32_t _impl_port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size);
+b_t port_isInInterruptContent(void);
+b_t port_isInThreadMode(void);
+void port_setPendSV(void);
+void port_interrupt_init(void);
+u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size);
 
 #ifdef __cplusplus
 }

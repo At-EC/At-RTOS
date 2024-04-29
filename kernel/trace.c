@@ -67,7 +67,7 @@ void _impl_trace_kernel_snapshot_print(void)
     KTRACE(">> %-6s %-15s %-5s %-7s %-3s %-10s %-7s %-9s %-10s\n", "Thread", "Name", "ID", "STATE", "PRI", "PSP_ADDR", "RAM(1%)",
            "CPU(0.1%)", "W/P/R(ms)");
     for (u32_t i = 0u; i < THREAD_INSTANCE_SUPPORTED_NUMBER; i++) {
-        if (_impl_trace_thread_snapshot(i, &snapshot_data)) {
+        if (thread_snapshot(i, &snapshot_data)) {
             KTRACE("   %-6d %-15s %-5d %-7s %-3d 0x%-8x %-7d %-9d %-10d\n", (i + 1u), snapshot_data.pName, snapshot_data.id,
                    snapshot_data.pState, snapshot_data.thread.priority, snapshot_data.thread.current_psp, snapshot_data.thread.ram,
                    snapshot_data.thread.cpu, snapshot_data.thread.delay);
@@ -79,7 +79,7 @@ void _impl_trace_kernel_snapshot_print(void)
     KTRACE(">> %-6s %-15s %-5s %-7s %-5s %-5s %-1s %-11s %-5s\n", "Sem", "Name", "ID", "STATE", "Init", "Limit", "P", "Timeout(ms)",
            "Block(ID)");
     for (u32_t i = 0u; i < SEMAPHORE_INSTANCE_SUPPORTED_NUMBER; i++) {
-        if (_impl_trace_semaphore_snapshot(i, &snapshot_data)) {
+        if (semaphore_snapshot(i, &snapshot_data)) {
             KTRACE("   %-6d %-15s %-5d %-7s %-5d %-5d %-1d %-11d", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
                    snapshot_data.semaphore.initial_count, snapshot_data.semaphore.limit_count, snapshot_data.semaphore.permit,
                    snapshot_data.semaphore.timeout_ms);
@@ -99,7 +99,7 @@ void _impl_trace_kernel_snapshot_print(void)
 
     KTRACE(">> %-6s %-15s %-5s %-7s %-5s %-3s %-5s\n", "Mutex", "Name", "ID", "STATE", "Hold", "Ori", "Block(ID)");
     for (u32_t i = 0u; i < MUTEX_INSTANCE_SUPPORTED_NUMBER; i++) {
-        if (_impl_trace_mutex_snapshot(i, &snapshot_data)) {
+        if (mutex_snapshot(i, &snapshot_data)) {
             KTRACE("   %-6d %-15s %-5d %-7s %-5d %-3d", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
                    snapshot_data.mutex.holdThreadId, snapshot_data.mutex.originalPriority);
 
@@ -118,7 +118,7 @@ void _impl_trace_kernel_snapshot_print(void)
 
     KTRACE(">> %-6s %-15s %-5s %-7s %-10s %-10s %-5s\n", "Event", "Name", "ID", "State", "Set", "Edge", "Block(ID)");
     for (u32_t i = 0u; i < EVENT_INSTANCE_SUPPORTED_NUMBER; i++) {
-        if (_impl_trace_event_snapshot(i, &snapshot_data)) {
+        if (event_snapshot(i, &snapshot_data)) {
             KTRACE("   %-6d %-15s %-5d %-7s 0x%-8x 0x%-8x", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
                    snapshot_data.event.set, snapshot_data.event.edge);
 
@@ -137,7 +137,7 @@ void _impl_trace_kernel_snapshot_print(void)
 
     KTRACE(">> %-6s %-15s %-5s %-7s %-5s %-20s\n", "Queue", "Name", "ID", "State", "Has", "Block(ID)");
     for (u32_t i = 0u; i < QUEUE_INSTANCE_SUPPORTED_NUMBER; i++) {
-        if (_impl_trace_queue_snapshot(i, &snapshot_data)) {
+        if (queue_snapshot(i, &snapshot_data)) {
             KTRACE("   %-6d %-15s %-5d %-7s %-5d", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
                    snapshot_data.queue.cacheSize);
 
@@ -163,7 +163,7 @@ void _impl_trace_kernel_snapshot_print(void)
 
     KTRACE(">> %-6s %-15s %-5s %-7s %-1s %-11s\n", "Timer", "Name", "ID", "State", "C", "Timeout(ms)");
     for (u32_t i = 0u; i < TIMER_INSTANCE_SUPPORTED_NUMBER; i++) {
-        if (_impl_trace_timer_snapshot(i, &snapshot_data)) {
+        if (timer_snapshot(i, &snapshot_data)) {
             KTRACE("   %-6d %-15s %-5d %-7s %-1d %-11d\n", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
                    snapshot_data.timer.is_cycle, snapshot_data.timer.timeout_ms);
         } else {
@@ -173,7 +173,7 @@ void _impl_trace_kernel_snapshot_print(void)
 
     KTRACE(">> %-6s %-15s %-5s %-7s %-13s %-5s\n", "Pool", "Name", "ID", "State", "FreeBits", "Block(ID)");
     for (u32_t i = 0u; i < POOL_INSTANCE_SUPPORTED_NUMBER; i++) {
-        if (_impl_trace_pool_snapshot(i, &snapshot_data)) {
+        if (pool_snapshot(i, &snapshot_data)) {
             KTRACE("   %-6d %-15s %-5d %-7s 0x%-11x", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
                    snapshot_data.pool.free);
 

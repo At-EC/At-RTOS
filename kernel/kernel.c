@@ -7,10 +7,10 @@
 
 #include "at_rtos.h"
 #include "kernel.h"
+#include "timer.h"
 #include "compiler.h"
 #include "clock_tick.h"
 #include "ktype.h"
-#include "kthread.h"
 #include "postcode.h"
 #include "trace.h"
 
@@ -73,7 +73,7 @@ static u32_t _kernel_start_privilege_routine(arguments_t *pArgs);
  */
 static void _kernel_setPendSV(void)
 {
-    _impl_port_setPendSV();
+    port_setPendSV();
 }
 
 /**
@@ -83,7 +83,7 @@ static void _kernel_setPendSV(void)
  */
 static b_t _kernel_isInPrivilegeMode(void)
 {
-    return _impl_port_isInInterruptContent();
+    return port_isInInterruptContent();
 }
 
 /**
@@ -91,7 +91,7 @@ static b_t _kernel_isInPrivilegeMode(void)
  */
 static void _kernel_pendsv_time_update(void)
 {
-    g_kernel_resource.pendsv_ms = _impl_timer_total_system_ms_get();
+    g_kernel_resource.pendsv_ms = timer_total_system_ms_get();
 }
 
 /**
@@ -118,7 +118,7 @@ static void _kernel_schedule_exit_time_analyze(os_id_t id)
 static void _kernel_schedule_entry_time_analyze(os_id_t id)
 {
 #if defined KTRACE
-    thread_context_t *pEntryThread = (thread_context_t *)_impl_kernel_member_unified_id_toContainerAddress(id);
+    thread_context_t *pEntryThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(id);
     pEntryThread->schedule.analyze.pend_ms = _kernel_pendsv_time_get();
 #endif
 }
@@ -129,8 +129,8 @@ static void _kernel_schedule_entry_time_analyze(os_id_t id)
 static void _kernel_schedule_run_time_analyze(os_id_t from, os_id_t to)
 {
 #if defined KTRACE
-    thread_context_t *pFromThread = (thread_context_t *)_impl_kernel_member_unified_id_toContainerAddress(from);
-    thread_context_t *pToThread = (thread_context_t *)_impl_kernel_member_unified_id_toContainerAddress(to);
+    thread_context_t *pFromThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(from);
+    thread_context_t *pToThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(to);
     u32_t sv_ms = _kernel_pendsv_time_get();
 
     pFromThread->schedule.analyze.active_ms += (u32_t)(sv_ms - pFromThread->schedule.analyze.run_ms);
@@ -149,7 +149,7 @@ static void _kernel_schedule_run_time_analyze(os_id_t from, os_id_t to)
  */
 static u32_t *_kernel_thread_PSP_Get(os_id_t id)
 {
-    thread_context_t *pCurThread = (thread_context_t *)_impl_kernel_member_unified_id_toContainerAddress(id);
+    thread_context_t *pCurThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(id);
 
     return (u32_t *)&pCurThread->PSPStartAddr;
 }
@@ -162,7 +162,7 @@ static u32_t *_kernel_thread_PSP_Get(os_id_t id)
 static os_id_t _kernel_thread_nextIdGet(void)
 {
     ENTER_CRITICAL_SECTION();
-    list_t *pListPending = (list_t *)_impl_kernel_list_pendingHeadGet();
+    list_t *pListPending = (list_t *)kernel_list_pendingHeadGet();
     linker_head_t *pHead = (linker_head_t *)(pListPending->pHead);
     EXIT_CRITICAL_SECTION();
 
@@ -220,7 +220,7 @@ static void _kernel_thread_entry_schedule(void)
     list_iterator_t it = ITERATION_NULL;
     thread_entry_t *pEntry = NULL;
 
-    list_t *pList = (list_t *)_impl_kernel_member_list_get(KERNEL_MEMBER_THREAD, KERNEL_MEMBER_LIST_THREAD_ENTRY);
+    list_t *pList = (list_t *)kernel_member_list_get(KERNEL_MEMBER_THREAD, KERNEL_MEMBER_LIST_THREAD_ENTRY);
     list_iterator_init(&it, pList);
     while (list_iterator_next_condition(&it, (void *)&pCurThread)) {
         pEntry = &pCurThread->schedule.entry;
@@ -233,7 +233,7 @@ static void _kernel_thread_entry_schedule(void)
         }
 
         _kernel_schedule_entry_time_analyze(pCurThread->head.id);
-        _impl_kernel_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
+        kernel_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
     }
 }
 
@@ -250,14 +250,13 @@ static b_t _kernel_thread_exit_schedule(void)
     b_t request = FALSE;
 
     /* The thread block */
-    list_t *pList = (list_t *)_impl_kernel_member_list_get(KERNEL_MEMBER_THREAD, KERNEL_MEMBER_LIST_THREAD_EXIT);
+    list_t *pList = (list_t *)kernel_member_list_get(KERNEL_MEMBER_THREAD, KERNEL_MEMBER_LIST_THREAD_EXIT);
     list_iterator_init(&it, pList);
     while (list_iterator_next_condition(&it, (void *)&pCurThread)) {
         pExit = &pCurThread->schedule.exit;
 
         if (pExit->timeout_us) {
-            _impl_thread_timer_start(_impl_kernel_member_unified_id_threadToTimer(pCurThread->head.id), pExit->timeout_us,
-                                     pExit->pTimeoutCallFun);
+            timer_start_for_thread(kernel_member_unified_id_threadToTimer(pCurThread->head.id), pExit->timeout_us, pExit->pTimeoutCallFun);
 
             if (pExit->timeout_us != OS_TIME_FOREVER_VAL) {
                 request = TRUE;
@@ -284,16 +283,16 @@ static u32_t _kernel_start_privilege_routine(arguments_t *pArgs)
 
     ENTER_CRITICAL_SECTION();
 
-    _impl_kernel_thread_init();
-    _impl_port_interrupt_init();
-    _impl_clock_time_init(_impl_timer_elapsed_handler);
+    kthread_init();
+    port_interrupt_init();
+    clock_time_init(timer_elapsed_handler);
 
     g_kernel_resource.current = _kernel_thread_nextIdGet();
     g_kernel_resource.run = TRUE;
 
     EXIT_CRITICAL_SECTION();
 
-    _impl_port_run_theFirstThread(*(_kernel_thread_PSP_Get(g_kernel_resource.current)));
+    port_run_theFirstThread(*(_kernel_thread_PSP_Get(g_kernel_resource.current)));
 
     // nothing arrive
     return _PC_CMPT_FAILED;
@@ -328,7 +327,15 @@ static u32_t _kernel_member_id_toUnifiedIdRange(u8_t member_id)
         return 0u;
     }
 
-    return (u32_t)(_kernel_member_id_toUnifiedIdEnd(member_id) - _impl_kernel_member_id_toUnifiedIdStart(member_id));
+    return (u32_t)(_kernel_member_id_toUnifiedIdEnd(member_id) - kernel_member_id_toUnifiedIdStart(member_id));
+}
+
+/**
+ * @brief To check if the kernel message arrived.
+ */
+static u32_t _kernel_message_arrived(void)
+{
+    return kthread_message_arrived();
 }
 
 /**
@@ -336,7 +343,7 @@ static u32_t _kernel_member_id_toUnifiedIdRange(u8_t member_id)
  *
  * @return The value of pendsv executed time.
  */
-u32_t _impl_kernel_schedule_time_get(void)
+u32_t kernel_schedule_time_get(void)
 {
     return _kernel_pendsv_time_get();
 }
@@ -346,10 +353,10 @@ u32_t _impl_kernel_schedule_time_get(void)
  *
  * @return The value of thread use percent.
  */
-u32_t impl_kernel_thread_use_percent_take(os_id_t id)
+u32_t kernel_thread_use_percent_take(os_id_t id)
 {
 #if defined KTRACE
-    thread_context_t *pCurThread = (thread_context_t *)_impl_kernel_member_unified_id_toContainerAddress(id);
+    thread_context_t *pCurThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(id);
 
     pCurThread->schedule.analyze.percent =
         (pCurThread->schedule.analyze.active_ms * 1000u) / (_kernel_pendsv_time_get() - pCurThread->schedule.analyze.cycle_ms);
@@ -368,12 +375,12 @@ u32_t impl_kernel_thread_use_percent_take(os_id_t id)
  * @param ppCurThreadPsp The current thread psp address.
  * @param ppNextThreadPSP The next thread psp address.
  */
-void _impl_kernel_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
+void kernel_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
 {
     _kernel_pendsv_time_update();
 
     if (_kernel_thread_exit_schedule()) {
-        _impl_kernel_timer_schedule_request();
+        timer_schedule();
     }
     _kernel_thread_entry_schedule();
 
@@ -394,7 +401,7 @@ void _impl_kernel_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
  *
  * @return The pointer of the list pointer.
  */
-list_t *_impl_kernel_member_list_get(u8_t member_id, u8_t list_id)
+list_t *kernel_member_list_get(u8_t member_id, u8_t list_id)
 {
     if (member_id >= KERNEL_MEMBER_NUMBER) {
         return NULL;
@@ -418,7 +425,7 @@ list_t *_impl_kernel_member_list_get(u8_t member_id, u8_t list_id)
  *
  * @return The pointer of the memeber address.
  */
-u8_t *_impl_kernel_member_unified_id_toContainerAddress(u32_t unified_id)
+u8_t *kernel_member_unified_id_toContainerAddress(u32_t unified_id)
 {
     if (unified_id >= KERNEL_MEMBER_MAP_NUMBER) {
         return NULL;
@@ -434,7 +441,7 @@ u8_t *_impl_kernel_member_unified_id_toContainerAddress(u32_t unified_id)
  *
  * @return The value of the kernel unified id.
  */
-u32_t _impl_kernel_member_containerAddress_toUnifiedid(u32_t container_address)
+u32_t kernel_member_containerAddress_toUnifiedid(u32_t container_address)
 {
     u32_t start = (u32_t)(u8_t *)&g_kernel_resource.member.pMemoryContainer[0];
 
@@ -456,7 +463,7 @@ u32_t _impl_kernel_member_containerAddress_toUnifiedid(u32_t container_address)
  *
  * @return The value of the kernel member unified id.
  */
-u32_t _impl_kernel_member_id_toUnifiedIdStart(u8_t member_id)
+u32_t kernel_member_id_toUnifiedIdStart(u8_t member_id)
 {
     if (member_id >= KERNEL_MEMBER_NUMBER) {
         return OS_INVALID_ID;
@@ -476,13 +483,13 @@ u32_t _impl_kernel_member_id_toUnifiedIdStart(u8_t member_id)
  *
  * @return The value of the kernel member address range.
  */
-u8_t *_impl_kernel_member_id_toContainerStartAddress(u32_t member_id)
+u8_t *kernel_member_id_toContainerStartAddress(u32_t member_id)
 {
     if (member_id >= KERNEL_MEMBER_NUMBER) {
         return NULL;
     }
 
-    return (u8_t *)_impl_kernel_member_unified_id_toContainerAddress(_impl_kernel_member_id_toUnifiedIdStart(member_id));
+    return (u8_t *)kernel_member_unified_id_toContainerAddress(kernel_member_id_toUnifiedIdStart(member_id));
 }
 
 /**
@@ -492,13 +499,13 @@ u8_t *_impl_kernel_member_id_toContainerStartAddress(u32_t member_id)
  *
  * @return The value of the kernel member ending address.
  */
-u8_t *_impl_kernel_member_id_toContainerEndAddress(u32_t member_id)
+u8_t *kernel_member_id_toContainerEndAddress(u32_t member_id)
 {
     if (member_id >= KERNEL_MEMBER_NUMBER) {
         return NULL;
     }
 
-    return (u8_t *)_impl_kernel_member_unified_id_toContainerAddress(_kernel_member_id_toUnifiedIdEnd(member_id));
+    return (u8_t *)kernel_member_unified_id_toContainerAddress(_kernel_member_id_toUnifiedIdEnd(member_id));
 }
 
 /**
@@ -509,13 +516,13 @@ u8_t *_impl_kernel_member_id_toContainerEndAddress(u32_t member_id)
  *
  * @return The value of the kernel member number.
  */
-u32_t _impl_kernel_member_id_unifiedConvert(u8_t member_id, u32_t unified_id)
+u32_t kernel_member_id_unifiedConvert(u8_t member_id, u32_t unified_id)
 {
     if (member_id >= KERNEL_MEMBER_NUMBER) {
         return 0u;
     }
 
-    u32_t diff = _impl_kernel_member_id_toUnifiedIdStart(member_id);
+    u32_t diff = kernel_member_id_toUnifiedIdStart(member_id);
     if (unified_id >= diff) {
         diff = unified_id - diff;
     } else {
@@ -533,7 +540,7 @@ u32_t _impl_kernel_member_id_unifiedConvert(u8_t member_id, u32_t unified_id)
  *
  * @return The value of true is invalid, otherwise is valid.
  */
-b_t _impl_kernel_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id)
+b_t kernel_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id)
 {
     if (member_id >= KERNEL_MEMBER_NUMBER) {
         return TRUE;
@@ -543,7 +550,7 @@ b_t _impl_kernel_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id)
         return TRUE;
     }
 
-    if (unified_id < _impl_kernel_member_id_toUnifiedIdStart(member_id)) {
+    if (unified_id < kernel_member_id_toUnifiedIdStart(member_id)) {
         return TRUE;
     }
 
@@ -561,7 +568,7 @@ b_t _impl_kernel_member_unified_id_isInvalid(u32_t member_id, u32_t unified_id)
  *
  * @return The value of true is invalid, otherwise is valid.
  */
-b_t _impl_kernel_os_id_is_invalid(struct os_id id)
+b_t kernel_os_id_is_invalid(struct os_id id)
 {
     if (id.val == OS_INVALID_ID) {
         return TRUE;
@@ -581,17 +588,17 @@ b_t _impl_kernel_os_id_is_invalid(struct os_id id)
  *
  * @return The value of timer unified id.
  */
-u32_t _impl_kernel_member_unified_id_threadToTimer(u32_t unified_id)
+u32_t kernel_member_unified_id_threadToTimer(u32_t unified_id)
 {
     u32_t uid = OS_INVALID_ID;
 
-    if (_impl_kernel_member_unified_id_isInvalid(KERNEL_MEMBER_THREAD, unified_id)) {
+    if (kernel_member_unified_id_isInvalid(KERNEL_MEMBER_THREAD, unified_id)) {
         return OS_INVALID_ID;
     }
 
-    uid = (unified_id - _impl_kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_THREAD)) / sizeof(thread_context_t);
+    uid = (unified_id - kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_THREAD)) / sizeof(thread_context_t);
 
-    return (u32_t)((uid * sizeof(timer_context_t)) + _impl_kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_TIMER_INTERNAL));
+    return (u32_t)((uid * sizeof(timer_context_t)) + kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_TIMER_INTERNAL));
 }
 
 /**
@@ -601,16 +608,16 @@ u32_t _impl_kernel_member_unified_id_threadToTimer(u32_t unified_id)
  *
  * @return The value of thread unified id.
  */
-u32_t _impl_kernel_member_unified_id_timerToThread(u32_t unified_id)
+u32_t kernel_member_unified_id_timerToThread(u32_t unified_id)
 {
     u32_t uid = OS_INVALID_ID;
 
-    if (_impl_kernel_member_unified_id_isInvalid(KERNEL_MEMBER_TIMER_INTERNAL, unified_id)) {
+    if (kernel_member_unified_id_isInvalid(KERNEL_MEMBER_TIMER_INTERNAL, unified_id)) {
         return OS_INVALID_ID;
     }
 
-    uid = (unified_id - _impl_kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_TIMER_INTERNAL)) / sizeof(timer_context_t);
-    return (u32_t)((uid * sizeof(thread_context_t)) + _impl_kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_THREAD));
+    uid = (unified_id - kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_TIMER_INTERNAL)) / sizeof(timer_context_t);
+    return (u32_t)((uid * sizeof(thread_context_t)) + kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_THREAD));
 }
 
 /**
@@ -620,12 +627,12 @@ u32_t _impl_kernel_member_unified_id_timerToThread(u32_t unified_id)
  *
  * @return The value of the kernel member id.
  */
-u8_t _impl_kernel_member_unified_id_toId(u32_t unified_id)
+u8_t kernel_member_unified_id_toId(u32_t unified_id)
 {
     u8_t member_id = KERNEL_MEMBER_THREAD;
 
-    while ((member_id < KERNEL_MEMBER_NUMBER) && ((unified_id < _impl_kernel_member_id_toUnifiedIdStart(member_id)) ||
-                                                  (unified_id >= _kernel_member_id_toUnifiedIdEnd(member_id)))) {
+    while ((member_id < KERNEL_MEMBER_NUMBER) &&
+           ((unified_id < kernel_member_id_toUnifiedIdStart(member_id)) || (unified_id >= _kernel_member_id_toUnifiedIdEnd(member_id)))) {
 
         member_id++;
     }
@@ -642,9 +649,9 @@ u8_t _impl_kernel_member_unified_id_toId(u32_t unified_id)
  *
  * @return The PSP stack address.
  */
-u32_t _impl_kernel_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
+u32_t kernel_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
 {
-    return (u32_t)_impl_port_stack_frame_init(pEntryFunction, pAddress, size);
+    return (u32_t)port_stack_frame_init(pEntryFunction, pAddress, size);
 }
 
 /**
@@ -652,7 +659,7 @@ u32_t _impl_kernel_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddres
  *
  * @return The pending list head.
  */
-list_t *_impl_kernel_list_pendingHeadGet(void)
+list_t *kernel_list_pendingHeadGet(void)
 {
     return (list_t *)(&g_kernel_resource.list);
 }
@@ -662,7 +669,7 @@ list_t *_impl_kernel_list_pendingHeadGet(void)
  *
  * @return The id of current running thread.
  */
-os_id_t _impl_kernel_thread_runIdGet(void)
+os_id_t kernel_thread_runIdGet(void)
 {
     return (os_id_t)g_kernel_resource.current;
 }
@@ -672,9 +679,9 @@ os_id_t _impl_kernel_thread_runIdGet(void)
  *
  * @return The context pointer of current running thread.
  */
-thread_context_t *_impl_kernel_thread_runContextGet(void)
+thread_context_t *kernel_thread_runContextGet(void)
 {
-    return (void *)_impl_kernel_member_unified_id_toContainerAddress(_impl_kernel_thread_runIdGet());
+    return (void *)kernel_member_unified_id_toContainerAddress(kernel_thread_runIdGet());
 }
 
 /**
@@ -682,11 +689,11 @@ thread_context_t *_impl_kernel_thread_runContextGet(void)
  *
  * @param pCurHead The pointer of the thread linker head.
  */
-static void _impl_kernel_thread_list_transfer_toExit(linker_head_t *pCurHead)
+static void kernel_thread_list_transfer_toExit(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    list_t *pToExitList = (list_t *)_impl_kernel_member_list_get(KERNEL_MEMBER_THREAD, KERNEL_MEMBER_LIST_THREAD_EXIT);
+    list_t *pToExitList = (list_t *)kernel_member_list_get(KERNEL_MEMBER_THREAD, KERNEL_MEMBER_LIST_THREAD_EXIT);
     linker_list_transaction_common(&pCurHead->linker, pToExitList, LIST_TAIL);
 
     EXIT_CRITICAL_SECTION();
@@ -697,11 +704,11 @@ static void _impl_kernel_thread_list_transfer_toExit(linker_head_t *pCurHead)
  *
  * @param pCurHead The pointer of the thread linker head.
  */
-void _impl_kernel_thread_list_transfer_toEntry(linker_head_t *pCurHead)
+void kernel_thread_list_transfer_toEntry(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    list_t *pToEntryList = (list_t *)_impl_kernel_member_list_get(KERNEL_MEMBER_THREAD, KERNEL_MEMBER_LIST_THREAD_ENTRY);
+    list_t *pToEntryList = (list_t *)kernel_member_list_get(KERNEL_MEMBER_THREAD, KERNEL_MEMBER_LIST_THREAD_ENTRY);
     linker_list_transaction_common(&pCurHead->linker, pToEntryList, LIST_TAIL);
 
     EXIT_CRITICAL_SECTION();
@@ -712,11 +719,11 @@ void _impl_kernel_thread_list_transfer_toEntry(linker_head_t *pCurHead)
  *
  * @param pCurHead The pointer of the thread linker head.
  */
-void _impl_kernel_thread_list_transfer_toPend(linker_head_t *pCurHead)
+void kernel_thread_list_transfer_toPend(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    list_t *pToPendList = (list_t *)_impl_kernel_list_pendingHeadGet();
+    list_t *pToPendList = (list_t *)kernel_list_pendingHeadGet();
     linker_list_transaction_specific(&pCurHead->linker, pToPendList, _kernel_thread_node_Order_compare_condition);
 
     EXIT_CRITICAL_SECTION();
@@ -727,11 +734,11 @@ void _impl_kernel_thread_list_transfer_toPend(linker_head_t *pCurHead)
  *
  * @param pCurHead The pointer of the semaphore linker head.
  */
-void _impl_kernel_semaphore_list_transfer_toLock(linker_head_t *pCurHead)
+void kernel_semaphore_list_transfer_toLock(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    list_t *pToLockList = (list_t *)(list_t *)_impl_kernel_member_list_get(KERNEL_MEMBER_SEMAPHORE, KERNEL_MEMBER_LIST_SEMAPHORE_LOCK);
+    list_t *pToLockList = (list_t *)(list_t *)kernel_member_list_get(KERNEL_MEMBER_SEMAPHORE, KERNEL_MEMBER_LIST_SEMAPHORE_LOCK);
     linker_list_transaction_common(&pCurHead->linker, pToLockList, LIST_TAIL);
 
     EXIT_CRITICAL_SECTION();
@@ -748,17 +755,17 @@ void _impl_kernel_semaphore_list_transfer_toLock(linker_head_t *pCurHead)
  *
  * @return The result of exit operation.
  */
-u32p_t _impl_kernel_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToList, u32_t timeout_us, void (*pCallback)(os_id_t))
+u32p_t kernel_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToList, u32_t timeout_us, void (*pCallback)(os_id_t))
 {
-    thread_context_t *pCurThread = (thread_context_t *)(_impl_kernel_member_unified_id_toContainerAddress(id));
+    thread_context_t *pCurThread = (thread_context_t *)(kernel_member_unified_id_toContainerAddress(id));
 
     pCurThread->schedule.hold = hold;
     pCurThread->schedule.exit.pToList = pToList;
     pCurThread->schedule.exit.timeout_us = timeout_us;
     pCurThread->schedule.exit.pTimeoutCallFun = pCallback;
 
-    _impl_kernel_thread_list_transfer_toExit((linker_head_t *)&pCurThread->head);
-    return _impl_kernel_thread_schedule_request();
+    kernel_thread_list_transfer_toExit((linker_head_t *)&pCurThread->head);
+    return kernel_thread_schedule_request();
 }
 
 /**
@@ -771,16 +778,16 @@ u32p_t _impl_kernel_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToLis
  *
  * @return The result of entry operation.
  */
-u32p_t _impl_kernel_thread_entry_trigger(os_id_t id, os_id_t release, u32_t result, void (*pCallback)(os_id_t))
+u32p_t kernel_thread_entry_trigger(os_id_t id, os_id_t release, u32_t result, void (*pCallback)(os_id_t))
 {
-    thread_context_t *pCurThread = (thread_context_t *)(_impl_kernel_member_unified_id_toContainerAddress(id));
+    thread_context_t *pCurThread = (thread_context_t *)(kernel_member_unified_id_toContainerAddress(id));
 
     pCurThread->schedule.entry.release = release;
     pCurThread->schedule.entry.result = result;
     pCurThread->schedule.entry.pEntryCallFun = pCallback;
 
-    _impl_kernel_thread_list_transfer_toEntry((linker_head_t *)&pCurThread->head);
-    return _impl_kernel_thread_schedule_request();
+    kernel_thread_list_transfer_toEntry((linker_head_t *)&pCurThread->head);
+    return kernel_thread_schedule_request();
 }
 
 /**
@@ -790,7 +797,7 @@ u32p_t _impl_kernel_thread_entry_trigger(os_id_t id, os_id_t release, u32_t resu
  *
  * @return The result of entry action schedule.
  */
-u32_t _impl_kernel_schedule_entry_result_take(action_schedule_t *pSchedule)
+u32_t kernel_schedule_entry_result_take(action_schedule_t *pSchedule)
 {
     if (!pSchedule) {
         return 0u;
@@ -807,9 +814,9 @@ u32_t _impl_kernel_schedule_entry_result_take(action_schedule_t *pSchedule)
  *
  * @return The true indicates the kernel is in thread mode.
  */
-b_t _impl_kernel_isInThreadMode(void)
+b_t kernel_isInThreadMode(void)
 {
-    return _impl_port_isInThreadMode();
+    return port_isInThreadMode();
 }
 
 /**
@@ -817,7 +824,7 @@ b_t _impl_kernel_isInThreadMode(void)
  *
  * @return The result of the request operation.
  */
-u32p_t _impl_kernel_thread_schedule_request(void)
+u32p_t kernel_thread_schedule_request(void)
 {
     if (!_kernel_isInPrivilegeMode()) {
         return _PC_CMPT_FAILED;
@@ -828,40 +835,22 @@ u32p_t _impl_kernel_thread_schedule_request(void)
 }
 
 /**
- * @brief To check if the kernel OS is running.
- *
- * return The true indicates the kernel OS is running.
- */
-b_t _impl_kernel_rtos_isRun(void)
-{
-    return (b_t)((g_kernel_resource.run) ? (TRUE) : (FALSE));
-}
-
-/**
  * @brief To issue a kernel message notification.
  */
-void _impl_kernel_message_notification(void)
+void kernel_message_notification(void)
 {
-    _impl_kernel_thread_message_notification();
-}
-
-/**
- * @brief To check if the kernel message arrived.
- */
-static u32_t _kernel_message_arrived(void)
-{
-    return _impl_kernel_thread_message_arrived();
+    kthread_message_notification();
 }
 
 /**
  * @brief The kernel thread only serve for RTOS with highest priority.
  */
-void _impl_kernel_thread_schedule(void)
+void kernel_schedule_thread(void)
 {
     while (1) {
         u32p_t postcode = _kernel_message_arrived();
         if (PC_IOK(postcode)) {
-            _impl_timer_reamining_elapsed_handler();
+            timer_reamining_elapsed_handler();
         }
     }
 }
@@ -869,7 +858,7 @@ void _impl_kernel_thread_schedule(void)
 /**
  * @brief The idle thread entry function.
  */
-void _impl_kernel_thread_idle(void)
+void kernel_idle_thread(void)
 {
     while (1) {
         /* TODO: Power Management */
@@ -877,23 +866,11 @@ void _impl_kernel_thread_idle(void)
 }
 
 /**
- * @brief The kernel OS start to run.
- */
-u32p_t _impl_kernel_at_rtos_run(void)
-{
-    if (_impl_kernel_rtos_isRun()) {
-        return PC_SC_SUCCESS;
-    }
-
-    return _impl_kernel_privilege_invoke((const void *)_kernel_start_privilege_routine, NULL);
-}
-
-/**
  * @brief kernel call privilege function in SVC interrupt content.
  *
  * @param svc_args The function arguments.
  */
-void _impl_kernel_privilege_call_inSVC_c(u32_t *svc_args)
+void kernel_privilege_call_inSVC_c(u32_t *svc_args)
 {
     /*
      * Stack contains:
@@ -918,14 +895,14 @@ void _impl_kernel_privilege_call_inSVC_c(u32_t *svc_args)
  *
  * @return The result of the privilege function.
  */
-u32_t _impl_kernel_privilege_invoke(const void *pCallFun, arguments_t *pArgs)
+u32_t kernel_privilege_invoke(const void *pCallFun, arguments_t *pArgs)
 {
     if (!pCallFun) {
         return _PC_CMPT_FAILED;
     }
 
     if (!_kernel_isInPrivilegeMode()) {
-        return (u32_t)_impl_kernel_svc_call((u32_t)pCallFun, (u32_t)pArgs, 0u, 0u);
+        return (u32_t)kernel_svc_call((u32_t)pCallFun, (u32_t)pArgs, 0u, 0u);
     }
 
     ENTER_CRITICAL_SECTION();
@@ -934,6 +911,28 @@ u32_t _impl_kernel_privilege_invoke(const void *pCallFun, arguments_t *pArgs)
     EXIT_CRITICAL_SECTION();
 
     return ret;
+}
+
+/**
+ * @brief To check if the kernel OS is running.
+ *
+ * return The true indicates the kernel OS is running.
+ */
+b_t _impl_kernel_rtos_isRun(void)
+{
+    return (b_t)((g_kernel_resource.run) ? (TRUE) : (FALSE));
+}
+
+/**
+ * @brief The kernel OS start to run.
+ */
+u32p_t _impl_kernel_at_rtos_run(void)
+{
+    if (_impl_kernel_rtos_isRun()) {
+        return PC_SC_SUCCESS;
+    }
+
+    return kernel_privilege_invoke((const void *)_kernel_start_privilege_routine, NULL);
 }
 
 #ifdef __cplusplus

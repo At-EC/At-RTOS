@@ -174,13 +174,13 @@ The following sample codes illustrates how to create your first thread:
 #include "at_rtos.h"
 
 /* Define a thread hook to specific the stack size and prioriy of the thread */
-ATOS_THREAD_DEFINE(your_thread_define, 1024, 7); // Set the thread stack size to 1024 bytes and the schedule prioriy level to 7.
+OS_THREAD_DEFINE(your_thread_define, 1024, 7); // Set the thread stack size to 1024 bytes and the schedule prioriy level to 7.
 
 /* User thread's entry function. */
 static void your_thread_entry_function(void)
 {
     while(1) {
-        AtOS.thread_sleep(1000u);
+        os.thread_sleep(1000u);
     }
 }
 
@@ -188,25 +188,31 @@ static void your_thread_entry_function(void)
 int main(void)
 {
     /* Initialize the your your thread. */
-    os_thread_id_t your_thread_id = AtOS.thread_init(your_thread_define, your_thread_entry_function);
-    if (AtOS.id_isInvalid(your_thread_id)) {
+    os_thread_id_t your_thread_id = os.thread_init(your_thread_define, your_thread_entry_function);
+    if (os.id_isInvalid(your_thread_id)) {
         printf("Thread %s init failed\n", your_thread_id.pName);
     }
 	
     /* The At-RTOS kernel schedule starts to run. */
-    AtOS.schedule_run();
+    os.schedule_run();
 }
 ```
 
-Note that: The following c/h files path must be included/contained in your project workshop.
+The following kernel H file path must be included in your project workshop.
 
-- `<root path>`\At-RTOS\
-- `<root path>`\At-RTOS\include\
-- `<root path>`\At-RTOS\include\kernel\
-- `<root path>`\At-RTOS\kernel\<all>.c
-- `<root path>`\At-RTOS\clock\clock_systick.c
-- `<root path>`\At-RTOS\port\port_common.c
-- `<root path>`\At-RTOS\port\<your compiler>.c
+```shell
+<root path>\
+<root path>\include\
+<root path>\include\kernel\
+```
+The following kernel C file should be placed in your project workshop based on your chip feature and compiler.
+
+```shell
+<root path>\kernel\<all of them>.c
+<root path>\clock\clock_systick.c
+<root path>\port\port_common.c
+<root path>\port\<your compiler>.c
+```
 
 ## Roadmap
 

@@ -26,13 +26,13 @@ void SVC_Handler( void )
     __asm volatile
     (
         "   .syntax unified                                 \n"
-        "   .extern _impl_kernel_privilege_call_inSVC_c     \n"
+        "   .extern kernel_privilege_call_inSVC_c           \n"
         "                                                   \n"
         "   tst   lr, #4                                    \n" /* call from which stack pointer base on the bit 2 of EXC_RETURN (LR) */
         "   ite   eq                                        \n"
         "   mrseq r0, msp                                   \n" /* Set R0 = MSP */
         "   mrsne r0, psp                                   \n" /* Set R0 = PSP */
-        "   b     _impl_kernel_privilege_call_inSVC_c       \n" /* call _impl_kernel_privilege_call_inSVC_c */
+        "   b     kernel_privilege_call_inSVC_c             \n" /* call kernel_privilege_call_inSVC_c */
         "                                                   \n"
         "   .align 4                                        \n"
     );
@@ -53,7 +53,7 @@ void PendSV_Handler(void)
     __asm volatile
     (
         "   .syntax unified                                 \n"
-        "   .extern _impl_kernel_scheduler_inPendSV_c       \n"
+        "   .extern kernel_scheduler_inPendSV_c             \n"
         "                                                   \n"
         "    cpsid    i                                     \n"  /* Disable interrupts */
         "    isb                                            \n"
@@ -64,7 +64,7 @@ void PendSV_Handler(void)
         "    push     {r0, r1, r12, lr}                     \n"
         "    mov      r0, sp                                \n" /* R0 points to the argument ppCurPsp  */
         "    add      r1, sp, #4                            \n" /* R1 points to the argument ppNextPSP */
-        "    bl       _impl_kernel_scheduler_inPendSV_c     \n" /* Call _impl_kernel_scheduler_inPendSV_c */
+        "    bl       kernel_scheduler_inPendSV_c           \n" /* Call kernel_scheduler_inPendSV_c */
         "    pop      {r0, r1, r12, lr}                     \n" /* R0 = ppCurPsp, R1 = ppNextPSP */
         "                                                   \n"
         "    cmp      r0, r1                                \n" /* if R0 = R1 */
@@ -89,7 +89,7 @@ void PendSV_Handler(void)
          */
         "    str      r2, [r0]                              \n" /* *ppCurPSP = CurPSP */
         "    ldr      r2, [r1]                              \n" /* NextPSP = *pNextPSP */
-        "                                                   \n"        
+        "                                                   \n"
         #if ( FPU_ENABLED )                                     /* If the Cortex-M is not supported, the ASM instruction will not support VSTMDBEQ */
             "    ldmia    r2!, {lr}                         \n" /* restore LR */
             "    ldmia    r2!, {r3 - r11}                   \n" /* restore {R3 - R11} */
@@ -104,11 +104,11 @@ void PendSV_Handler(void)
             "    ldmia    r2!, {r4 - r11}                   \n" /* no FPU present - context is {R4 - R11} */
         #endif
         "                                                   \n"
-        "    msr      psp, r2                               \n" /* Set PSP to next thread */    
+        "    msr      psp, r2                               \n" /* Set PSP to next thread */
         /**
          * End of Context switching code
          */
-         "exit:                                              \n"
+         "exit:                                             \n"
         "    cpsie    I                                     \n" /* Enable interrupts */
         "    isb                                            \n"
         "                                                   \n"
@@ -121,7 +121,7 @@ void PendSV_Handler(void)
 /**
  * @brief ARM core trigger the first thread to run.
  */
-void _impl_port_run_theFirstThread(u32_t sp)
+void port_run_theFirstThread(u32_t sp)
 {
     /**
      * initialize R4-R11 from context frame using passed SP
