@@ -43,18 +43,15 @@ typedef struct os_priority os_priority_t;
 typedef struct os_time os_time_t;
 
 typedef struct {
+    b_t enable;
 
-    linker_t linker;
+    b_t start;
 
-    os_id_t id;
-
-    u32_t desired;
-
-    u32_t value;
-} evt_cushion_t;
+    u8_t location;
+} evt_depth_t;
 
 typedef struct {
-    evt_cushion_t cushion;
+    evt_depth_t depth;
 
     u32_t value;
 } os_evt_val_t;

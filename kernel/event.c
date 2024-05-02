@@ -157,7 +157,9 @@ static void _event_schedule(os_id_t id)
 
     /* Auto clear user configuration */
     pEntryThread->event.listen = 0u;
-    pEntryThread->event.desired = 0u;
+    pEntryThread->event.trigger = 0u;
+    pEntryThread->event.group = 0u;
+    pEntryThread->event.pEvtVal = NULL;
 
     if (isAvail) {
         pEntry->result = PC_SC_SUCCESS;
@@ -207,7 +209,7 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
         pCurEvent->head.id = id;
         pCurEvent->head.pName = pName;
 
-        pCurEvent->value = 0u;
+        _memset((char_t *)pCurEvent->value, 0x0u, OS_EVENT_POOL_DEPTH);
         pCurEvent->edgeMask = edgeMask;
         pCurEvent->clearMask = ~clrDisMask;
         pCurEvent->call.pCallbackFunc = NULL;
@@ -240,62 +242,59 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
     u32_t toggle = (u32_t)pArgs[3].u32_val;
 
     u32p_t postcode = PC_SC_SUCCESS;
-    event_context_t *pCurEvent = NULL;
-    u32_t value = 0u;
-    u32_t defer = 0u;
-    u32_t report = 0u;
-    u32_t reported = 0u;
+    event_context_t *pCurEvent = _event_object_contextGet(id);
+    u32_t idx = pCurEvent->index;
+    u32_t val = pCurEvent->value[idx];
 
-    pCurEvent = _event_object_contextGet(id);
-
-    value = pCurEvent->value;
     /* clear bits */
-    value &= ~clear;
+    val &= ~clear;
     /* set bits */
-    value |= set;
+    val |= set;
     /* toggle bits */
-    value ^= toggle;
+    val ^= toggle;
 
-    /* Calculate defer bits */
-    defer = pCurEvent->defer;
-    defer |= (u32_t)(value ^ pCurEvent->value);
+    /* Edge trigger */
+    u32_t trigger = (val ^ pCurEvent->value[idx]) & pCurEvent->edgeMask;
 
-    /* Calculate triggered report bits */
-    report = (u32_t)(defer & pCurEvent->edgeMask);     // Edge trigger
-    report |= (u32_t)(value & (~pCurEvent->edgeMask)); // Level trigger
+    /* Level trigger */
+    trigger |= val & (~pCurEvent->edgeMask);
 
     list_iterator_t it = {0u};
     list_iterator_init(&it, _event_list_blockingHeadGet(id));
     thread_context_t *pCurThread = (thread_context_t *)list_iterator_next(&it);
+
     while (pCurThread) {
-        u32_t unreported = ~(report ^ pCurThread->event.desired) & pCurThread->event.listen;
+        /* set = desired-trigger bits & listening bits */
+        u32_t set = ~(trigger ^ pCurThread->event.trigger) & pCurThread->event.listen;
 
-        if (unreported) {
-            pCurThread->event.pEvtVal->value |= unreported;
-            reported |= unreported;
+        if (set) {
+            pCurThread->event.pEvtVal->value |= set;
 
-            if (pCurThread->event.group) { // Group event
+            if (pCurThread->event.group) {
                 if (pCurThread->event.group == (pCurThread->event.pEvtVal->value & pCurThread->event.group)) {
-                    kernel_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _event_schedule);
+                    /* group */
+                    pCurThread->event.pEvtVal->depth.location = pCurEvent->index;
+                    postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _event_schedule);
                 }
             } else {
-                if (pCurThread->event.pEvtVal->value) { // Single event
-                    kernel_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _event_schedule);
+                if (pCurThread->event.pEvtVal->value) {
+                    /* single */
+                    pCurThread->event.pEvtVal->depth.location = pCurEvent->index;
+                    postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _event_schedule);
                 }
             }
-        }
 
-        if (PC_IER(postcode)) {
-            break;
+            if (PC_IER(postcode)) {
+                break;
+            }
+            pCurThread = (thread_context_t *)list_iterator_next(&it);
         }
-        pCurThread = (thread_context_t *)list_iterator_next(&it);
     }
 
-    pCurEvent->value = value;
-    pCurEvent->value &= ~(reported & pCurEvent->clearMask); // Clear reported value
-
-    pCurEvent->defer = defer;
-    pCurEvent->defer &= ~reported; // Clear reported defer
+    /* new index and value*/
+    idx = (idx + 1) % OS_EVENT_POOL_DEPTH;
+    pCurEvent->value[idx] = val;
+    pCurEvent->index = idx;
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -314,57 +313,71 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     os_evt_val_t *pEvtData = (os_evt_val_t *)pArgs[1].pv_val;
-    u32_t desired = (u32_t)pArgs[2].u32_val;
+    u32_t trigger = (u32_t)pArgs[2].u32_val;
     u32_t listen = (u32_t)pArgs[3].u32_val;
     u32_t group = (u32_t)pArgs[4].u32_val;
     u32_t timeout_ms = (u32_t)pArgs[5].u32_val;
-    thread_context_t *pCurThread = NULL;
-    event_context_t *pCurEvent = NULL;
-    u32_t report = 0u;
-    u32_t report_cushion = 0u;
-    u32_t reported = 0u;
     u32p_t postcode = PC_SC_SUCCESS;
 
-    pCurEvent = _event_object_contextGet(id);
-    pCurThread = kernel_thread_runContextGet();
+    thread_context_t *pCurThread = kernel_thread_runContextGet();
     pCurThread->event.listen = listen;
-    pCurThread->event.desired = desired;
+    pCurThread->event.trigger = trigger;
     pCurThread->event.group = group;
     pCurThread->event.pEvtVal = pEvtData;
 
-    if (pEvtData->cushion.id != id) {
-        pEvtData->cushion.desired = desired;
-        pEvtData->cushion.id = id;
-        pEvtData->cushion.value = 0u;
-    }
+    event_context_t *pCurEvent = _event_object_contextGet(id);
 
-    report_cushion = (u32_t)pEvtData->cushion.value & pCurEvent->edgeMask; // Cushion edge trigger
-    pEvtData->cushion.value = 0u;
+    /* reset event value */
+    pEvtData->value = 0u;
 
-    report = (u32_t)(pCurEvent->defer & pCurEvent->edgeMask);     // Edge trigger
-    report |= (u32_t)(pCurEvent->value & (~pCurEvent->edgeMask)); // Level trigger
-
-    reported = ~(report_cushion ^ pEvtData->cushion.desired);
-
-    reported |= ~(report ^ desired) & listen;
-    if (reported) {
-        pCurThread->event.pEvtVal->value = reported;
-        pCurEvent->defer &= ~reported;                          // Clear reported defer
-        pCurEvent->value &= ~(reported & pCurEvent->clearMask); // Clear reported value
-
-        if (!group) {
-            EXIT_CRITICAL_SECTION();
-            return postcode;
+    if (!pEvtData->depth.enable) {
+        pEvtData->depth.start = FALSE;
+        pEvtData->depth.location = 0u;
+    } else {
+        if (!pEvtData->depth.start) {
+            pEvtData->depth.start = TRUE;
+            pEvtData->depth.location = (pCurEvent->index + 1u) % OS_EVENT_POOL_DEPTH;
         }
 
-        if (group == (reported & group)) {
-            EXIT_CRITICAL_SECTION();
-            return postcode;
+        u8_t i = 0u;
+        u8_t idx = pEvtData->depth.location;
+        u32_t record = 0u;
+        while ((idx != pCurEvent->index) && (i < OS_EVENT_POOL_DEPTH)) {
+            idx = (pEvtData->depth.location + i) % OS_EVENT_POOL_DEPTH;
+            record |= pCurEvent->value[idx];
+            i++;
+        };
+
+        /* It'll be updated again when event triger successful */
+        pEvtData->depth.location = pCurEvent->index;
+
+        /* set = desired-trigger bits & listening bits */
+        u32_t set = ~(record ^ pCurThread->event.trigger) & pCurThread->event.listen;
+
+        if (set) {
+            pCurThread->event.pEvtVal->value |= set;
+
+            if (pCurThread->event.group) {
+                if (pCurThread->event.group == (pCurThread->event.pEvtVal->value & pCurThread->event.group)) {
+                    /* group */
+                    EXIT_CRITICAL_SECTION();
+                    return postcode;
+                }
+            } else {
+                if (pCurThread->event.pEvtVal->value) {
+                    /* single */
+                    EXIT_CRITICAL_SECTION();
+                    return postcode;
+                }
+            }
         }
     }
-
     postcode =
         kernel_thread_exit_trigger(pCurThread->head.id, id, _event_list_blockingHeadGet(id), timeout_ms, _event_callback_fromTimeOut);
+
+    if (PC_IOK(postcode)) {
+        postcode = PC_SC_UNAVAILABLE;
+    }
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -446,14 +459,14 @@ u32p_t _impl_event_set(os_id_t id, u32_t set, u32_t clear, u32_t toggle)
  *
  * @param id The event unique id.
  * @param pEvtData The pointer of event value.
- * @param desired_val If the desired is not zero, All changed bits seen can wake up the thread to handle event.
+ * @param trigger If the trigger is not zero, All changed bits seen can wake up the thread to handle event.
  * @param listen_mask Current thread listen which bits in the event.
  * @param group_mask To define a group event.
  * @param timeout_ms The event wait timeout setting.
  *
  * @return The result of the operation.
  */
-u32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t desired_val, u32_t listen_mask, u32_t group_mask, u32_t timeout_ms)
+u32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t trigger, u32_t listen_mask, u32_t group_mask, u32_t timeout_ms)
 {
     if (_event_id_isInvalid(id)) {
         return _PC_CMPT_FAILED;
@@ -476,7 +489,7 @@ u32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t desired_val, u
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},          [1] = {.pv_val = (void *)pEvtData},   [2] = {.u32_val = (u32_t)desired_val},
+        [0] = {.u32_val = (u32_t)id},          [1] = {.pv_val = (void *)pEvtData},   [2] = {.u32_val = (u32_t)trigger},
         [3] = {.u32_val = (u32_t)listen_mask}, [4] = {.u32_val = (u32_t)group_mask}, [5] = {.u32_val = (u32_t)timeout_ms},
     };
 
@@ -484,7 +497,7 @@ u32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t desired_val, u
 
     ENTER_CRITICAL_SECTION();
 
-    if (PC_IOK(postcode)) {
+    if (postcode == PC_SC_UNAVAILABLE) {
         thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
         postcode = (u32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
     }
@@ -538,7 +551,7 @@ b_t event_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     pMsgs->id = pCurEvent->head.id;
     pMsgs->pName = pCurEvent->head.pName;
 
-    pMsgs->event.set = pCurEvent->value;
+    pMsgs->event.set = pCurEvent->value[pCurEvent->index];
     pMsgs->event.edge = pCurEvent->edgeMask;
     pMsgs->event.wait_list = pCurEvent->blockingThreadHead;
 

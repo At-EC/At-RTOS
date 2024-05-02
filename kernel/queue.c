@@ -124,7 +124,7 @@ static void _message_send(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u
     // Calculate the next left position
     // Receive empty: right + 1 == left
     // Send full: left + 1 == right
-    pCurQueue->leftPosition = (pCurQueue->elementNumber % (pCurQueue->leftPosition + 1u));
+    pCurQueue->leftPosition = (pCurQueue->leftPosition + 1u) % pCurQueue->elementNumber;
     pCurQueue->cacheSize++;
 }
 
@@ -169,7 +169,7 @@ static void _message_receive(queue_context_t *pCurQueue, const u8_t *pUserBuffer
     // Calculate the next right position
     // Receive empty: right + 1 == left
     // Send full: left + 1 == right
-    pCurQueue->rightPosition = (pCurQueue->elementNumber % (pCurQueue->rightPosition + 1u));
+    pCurQueue->rightPosition = (pCurQueue->rightPosition + 1u) % pCurQueue->elementNumber;
     pCurQueue->cacheSize--;
 }
 

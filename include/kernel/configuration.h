@@ -126,6 +126,10 @@ extern "C" {
 #define OS_INTERFACE_EXTERN_USE_ENABLE (ENABLED)
 #endif
 
+#ifndef OS_EVENT_POOL_DEPTH
+#define OS_EVENT_POOL_DEPTH (4u)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

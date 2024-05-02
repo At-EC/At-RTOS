@@ -130,7 +130,7 @@ typedef struct {
 
 typedef struct {
     /* the desired bits*/
-    u32_t desired;
+    u32_t trigger;
 
     /* the listen bits*/
     u32_t listen;
@@ -147,10 +147,10 @@ typedef struct {
     linker_head_t head;
 
     /* The event value */
-    u32_t value;
+    u32_t value[OS_EVENT_POOL_DEPTH];
 
-    /* The event defer value */
-    u32_t defer;
+    /* Current index */
+    u8_t index;
 
     /* Specific the event trigger condition of edge or level. */
     u32_t edgeMask;
