@@ -15,12 +15,12 @@
         EXTERN kernel_privilege_call_inSVC_c
         EXTERN kernel_scheduler_inPendSV_c
 
-        EXPORT _impl_port_run_theFirstThread
+        EXPORT port_run_theFirstThread
         EXPORT PendSV_Handler
         EXPORT SVC_Handler
 
 ; ARM core trigger the first thread to run.
-_impl_port_run_theFirstThread:
+port_run_theFirstThread:
 
 #if ( FPU_ENABLED )
         LDMIA   R0!, {R2 - R11}                                      ; Context includes EXC_RETURN and CONTROL {R4 - R11}
