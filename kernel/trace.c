@@ -76,13 +76,11 @@ void _impl_trace_kernel_snapshot_print(void)
         }
     }
 
-    KTRACE(">> %-6s %-15s %-5s %-7s %-5s %-5s %-1s %-11s %-5s\n", "Sem", "Name", "ID", "STATE", "Init", "Limit", "P", "Timeout(ms)",
-           "Block(ID)");
+    KTRACE(">> %-6s %-15s %-5s %-7s %-5s %-5s %-11s %-5s\n", "Sem", "Name", "ID", "STATE", "Init", "Limit", "Timeout(ms)", "Block(ID)");
     for (u32_t i = 0u; i < SEMAPHORE_INSTANCE_SUPPORTED_NUMBER; i++) {
         if (semaphore_snapshot(i, &snapshot_data)) {
-            KTRACE("   %-6d %-15s %-5d %-7s %-5d %-5d %-1d %-11d", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
-                   snapshot_data.semaphore.initial_count, snapshot_data.semaphore.limit_count, snapshot_data.semaphore.permit,
-                   snapshot_data.semaphore.timeout_ms);
+            KTRACE("   %-6d %-15s %-5d %-7s %-5d %-5d %-11d", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
+                   snapshot_data.semaphore.initial_count, snapshot_data.semaphore.limit_count, snapshot_data.semaphore.timeout_ms);
 
             list_t *pList = (list_t *)&snapshot_data.semaphore.wait_list;
             while (pList->pHead) {

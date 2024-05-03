@@ -36,23 +36,13 @@ static semaphore_context_t *_semaphore_object_contextGet(os_id_t id)
 }
 
 /**
- * @brief Get the locking semaphore list head.
+ * @brief Get the init semaphore list head.
  *
- * @return The value of the locking list head.
+ * @return The value of the init list head.
  */
-static list_t *_semaphore_list_lockingHeadGet(void)
+static list_t *_semaphore_list_initHeadGet(void)
 {
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_SEMAPHORE, KERNEL_MEMBER_LIST_SEMAPHORE_LOCK);
-}
-
-/**
- * @brief Get the unlocking semaphore list head.
- *
- * @return The value of the unlocking list head.
- */
-static list_t *_semaphore_list_unlockingHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_SEMAPHORE, KERNEL_MEMBER_LIST_SEMAPHORE_UNLOCK);
+    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_SEMAPHORE, KERNEL_MEMBER_LIST_SEMAPHORE_INIT);
 }
 
 /**
@@ -68,31 +58,16 @@ static list_t *_semaphore_list_blockingHeadGet(os_id_t id)
 }
 
 /**
- * @brief Push one semaphore context into locking list.
+ * @brief Push one semaphore context into init list.
  *
  * @param pCurHead The pointer of the semaphore linker head.
  */
-static void _semaphore_list_transfer_toLock(linker_head_t *pCurHead)
+static void _semaphore_list_transfer_toInit(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
-    list_t *pToLockingList = (list_t *)_semaphore_list_lockingHeadGet();
+    list_t *pToLockingList = (list_t *)_semaphore_list_initHeadGet();
     linker_list_transaction_common(&pCurHead->linker, pToLockingList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Push one semaphore context into unlocking list.
- *
- * @param pCurHead The pointer of the semaphore linker head.
- */
-static void _semaphore_list_transfer_toUnlock(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToUnlockList = (list_t *)_semaphore_list_unlockingHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToUnlockList, LIST_TAIL);
 
     EXIT_CRITICAL_SECTION();
 }
@@ -188,16 +163,10 @@ static void _semaphore_schedule(os_id_t id)
     }
 
     if (isAvail) {
-        pEntry->result = PC_SC_SUCCESS;
         /* If the PC arrive, the semaphore will be available and can be acquired */
-        pCurSemaphore->initialCount--; // The semaphore has available count
-    }
+        pCurSemaphore->remains--; // The semaphore has available count
 
-    /* Check if we can take the next acquired thread into locking */
-    if (pCurSemaphore->initialCount < pCurSemaphore->limitCount) {
-        _semaphore_list_transfer_toLock((linker_head_t *)&pCurSemaphore->head);
-    } else {
-        _semaphore_list_transfer_toUnlock((linker_head_t *)&pCurSemaphore->head);
+        pEntry->result = PC_SC_SUCCESS;
     }
 }
 
@@ -214,8 +183,7 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
 
     u8_t initialCount = (u8_t)(pArgs[0].u8_val);
     u8_t limitCount = (u8_t)(pArgs[1].u8_val);
-    b_t permit = (b_t)(pArgs[2].b_val);
-    const char_t *pName = (const char_t *)(pArgs[3].pch_val);
+    const char_t *pName = (const char_t *)(pArgs[2].pch_val);
     u32_t internal = 0u;
     u32_t endAddr = 0u;
     semaphore_context_t *pCurSemaphore = NULL;
@@ -237,16 +205,9 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
         os_memset((char_t *)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
         pCurSemaphore->head.id = id;
         pCurSemaphore->head.pName = pName;
-
-        pCurSemaphore->initialCount = initialCount;
-        pCurSemaphore->limitCount = limitCount;
-        pCurSemaphore->isPermit = permit;
-
-        if (pCurSemaphore->initialCount < pCurSemaphore->limitCount) {
-            _semaphore_list_transfer_toLock((linker_head_t *)&pCurSemaphore->head);
-        } else {
-            _semaphore_list_transfer_toUnlock((linker_head_t *)&pCurSemaphore->head);
-        }
+        pCurSemaphore->remains = initialCount;
+        pCurSemaphore->limits = limitCount;
+        _semaphore_list_transfer_toInit((linker_head_t *)&pCurSemaphore->head);
 
         EXIT_CRITICAL_SECTION();
         return id;
@@ -271,11 +232,11 @@ static u32_t _semaphore_take_privilege_routine(arguments_t *pArgs)
     u32_t timeout_ms = (u32_t)pArgs[1].u32_val;
     semaphore_context_t *pCurSemaphore = NULL;
     thread_context_t *pCurThread = NULL;
-    u32p_t postcode = PC_SC_SUCCESS;
+    u32p_t postcode = PC_SC_AVAILABLE;
 
     pCurThread = kernel_thread_runContextGet();
     pCurSemaphore = _semaphore_object_contextGet(id);
-    if (pCurSemaphore->head.linker.pList == _semaphore_list_lockingHeadGet()) {
+    if (!pCurSemaphore->remains) {
         /* No availabe count */
         postcode = kernel_thread_exit_trigger(pCurThread->head.id, id, _semaphore_list_blockingHeadGet(id), timeout_ms,
                                               _semaphore_callback_fromTimeOut);
@@ -289,13 +250,7 @@ static u32_t _semaphore_take_privilege_routine(arguments_t *pArgs)
     }
 
     /* The semaphore has available count */
-    pCurSemaphore->initialCount--;
-
-    /* Check if we can take the next acquired thread into locking */
-    if (pCurSemaphore->initialCount < pCurSemaphore->limitCount) {
-        _semaphore_list_transfer_toLock((linker_head_t *)&pCurSemaphore->head);
-    }
-    postcode = PC_SC_AVAILABLE;
+    pCurSemaphore->remains--;
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -313,25 +268,16 @@ static u32_t _semaphore_give_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    semaphore_context_t *pCurSemaphore = NULL;
-    thread_context_t *pSemaphoreHighestBlockingThread = NULL;
     u32p_t postcode = PC_SC_SUCCESS;
 
-    pCurSemaphore = _semaphore_object_contextGet(id);
-    pSemaphoreHighestBlockingThread = (thread_context_t *)_semaphore_linker_head_fromBlocking(id);
-    if (pCurSemaphore->isPermit) {
-        /* permit to save all released counts */
-        pCurSemaphore->initialCount++;
+    semaphore_context_t *pCurSemaphore = _semaphore_object_contextGet(id);
+    if (pCurSemaphore->remains < pCurSemaphore->limits) {
+        pCurSemaphore->remains++;
 
-        if (pCurSemaphore->initialCount >= _SEMAPHORE_AVAILABLE_COUNT_MAXIMUM) {
-            postcode = _PC_CMPT_FAILED;
+        thread_context_t *pSemaphoreHighestBlockingThread = (thread_context_t *)_semaphore_linker_head_fromBlocking(id);
+        if (pSemaphoreHighestBlockingThread) {
+            postcode = kernel_thread_entry_trigger(pSemaphoreHighestBlockingThread->head.id, id, PC_SC_SUCCESS, _semaphore_schedule);
         }
-    } else if (pCurSemaphore->initialCount < pCurSemaphore->limitCount) {
-        pCurSemaphore->initialCount++;
-    }
-
-    if (pSemaphoreHighestBlockingThread) {
-        postcode = kernel_thread_entry_trigger(pSemaphoreHighestBlockingThread->head.id, id, PC_SC_SUCCESS, _semaphore_schedule);
     }
 
     EXIT_CRITICAL_SECTION();
@@ -359,7 +305,7 @@ static u32_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
     list_iterator_init(&it, _semaphore_list_blockingHeadGet(id));
     pCurThread = (thread_context_t *)list_iterator_next(&it);
     while (pCurThread) {
-        pCurSemaphore->initialCount++;
+        pCurSemaphore->remains++;
         postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _semaphore_schedule);
         if (PC_IER(postcode)) {
             break;
@@ -390,25 +336,26 @@ u32_t _impl_semaphore_os_id_to_number(os_id_t id)
 /**
  * @brief Initialize a new semaphore.
  *
- * @param initial The initial count that allows the system take.
- * @param limit The maximum count that it's the semaphore's limitation.
- * @param permit It permits that all sem_give counts save until sem_take flush, even if the counts number higher than limitation setting
- * count.
+ * @param remainCount The initial count that allows the system take.
+ * @param limitCount The maximum count that it's the semaphore's limitation.
  * @param pName The semaphore name.
  *
  * @return The semaphore unique id.
  */
-os_id_t _impl_semaphore_init(u8_t initialCount, u8_t limitCount, b_t permit, const char_t *pName)
+os_id_t _impl_semaphore_init(u8_t remainCount, u8_t limitCount, const char_t *pName)
 {
     if (!limitCount) {
         return OS_INVALID_ID;
     }
 
+    if (remainCount > limitCount) {
+        return OS_INVALID_ID;
+    }
+
     arguments_t arguments[] = {
-        [0] = {.u8_val = (u8_t)initialCount},
+        [0] = {.u8_val = (u8_t)remainCount},
         [1] = {.u8_val = (u8_t)limitCount},
-        [2] = {.b_val = (b_t)permit},
-        [3] = {.pch_val = (const char_t *)pName},
+        [2] = {.pch_val = (const char_t *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_semaphore_init_privilege_routine, arguments);
@@ -536,10 +483,8 @@ b_t semaphore_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
         return FALSE;
     }
 
-    if (pCurSemaphore->head.linker.pList == _semaphore_list_lockingHeadGet()) {
-        pMsgs->pState = "lock";
-    } else if (pCurSemaphore->head.linker.pList == _semaphore_list_unlockingHeadGet()) {
-        pMsgs->pState = "unlock";
+    if (pCurSemaphore->head.linker.pList == _semaphore_list_initHeadGet()) {
+        pMsgs->pState = "init";
     } else if (pCurSemaphore->head.linker.pList) {
         pMsgs->pState = "*";
     } else {
@@ -552,9 +497,8 @@ b_t semaphore_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     pMsgs->id = pCurSemaphore->head.id;
     pMsgs->pName = pCurSemaphore->head.pName;
 
-    pMsgs->semaphore.initial_count = pCurSemaphore->initialCount;
-    pMsgs->semaphore.limit_count = pCurSemaphore->limitCount;
-    pMsgs->semaphore.permit = pCurSemaphore->isPermit;
+    pMsgs->semaphore.initial_count = pCurSemaphore->remains;
+    pMsgs->semaphore.limit_count = pCurSemaphore->limits;
     pMsgs->semaphore.timeout_ms = pCurSemaphore->timeout_ms;
     pMsgs->semaphore.wait_list = pCurSemaphore->blockingThreadHead;
 

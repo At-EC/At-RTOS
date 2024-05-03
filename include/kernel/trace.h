@@ -36,7 +36,6 @@ typedef struct {
 typedef struct {
     u16_t initial_count;
     u16_t limit_count;
-    b_t permit;
     u32_t timeout_ms;
     list_t wait_list;
 } semaphore_snapshot_t;

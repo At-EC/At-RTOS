@@ -42,16 +42,6 @@ static list_t *_event_list_initHeadGet(void)
 }
 
 /**
- * @brief Get the active event list head.
- *
- * @return The value of the active list head.
- */
-static list_t *_event_list_activeHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_EVENT, KERNEL_MEMBER_LIST_EVENT_ACTIVE);
-}
-
-/**
  * @brief Pick up a highest priority thread that blocking by the event pending list.
  *
  * @param The event unique id.
@@ -76,21 +66,6 @@ static void _event_list_transfer_toInit(linker_head_t *pCurHead)
 
     list_t *pToInitList = (list_t *)_event_list_initHeadGet();
     linker_list_transaction_common(&pCurHead->linker, pToInitList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Push one event context into active list.
- *
- * @param pCurHead The pointer of the timer linker head.
- */
-static void _event_list_transfer_toActive(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToActiveList = (list_t *)_event_list_activeHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToActiveList, LIST_TAIL);
 
     EXIT_CRITICAL_SECTION();
 }
@@ -535,7 +510,7 @@ b_t event_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
         return FALSE;
     }
 
-    if (pCurEvent->head.linker.pList == _event_list_activeHeadGet()) {
+    if (pCurEvent->head.linker.pList == _event_list_initHeadGet()) {
         pMsgs->pState = "init";
     } else if (pCurEvent->head.linker.pList) {
         pMsgs->pState = "*";

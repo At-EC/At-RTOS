@@ -30,9 +30,9 @@ static kernel_member_setting_t g_kernel_member_setting[KERNEL_MEMBER_NUMBER] = {
     [KERNEL_MEMBER_THREAD] = {KERNEL_MEMBER_MAP_1, (SBITS(KERNEL_MEMBER_LIST_THREAD_WAIT, KERNEL_MEMBER_LIST_THREAD_EXIT))},
     [KERNEL_MEMBER_TIMER_INTERNAL] = {KERNEL_MEMBER_MAP_2, (SBITS(KERNEL_MEMBER_LIST_TIMER_STOP, KERNEL_MEMBER_LIST_TIMER_RUN))},
     [KERNEL_MEMBER_TIMER] = {KERNEL_MEMBER_MAP_3, (SBITS(KERNEL_MEMBER_LIST_TIMER_STOP, KERNEL_MEMBER_LIST_TIMER_RUN))},
-    [KERNEL_MEMBER_SEMAPHORE] = {KERNEL_MEMBER_MAP_4, (SBITS(KERNEL_MEMBER_LIST_SEMAPHORE_LOCK, KERNEL_MEMBER_LIST_SEMAPHORE_UNLOCK))},
+    [KERNEL_MEMBER_SEMAPHORE] = {KERNEL_MEMBER_MAP_4, (SBIT(KERNEL_MEMBER_LIST_SEMAPHORE_INIT))},
     [KERNEL_MEMBER_MUTEX] = {KERNEL_MEMBER_MAP_5, (SBITS(KERNEL_MEMBER_LIST_MUTEX_LOCK, KERNEL_MEMBER_LIST_MUTEX_UNLOCK))},
-    [KERNEL_MEMBER_EVENT] = {KERNEL_MEMBER_MAP_6, (SBITS(KERNEL_MEMBER_LIST_EVENT_INIT, KERNEL_MEMBER_LIST_EVENT_ACTIVE))},
+    [KERNEL_MEMBER_EVENT] = {KERNEL_MEMBER_MAP_6, (SBIT(KERNEL_MEMBER_LIST_EVENT_INIT))},
     [KERNEL_MEMBER_QUEUE] = {KERNEL_MEMBER_MAP_7, (SBIT(KERNEL_MEMBER_LIST_QUEUE_INIT))},
     [KERNEL_MEMBER_POOL] = {KERNEL_MEMBER_MAP_8, (SBIT(KERNEL_MEMBER_LIST_POOL_INIT))},
 };
@@ -346,6 +346,21 @@ static u32_t _kernel_message_arrived(void)
 u32_t kernel_schedule_time_get(void)
 {
     return _kernel_pendsv_time_get();
+}
+
+/**
+ * @brief Push one semaphore context into lock list.
+ *
+ * @param pCurHead The pointer of the semaphore linker head.
+ */
+void kernel_semaphore_list_transfer_toInit(linker_head_t *pCurHead)
+{
+    ENTER_CRITICAL_SECTION();
+
+    list_t *pToLockList = (list_t *)(list_t *)kernel_member_list_get(KERNEL_MEMBER_SEMAPHORE, KERNEL_MEMBER_LIST_SEMAPHORE_INIT);
+    linker_list_transaction_common(&pCurHead->linker, pToLockList, LIST_TAIL);
+
+    EXIT_CRITICAL_SECTION();
 }
 
 /**
@@ -725,21 +740,6 @@ void kernel_thread_list_transfer_toPend(linker_head_t *pCurHead)
 
     list_t *pToPendList = (list_t *)kernel_list_pendingHeadGet();
     linker_list_transaction_specific(&pCurHead->linker, pToPendList, _kernel_thread_node_Order_compare_condition);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Push one semaphore context into lock list.
- *
- * @param pCurHead The pointer of the semaphore linker head.
- */
-void kernel_semaphore_list_transfer_toLock(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToLockList = (list_t *)(list_t *)kernel_member_list_get(KERNEL_MEMBER_SEMAPHORE, KERNEL_MEMBER_LIST_SEMAPHORE_LOCK);
-    linker_list_transaction_common(&pCurHead->linker, pToLockList, LIST_TAIL);
 
     EXIT_CRITICAL_SECTION();
 }

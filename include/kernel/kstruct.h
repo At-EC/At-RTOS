@@ -58,11 +58,9 @@ typedef struct {
     /* A common struct head to link with other context */
     linker_head_t head;
 
-    u8_t initialCount;
+    u8_t remains;
 
-    u8_t limitCount;
-
-    b_t isPermit;
+    u8_t limits;
 
     u32_t timeout_ms;
 
@@ -259,14 +257,12 @@ enum {
     KERNEL_MEMBER_LIST_TIMER_PEND,
     KERNEL_MEMBER_LIST_TIMER_RUN,
 
-    KERNEL_MEMBER_LIST_SEMAPHORE_LOCK,
-    KERNEL_MEMBER_LIST_SEMAPHORE_UNLOCK,
+    KERNEL_MEMBER_LIST_SEMAPHORE_INIT,
 
     KERNEL_MEMBER_LIST_MUTEX_LOCK,
     KERNEL_MEMBER_LIST_MUTEX_UNLOCK,
 
     KERNEL_MEMBER_LIST_EVENT_INIT,
-    KERNEL_MEMBER_LIST_EVENT_ACTIVE,
 
     KERNEL_MEMBER_LIST_QUEUE_INIT,
 

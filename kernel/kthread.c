@@ -195,9 +195,8 @@ void kthread_init(void)
                         .pName = g_kernel_thread_resource.schedule_id.pName,
                         .linker = LINKER_NULL,
                     },
-                .initialCount = 0u,
-                .limitCount = OS_SEMPHORE_TICKET_BINARY,
-                .isPermit = FALSE, /* reduce useless thread calling */
+                .remains = 0u,
+                .limits = OS_SEMPHORE_TICKET_BINARY,
             },
     };
 
@@ -208,7 +207,7 @@ void kthread_init(void)
 
     pCurSemaphore =
         (semaphore_context_t *)kernel_member_unified_id_toContainerAddress(kernel_semaphore[KERNEL_SCHEDULE_SEMAPHORE_INSTANCE].head.id);
-    kernel_semaphore_list_transfer_toLock((linker_head_t *)&pCurSemaphore->head);
+    kernel_semaphore_list_transfer_toInit((linker_head_t *)&pCurSemaphore->head);
 }
 
 #ifdef __cplusplus

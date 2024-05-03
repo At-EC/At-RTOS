@@ -81,7 +81,7 @@ u32_t kernel_schedule_time_get(void);
 u32_t kernel_thread_use_percent_take(os_id_t id);
 void kernel_privilege_call_inSVC_c(u32_t *svc_args);
 u32_t kernel_privilege_invoke(const void *pCallFun, arguments_t *pArgs);
-void kernel_semaphore_list_transfer_toLock(linker_head_t *pCurHead);
+void kernel_semaphore_list_transfer_toInit(linker_head_t *pCurHead);
 void kernel_schedule_thread(void);
 void kernel_idle_thread(void);
 void kthread_init(void);
