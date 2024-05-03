@@ -205,11 +205,11 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        _memset((char_t *)pCurEvent, 0x0u, sizeof(event_context_t));
+        os_memset((char_t *)pCurEvent, 0x0u, sizeof(event_context_t));
         pCurEvent->head.id = id;
         pCurEvent->head.pName = pName;
 
-        _memset((char_t *)pCurEvent->value, 0x0u, OS_EVENT_POOL_DEPTH);
+        os_memset((char_t *)pCurEvent->value, 0x0u, OS_EVENT_POOL_DEPTH);
         pCurEvent->edgeMask = edgeMask;
         pCurEvent->clearMask = ~clrDisMask;
         pCurEvent->call.pCallbackFunc = NULL;
@@ -528,7 +528,7 @@ b_t event_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     offset = sizeof(event_context_t) * instance;
     pCurEvent = (event_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_EVENT) + offset);
     id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurEvent);
-    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
+    os_memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
 
     if (_event_id_isInvalid(id)) {
         EXIT_CRITICAL_SECTION();

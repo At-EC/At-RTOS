@@ -163,7 +163,7 @@ static u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        _memset((char_t *)pCurMutex, 0x0u, sizeof(mutex_context_t));
+        os_memset((char_t *)pCurMutex, 0x0u, sizeof(mutex_context_t));
         pCurMutex->head.id = id;
         pCurMutex->head.pName = pName;
 
@@ -363,7 +363,7 @@ b_t mutex_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     offset = sizeof(mutex_context_t) * instance;
     pCurMutex = (mutex_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_MUTEX) + offset);
     id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurMutex);
-    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
+    os_memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
 
     if (_mutex_id_isInvalid(id)) {
         EXIT_CRITICAL_SECTION();

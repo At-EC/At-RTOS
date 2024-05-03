@@ -234,7 +234,7 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        _memset((char_t *)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
+        os_memset((char_t *)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
         pCurSemaphore->head.id = id;
         pCurSemaphore->head.pName = pName;
 
@@ -529,7 +529,7 @@ b_t semaphore_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     offset = sizeof(semaphore_context_t) * instance;
     pCurSemaphore = (semaphore_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_SEMAPHORE) + offset);
     id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurSemaphore);
-    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
+    os_memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
 
     if (_semaphore_id_isInvalid(id)) {
         EXIT_CRITICAL_SECTION();

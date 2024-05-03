@@ -88,14 +88,6 @@ typedef u32_t u32p_t;
 #define RANGE_ADDRESS_CONDITION(address, pool)                                                                                             \
     (((u32_t)(address) >= (u32_t)(pool)) && ((u32_t)(address) < ((u32_t)(pool) + (u16_t)SIZEOF(pool))))
 
-/**
- * The implement string operation function lists for rtos kernel internal use.
- */
-void _memcpy(void *dst, const void *src, u32_t cnt);
-void _memset(void *dst, u8_t val, u32_t cnt);
-i32_t _memcmp(const void *dst, const void *src, u32_t cnt);
-u32_t _strlen(const uchar_t *str);
-
 #ifdef __cplusplus
 }
 #endif

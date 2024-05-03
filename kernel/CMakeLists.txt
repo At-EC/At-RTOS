@@ -1,10 +1,8 @@
 target_sources(atos_kernel
     PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/basic.c
     ${CMAKE_CURRENT_LIST_DIR}/event.c
     ${CMAKE_CURRENT_LIST_DIR}/kernel.c
     ${CMAKE_CURRENT_LIST_DIR}/linker.c
-    ${CMAKE_CURRENT_LIST_DIR}/list.c
     ${CMAKE_CURRENT_LIST_DIR}/mutex.c
     ${CMAKE_CURRENT_LIST_DIR}/queue.c
     ${CMAKE_CURRENT_LIST_DIR}/semaphore.c

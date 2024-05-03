@@ -224,7 +224,7 @@ static os_id_t _thread_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        _memset((char_t *)pCurThread, 0x0u, sizeof(thread_context_t));
+        os_memset((char_t *)pCurThread, 0x0u, sizeof(thread_context_t));
         pCurThread->head.id = id;
         pCurThread->head.pName = pName;
 
@@ -352,8 +352,8 @@ static u32p_t _thread_delete_privilege_routine(arguments_t *pArgs)
     }
 
     _thread_list_transfer_toUninitialized((linker_head_t *)&pCurThread->head);
-    _memset((char_t *)pCurThread->pStackAddr, STACT_UNUSED_DATA, pCurThread->stackSize);
-    _memset((char_t *)pCurThread, 0x0u, sizeof(thread_context_t));
+    os_memset((char_t *)pCurThread->pStackAddr, STACT_UNUSED_DATA, pCurThread->stackSize);
+    os_memset((char_t *)pCurThread, 0x0u, sizeof(thread_context_t));
     postcode = kernel_thread_schedule_request();
 
     EXIT_CRITICAL_SECTION();
@@ -592,7 +592,7 @@ b_t thread_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     offset = sizeof(thread_context_t) * instance;
     pCurThread = (thread_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_THREAD) + offset);
     id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurThread);
-    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
+    os_memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
 
     if (_thread_id_isInvalid(id)) {
         EXIT_CRITICAL_SECTION();

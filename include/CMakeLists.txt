@@ -12,7 +12,6 @@ target_sources(kernel_include
     ${KERNEL_PATH}/include/kernel/configuration.h
     ${KERNEL_PATH}/include/kernel/kernel.h
     ${KERNEL_PATH}/include/kernel/linker.h
-    ${KERNEL_PATH}/include/kernel/list.h
     ${KERNEL_PATH}/include/kernel/kstruct.h
     ${KERNEL_PATH}/include/kernel/postcode.h
     ${KERNEL_PATH}/include/kernel/timer.h

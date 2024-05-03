@@ -177,7 +177,7 @@ void kthread_init(void)
     };
 
     thread_context_t *pCurThread = (thread_context_t *)kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_THREAD);
-    _memcpy((u8_t *)pCurThread, (u8_t *)kernel_thread, (sizeof(thread_context_t) * KERNEL_APPLICATION_THREAD_INSTANCE));
+    os_memcpy((u8_t *)pCurThread, (u8_t *)kernel_thread, (sizeof(thread_context_t) * KERNEL_APPLICATION_THREAD_INSTANCE));
 
     pCurThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(kernel_thread[KERNEL_SCHEDULE_THREAD_INSTANCE].head.id);
     timer_init_for_thread(kernel_member_unified_id_threadToTimer(pCurThread->head.id));
@@ -204,7 +204,7 @@ void kthread_init(void)
     semaphore_context_t *pCurSemaphore = (semaphore_context_t *)kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_SEMAPHORE);
     g_kernel_thread_resource.sem_id.val = kernel_member_containerAddress_toUnifiedid((u32_t)pCurSemaphore);
     kernel_semaphore[KERNEL_SCHEDULE_SEMAPHORE_INSTANCE].head.id = g_kernel_thread_resource.sem_id.val;
-    _memcpy((u8_t *)pCurSemaphore, (u8_t *)kernel_semaphore, (sizeof(semaphore_context_t) * KERNEL_APPLICATION_SEMAPHORE_INSTANCE));
+    os_memcpy((u8_t *)pCurSemaphore, (u8_t *)kernel_semaphore, (sizeof(semaphore_context_t) * KERNEL_APPLICATION_SEMAPHORE_INSTANCE));
 
     pCurSemaphore =
         (semaphore_context_t *)kernel_member_unified_id_toContainerAddress(kernel_semaphore[KERNEL_SCHEDULE_SEMAPHORE_INSTANCE].head.id);

@@ -116,7 +116,7 @@ static void *_mem_take(pool_context_t *pCurPool)
         }
 
         pMemTake = (void *)((u32_t)((i * pCurPool->elementLength) + (u32_t)pCurPool->pMemAddress));
-        _memset((char_t *)pMemTake, 0x0u, pCurPool->elementLength);
+        os_memset((char_t *)pMemTake, 0x0u, pCurPool->elementLength);
         pCurPool->elementFreeBits &= ~SBIT(i);
         break;
 
@@ -146,7 +146,7 @@ static bool _mem_release(pool_context_t *pCurPool, void *pUserMem)
 
         pMemTake = (void *)((u32_t)((i * pCurPool->elementLength) + (u32_t)pCurPool->pMemAddress));
         if (pMemTake == pUserMem) {
-            _memset((char_t *)pMemTake, 0x0u, pCurPool->elementLength);
+            os_memset((char_t *)pMemTake, 0x0u, pCurPool->elementLength);
             pCurPool->elementFreeBits |= SBIT(i);
             break;
         }
@@ -240,7 +240,7 @@ static u32_t _pool_init_privilege_routine(arguments_t *pArgs)
         if (_pool_object_isInit(id)) {
             continue;
         }
-        _memset((char_t *)pCurPool, 0x0u, sizeof(pool_context_t));
+        os_memset((char_t *)pCurPool, 0x0u, sizeof(pool_context_t));
         pCurPool->head.id = id;
         pCurPool->head.pName = pName;
 
@@ -292,7 +292,7 @@ static u32_t _pool_take_privilege_routine(arguments_t *pArgs)
             return _PC_CMPT_FAILED;
         }
 
-        _memset((u8_t *)&pCurThread->pool, 0x0u, sizeof(action_pool_t));
+        os_memset((u8_t *)&pCurThread->pool, 0x0u, sizeof(action_pool_t));
 
         pCurThread->pool.ppUserMemAddress = ppUserBuffer;
         postcode =
@@ -505,7 +505,7 @@ b_t pool_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     offset = sizeof(pool_context_t) * instance;
     pCurPool = (pool_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_POOL) + offset);
     id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurPool);
-    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
+    os_memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
 
     if (_pool_id_isInvalid(id)) {
         EXIT_CRITICAL_SECTION();

@@ -337,7 +337,7 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        _memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
+        os_memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
         pCurTimer->head.id = id;
         pCurTimer->head.pName = pName;
 
@@ -620,7 +620,7 @@ void timer_init_for_thread(os_id_t id)
 
     timer_context_t *pCurTimer = _timer_object_contextGet(id);
 
-    _memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
+    os_memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
     pCurTimer->head.id = id;
     pCurTimer->head.pName = "TH";
 
@@ -780,7 +780,7 @@ b_t timer_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     offset = sizeof(timer_context_t) * instance;
     pCurTimer = (timer_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_TIMER) + offset);
     id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurTimer);
-    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
+    os_memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
 
     if (_timer_id_isInvalid(id)) {
         EXIT_CRITICAL_SECTION();

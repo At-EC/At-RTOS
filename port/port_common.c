@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  **/
 
+#include "linker.h"
 #include "clock_tick.h"
 #include "port.h"
 
@@ -84,7 +85,7 @@ void port_interrupt_init(void)
  */
 u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
 {
-    _memset((uchar_t *)pAddress, STACT_UNUSED_DATA, size);
+    os_memset((uchar_t *)pAddress, STACT_UNUSED_DATA, size);
 
     u32_t psp_frame = (u32_t)pAddress + size - sizeof(stack_snapshot_t);
 

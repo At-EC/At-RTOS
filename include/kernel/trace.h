@@ -9,7 +9,7 @@
 #define _TRACE_H_
 
 #include "typedef.h"
-#include "list.h"
+#include "linker.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -118,8 +118,8 @@ static void _message_send(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u
     u8_t *pInBuffer = NULL;
 
     pInBuffer = (u8_t *)((u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress));
-    _memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
-    _memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
+    os_memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
+    os_memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
 
     // Calculate the next left position
     // Receive empty: right + 1 == left
@@ -147,8 +147,8 @@ static void _message_send_front(queue_context_t *pCurQueue, const u8_t *pUserBuf
     pCurQueue->cacheSize++;
 
     pInBuffer = (u8_t *)((u32_t)((pCurQueue->rightPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress));
-    _memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
-    _memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
+    os_memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
+    os_memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
 }
 
 /**
@@ -163,8 +163,8 @@ static void _message_receive(queue_context_t *pCurQueue, const u8_t *pUserBuffer
     u8_t *pOutBuffer = NULL;
 
     pOutBuffer = (u8_t *)((pCurQueue->rightPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress);
-    _memset((char_t *)pUserBuffer, 0x0u, userSize);
-    _memcpy((char_t *)pUserBuffer, (const char_t *)pOutBuffer, userSize);
+    os_memset((char_t *)pUserBuffer, 0x0u, userSize);
+    os_memcpy((char_t *)pUserBuffer, (const char_t *)pOutBuffer, userSize);
 
     // Calculate the next right position
     // Receive empty: right + 1 == left
@@ -192,8 +192,8 @@ static void _message_receive_behind(queue_context_t *pCurQueue, const u8_t *pUse
     pCurQueue->cacheSize--;
 
     pInBuffer = (u8_t *)((u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress));
-    _memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
-    _memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
+    os_memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
+    os_memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
 }
 
 /**
@@ -309,7 +309,7 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
         if (_queue_object_isInit(id)) {
             continue;
         }
-        _memset((char_t *)pCurQueue, 0x0u, sizeof(queue_context_t));
+        os_memset((char_t *)pCurQueue, 0x0u, sizeof(queue_context_t));
         pCurQueue->head.id = id;
         pCurQueue->head.pName = pName;
 
@@ -363,7 +363,7 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
             return _PC_CMPT_FAILED;
         }
 
-        _memset((char *)&pCurThread->queue, 0x0u, sizeof(action_queue_t));
+        os_memset((char *)&pCurThread->queue, 0x0u, sizeof(action_queue_t));
 
         pCurThread->queue.pUserBufferAddress = pUserBuffer;
         pCurThread->queue.userBufferSize = bufferSize;
@@ -428,7 +428,7 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
             return _PC_CMPT_FAILED;
         }
 
-        _memset((char *)&pCurThread->queue, 0x0u, sizeof(action_queue_t));
+        os_memset((char *)&pCurThread->queue, 0x0u, sizeof(action_queue_t));
         pCurThread->queue.pUserBufferAddress = pUserBuffer;
         pCurThread->queue.userBufferSize = bufferSize;
         pCurThread->queue.fromBack = isBack;
@@ -628,7 +628,7 @@ b_t queue_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     offset = sizeof(queue_context_t) * instance;
     pCurQueue = (queue_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_QUEUE) + offset);
     id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurQueue);
-    _memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
+    os_memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
 
     if (_queue_id_isInvalid(id)) {
         EXIT_CRITICAL_SECTION();
