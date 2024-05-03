@@ -43,9 +43,9 @@ typedef struct os_priority os_priority_t;
 typedef struct os_time os_time_t;
 
 typedef struct {
-    b_t enable;
+    b_t active;
 
-    b_t start;
+    b_t enable;
 
     u8_t location;
 } evt_depth_t;

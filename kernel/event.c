@@ -259,10 +259,14 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
     /* Level trigger */
     trigger |= val & (~pCurEvent->edgeMask);
 
+    /* Order new index and value*/
+    idx = (idx + 1) % OS_EVENT_POOL_DEPTH;
+    pCurEvent->value[idx] = val;
+    pCurEvent->index = idx;
+
     list_iterator_t it = {0u};
     list_iterator_init(&it, _event_list_blockingHeadGet(id));
     thread_context_t *pCurThread = (thread_context_t *)list_iterator_next(&it);
-
     while (pCurThread) {
         /* set = desired-trigger bits & listening bits */
         u32_t set = ~(trigger ^ pCurThread->event.trigger) & pCurThread->event.listen;
@@ -290,11 +294,6 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
             pCurThread = (thread_context_t *)list_iterator_next(&it);
         }
     }
-
-    /* new index and value*/
-    idx = (idx + 1) % OS_EVENT_POOL_DEPTH;
-    pCurEvent->value[idx] = val;
-    pCurEvent->index = idx;
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -326,52 +325,51 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
     pCurThread->event.pEvtVal = pEvtData;
 
     event_context_t *pCurEvent = _event_object_contextGet(id);
+    u32_t record = 0u;
 
     /* reset event value */
     pEvtData->value = 0u;
 
-    if (!pEvtData->depth.enable) {
-        pEvtData->depth.start = FALSE;
-        pEvtData->depth.location = 0u;
-    } else {
-        if (!pEvtData->depth.start) {
-            pEvtData->depth.start = TRUE;
-            pEvtData->depth.location = (pCurEvent->index + 1u) % OS_EVENT_POOL_DEPTH;
-        }
+    if (!pEvtData->depth.active) {
+        pEvtData->depth.active = TRUE;
+        pEvtData->depth.location = (pCurEvent->index + 1u) % OS_EVENT_POOL_DEPTH;
+    }
 
+    if (!pEvtData->depth.enable) {
+        record = pCurEvent->value[pCurEvent->index];
+    } else {
         u8_t i = 0u;
         u8_t idx = pEvtData->depth.location;
-        u32_t record = 0u;
         while ((idx != pCurEvent->index) && (i < OS_EVENT_POOL_DEPTH)) {
             idx = (pEvtData->depth.location + i) % OS_EVENT_POOL_DEPTH;
             record |= pCurEvent->value[idx];
             i++;
         };
+    }
+    /* It'll be updated again when event trigger successful */
+    pEvtData->depth.location = pCurEvent->index;
 
-        /* It'll be updated again when event triger successful */
-        pEvtData->depth.location = pCurEvent->index;
+    /* set = desired-trigger bits & listening bits */
+    u32_t set = ~(record ^ pCurThread->event.trigger) & pCurThread->event.listen;
 
-        /* set = desired-trigger bits & listening bits */
-        u32_t set = ~(record ^ pCurThread->event.trigger) & pCurThread->event.listen;
+    if (set) {
+        pCurThread->event.pEvtVal->value |= set;
 
-        if (set) {
-            pCurThread->event.pEvtVal->value |= set;
-
-            if (pCurThread->event.group) {
-                if (pCurThread->event.group == (pCurThread->event.pEvtVal->value & pCurThread->event.group)) {
-                    /* group */
-                    EXIT_CRITICAL_SECTION();
-                    return postcode;
-                }
-            } else {
-                if (pCurThread->event.pEvtVal->value) {
-                    /* single */
-                    EXIT_CRITICAL_SECTION();
-                    return postcode;
-                }
+        if (pCurThread->event.group) {
+            if (pCurThread->event.group == (pCurThread->event.pEvtVal->value & pCurThread->event.group)) {
+                /* group */
+                EXIT_CRITICAL_SECTION();
+                return postcode;
+            }
+        } else {
+            if (pCurThread->event.pEvtVal->value) {
+                /* single */
+                EXIT_CRITICAL_SECTION();
+                return postcode;
             }
         }
     }
+
     postcode =
         kernel_thread_exit_trigger(pCurThread->head.id, id, _event_list_blockingHeadGet(id), timeout_ms, _event_callback_fromTimeOut);
 

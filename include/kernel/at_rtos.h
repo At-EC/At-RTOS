@@ -584,6 +584,9 @@ static inline u32p_t os_evt_wait(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t d
     extern u32p_t _impl_event_wait(os_id_t id, os_evt_val_t * pEvtData, u32_t desired_val, u32_t listen_mask, u32_t group_mask,
                                    u32_t timeout_ms);
 
+    if (pEvtData) {
+        pEvtData->depth.enable = FALSE;
+    }
     return (u32p_t)_impl_event_wait(id.val, pEvtData, desired_val, listen_mask, group_mask, timeout_ms);
 }
 
