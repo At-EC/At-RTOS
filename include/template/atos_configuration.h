@@ -117,6 +117,22 @@ extern "C" {
 #define POOL_INSTANCE_SUPPORTED_NUMBER (10u)
 
 /**
+ * This symbol defined the timer instance number that your application is using.
+ * The defaule value is set to 5. Your application will certainly need a
+ * different value so set this correctly. This is very often, but not always,
+ * according to the actual timer instance number that you created.
+ **/
+#define PUBLISH_INSTANCE_SUPPORTED_NUMBER (10u)
+
+/**
+ * This symbol defined the timer instance number that your application is using.
+ * The defaule value is set to 5. Your application will certainly need a
+ * different value so set this correctly. This is very often, but not always,
+ * according to the actual timer instance number that you created.
+ **/
+#define SUBSCRIBE_INSTANCE_SUPPORTED_NUMBER (10u)
+
+/**
  * This symbol defined your thread running mode, if the thread runs at the privileged mode.
  * The defaule value is set to 0. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the security level that you want.

@@ -61,6 +61,13 @@ const at_rtos_api_t os = {
     .pool_take = os_pool_take,
     .pool_release = os_pool_release,
 
+    .publish_init = os_publish_init,
+    .publish_data_submit = os_publish_data_submit,
+    .subscribe_init = os_subscribe_init,
+    .subscribe_register = os_subscribe_register,
+    .subscribe_data_apply = os_subscribe_data_apply,
+    .subscribe_data_is_ready = os_subscribe_data_is_ready,
+
     .id_isInvalid = os_id_is_invalid,
     .schedule_run = os_kernel_run,
     .schedule_is_running = os_kernel_is_running,

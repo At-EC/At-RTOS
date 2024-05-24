@@ -42,8 +42,9 @@ And the keywords of the At-RTOS is shown as following lists.
 * **Preemptive and Cooperative Scheduling:** You can easily config your thread to pass preemptive and cooperative scheduling through your thread's priority setting.
 * **Resource Mutexes:** It helps to protect your globally sensitive data from tampering by other threads.
 * **Binary and Counting Semaphores:** It provides selectable counting and binary semaphore for thread communication in the system.
-* **Queue Messages:** It's for thread-safe communication.
-* **Multiple Events:** It's for thread-safe communication.
+* **Queue Messages:** It's for thread-safe messages' communication.
+* **Subscribtion Messages:** It's for thread-safe messages' communication.
+* **Multiple Events:** It's for thread-safe events' communication.
 * **Memory Pools:** It's for thread memory pool resource management.
 * **Software Timers with callback:** It supports your varity time requirements application.
 * **Fully configurable (ROM and RAM):** No limits on number of At-RTOS objects, except your devices' available memory.

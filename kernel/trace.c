@@ -58,7 +58,7 @@ void _impl_trace_postcode_snapshot_print(void)
 void _impl_trace_kernel_snapshot_print(void)
 {
 #if defined KTRACE
-    u32_t unused[7] = {0u};
+    u32_t unused[8] = {0u};
     kernel_snapshot_t snapshot_data;
 
     _impl_trace_firmware_snapshot_print();
@@ -169,6 +169,16 @@ void _impl_trace_kernel_snapshot_print(void)
         }
     }
 
+    KTRACE(">> %-6s %-15s %-5s %-7s %-7s\n", "Publish", "Name", "ID", "State", "refresh");
+    for (u32_t i = 0u; i < PUBLISH_INSTANCE_SUPPORTED_NUMBER; i++) {
+        if (publish_snapshot(i, &snapshot_data)) {
+            KTRACE("   %-6d %-15s %-5d %-7s %-7d\n", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
+                   snapshot_data.publish.refresh_count);
+        } else {
+            unused[6]++;
+        }
+    }
+
     KTRACE(">> %-6s %-15s %-5s %-7s %-13s %-5s\n", "Pool", "Name", "ID", "State", "FreeBits", "Block(ID)");
     for (u32_t i = 0u; i < POOL_INSTANCE_SUPPORTED_NUMBER; i++) {
         if (pool_snapshot(i, &snapshot_data)) {
@@ -183,7 +193,7 @@ void _impl_trace_kernel_snapshot_print(void)
             }
             KTRACE("\n");
         } else {
-            unused[6]++;
+            unused[7]++;
         }
     }
 
@@ -194,7 +204,8 @@ void _impl_trace_kernel_snapshot_print(void)
     KTRACE("   %-9s %-6d %-6d\n", "Event", EVENT_INSTANCE_SUPPORTED_NUMBER, unused[3]);
     KTRACE("   %-9s %-6d %-6d\n", "Queue", QUEUE_INSTANCE_SUPPORTED_NUMBER, unused[4]);
     KTRACE("   %-9s %-6d %-6d\n", "Timer", TIMER_INSTANCE_SUPPORTED_NUMBER, unused[5]);
-    KTRACE("   %-9s %-6d %-6d\n", "Pool", POOL_INSTANCE_SUPPORTED_NUMBER, unused[6]);
+    KTRACE("   %-9s %-6d %-6d\n", "Timer", PUBLISH_INSTANCE_SUPPORTED_NUMBER, unused[6]);
+    KTRACE("   %-9s %-6d %-6d\n", "Pool", POOL_INSTANCE_SUPPORTED_NUMBER, unused[7]);
 #endif
 }
 

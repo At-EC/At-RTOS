@@ -73,15 +73,18 @@ typedef u32_t u32p_t;
 #define VREG16(addr) (*(volatile u16_t *)(u32_t)(addr))
 #define VREG8(addr)  (*(volatile u8_t *)(u32_t)(addr))
 
-#define SBIT(x)                   ((u32_t)((u32_t)0x01u << (x)))
-#define SBITS(start, end)         ((0xFFFFFFFFul << (start)) & (0xFFFFFFFFul >> (31u - (u32_t)(end))))
-#define GBITS(regval, start, end) (((regval) & SBITS((start), (end))) >> (start))
+#define SET_BIT(x)                    ((u32_t)((u32_t)0x01u << (x)))
+#define SET_BITS(start, end)          ((0xFFFFFFFFul << (start)) & (0xFFFFFFFFul >> (31u - (u32_t)(end))))
+#define DUMP_BITS(regval, start, end) (((regval) & SET_BITS((start), (end))) >> (start))
 
 #define DEQUALIFY(s, v)      ((s)(u32_t)(const volatile void *)(v))
 #define OFFSETOF(s, m)       ((u32_t)(&((s *)0)->m))
 #define CONTAINEROF(p, s, m) (DEQUALIFY(s *, ((const vu8_t *)(p)-OFFSETOF(s, m))))
 #define SIZEOF(arr)          (sizeof(arr))
 #define DIMOF(arr)           (SIZEOF(arr) / SIZEOF(arr[0]))
+
+#define MINI(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 
 #define ROUND_UP(size, align)   (((u32_t)(size) + (align - 1u)) & (~(align - 1)))
 #define ROUND_DOWN(size, align) (((u32_t)(size)) & (~(align - 1)))

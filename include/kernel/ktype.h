@@ -38,6 +38,8 @@ typedef struct os_id os_mutex_id_t;
 typedef struct os_id os_evt_id_t;
 typedef struct os_id os_msgq_id_t;
 typedef struct os_id os_pool_id_t;
+typedef struct os_id os_publish_id_t;
+typedef struct os_id os_subscribe_id_t;
 
 typedef struct os_priority os_priority_t;
 typedef struct os_time os_time_t;

@@ -32,6 +32,37 @@ typedef void (*pTimer_callbackFunc_t)(void);
 typedef void (*pThread_callbackFunc_t)(os_id_t);
 typedef void (*pThread_entryFunc_t)(void);
 typedef void (*pEvent_callbackFunc_t)(void);
+typedef void (*pSubscribe_callbackFunc_t)(const void *, u16_t);
+
+typedef struct {
+    /* A common struct head to link with other context */
+    linker_head_t head;
+
+    u32_t refresh_count;
+
+    list_t subscribeListHead;
+} publish_context_t;
+
+typedef struct {
+    /* A common struct head to link with other context */
+    linker_head_t head;
+
+    os_id_t hold;
+
+    u32_t last_count;
+
+    u32_t isMute;
+
+    struct callSubEntry {
+        list_node_t node;
+
+        void *pDataAddress;
+
+        u16_t dataSize;
+
+        pSubscribe_callbackFunc_t pNotificationHandler;
+    } callEntry;
+} subscribe_context_t;
 
 typedef struct {
     /* A common struct head to link with other context */
@@ -43,15 +74,15 @@ typedef struct {
 
     u64_t duration_us;
 
-    struct callFunc {
+    struct callTimerEntry {
         list_node_t node;
 
         union {
-            pTimer_callbackFunc_t pTimer;
+            pTimer_callbackFunc_t pTimerCallEntry;
 
-            pThread_callbackFunc_t pThread;
+            pThread_callbackFunc_t pThreadCallEntry;
         };
-    } call;
+    } callEntry;
 } timer_context_t;
 
 typedef struct {
@@ -243,6 +274,8 @@ enum {
     KERNEL_MEMBER_EVENT,
     KERNEL_MEMBER_QUEUE,
     KERNEL_MEMBER_POOL,
+    KERNEL_MEMBER_PUBLISH,
+    KERNEL_MEMBER_SUBSCRIBE,
     KERNEL_MEMBER_NUMBER,
 };
 
@@ -267,6 +300,11 @@ enum {
     KERNEL_MEMBER_LIST_QUEUE_INIT,
 
     KERNEL_MEMBER_LIST_POOL_INIT,
+
+    KERNEL_MEMBER_LIST_PUBLISH_INIT,
+    KERNEL_MEMBER_LIST_PUBLISH_PEND,
+    KERNEL_MEMBER_LIST_SUBSCRIBE_INIT,
+
     KERNEL_MEMBER_LIST_NUMBER,
 };
 

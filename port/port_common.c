@@ -38,7 +38,7 @@ b_t port_isInInterruptContent(void)
         return TRUE;
     }
 
-    if (__get_PRIMASK() == SBIT(0)) {
+    if (__get_PRIMASK() == SET_BIT(0)) {
         return TRUE;
     }
 
@@ -91,7 +91,7 @@ u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t
 
     psp_frame = STACK_ADDRESS_DOWN(psp_frame);
 
-    ((stack_snapshot_t *)psp_frame)->xPSR = SBIT(24);                /* xPSR */
+    ((stack_snapshot_t *)psp_frame)->xPSR = SET_BIT(24);                /* xPSR */
     ((stack_snapshot_t *)psp_frame)->R15_PC = (u32_t)pEntryFunction; /* PC   */
     ((stack_snapshot_t *)psp_frame)->R14_LR = 0xFFFFFFFDu;           /* LR   */
 

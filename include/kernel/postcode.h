@@ -52,8 +52,8 @@ enum {
     PC_CMPT_EVENT_6,
     PC_CMPT_TIMER_7,
     PC_CMPT_POOL_8,
-
-    PC_CMPT_ASSERT_8,
+    PC_CMPT_PUBLISH_9,
+    PC_CMPT_ASSERT_10,
 
     POSTCODE_COMPONENT_NUMBER,
 };
@@ -102,7 +102,7 @@ static inline u32p_t _impl_trace_postcode_cmpt_last_failed(u32p_t postcode)
 #define PC_IOK(code) PC_IOK_TC(code)
 #define PC_IER(code) PC_IER_TC(code)
 
-#define _PC_CMPT_ASSERT_FAILED PC_FAILED(PC_CMPT_ASSERT_8)
+#define _PC_CMPT_ASSERT_FAILED PC_FAILED(PC_CMPT_ASSERT_10)
 
 #define _CHECK_CONDITION(cond)                                                                                                             \
     do {                                                                                                                                   \

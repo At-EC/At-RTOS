@@ -344,7 +344,7 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
         pCurTimer->isCycle = isCycle;
         pCurTimer->timeout_ms = timeout_ms;
         pCurTimer->duration_us = 0u;
-        pCurTimer->call.pTimer = pCallFun;
+        pCurTimer->callEntry.pTimerCallEntry = pCallFun;
 
         _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
 
@@ -627,7 +627,7 @@ void timer_init_for_thread(os_id_t id)
     pCurTimer->isCycle = FALSE;
     pCurTimer->timeout_ms = 0u;
     pCurTimer->duration_us = 0u;
-    pCurTimer->call.pThread = NULL;
+    pCurTimer->callEntry.pThreadCallEntry = NULL;
 
     _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
 
@@ -647,7 +647,7 @@ void timer_start_for_thread(os_id_t id, u32_t timeout_ms, void (*pCallback)(os_i
 
     timer_context_t *pCurTimer = _timer_object_contextGet(id); // Only for internal thread use
 
-    pCurTimer->call.pThread = pCallback;
+    pCurTimer->callEntry.pThreadCallEntry = pCallback;
     pCurTimer->timeout_ms = OS_TIME_FOREVER_VAL;
     pCurTimer->isCycle = FALSE;
 
@@ -673,16 +673,16 @@ void timer_reamining_elapsed_handler(void)
     list_t *pListRunning = (list_t *)_timer_list_runningHeadGet();
 
     ENTER_CRITICAL_SECTION();
-    struct callFunc *pCallFun = (struct callFunc *)list_node_pop(pListRunning, LIST_TAIL);
+    struct callTimerEntry *pCallFunEntry = (struct callTimerEntry *)list_node_pop(pListRunning, LIST_TAIL);
     EXIT_CRITICAL_SECTION();
 
-    while (pCallFun) {
-        if (pCallFun->pTimer) {
-            pCallFun->pTimer();
+    while (pCallFunEntry) {
+        if (pCallFunEntry->pTimerCallEntry) {
+            pCallFunEntry->pTimerCallEntry();
         }
 
         ENTER_CRITICAL_SECTION();
-        pCallFun = (struct callFunc *)list_node_pop(pListRunning, LIST_TAIL);
+        pCallFunEntry = (struct callTimerEntry *)list_node_pop(pListRunning, LIST_TAIL);
         EXIT_CRITICAL_SECTION();
     }
 }
@@ -711,10 +711,10 @@ void timer_elapsed_handler(u32_t elapsed_us)
             if (kernel_member_unified_id_toId(pCurTimer->head.id) == KERNEL_MEMBER_TIMER_INTERNAL) {
                 _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
 
-                if (pCurTimer->call.pThread) {
-                    pCurTimer->call.pThread(pCurTimer->head.id);
+                if (pCurTimer->callEntry.pThreadCallEntry) {
+                    pCurTimer->callEntry.pThreadCallEntry(pCurTimer->head.id);
                 }
-                pCurTimer->call.pThread = NULL;
+                pCurTimer->callEntry.pThreadCallEntry = NULL;
             } else {
                 pCurTimer->duration_us = g_timer_resource.system_us;
                 _timer_list_transfer_toPendList((linker_head_t *)&pCurTimer->head);
@@ -746,8 +746,8 @@ void timer_elapsed_handler(u32_t elapsed_us)
             _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
         }
         list_t *pListRunning = (list_t *)_timer_list_runningHeadGet();
-        if (!list_node_isExisted(pListRunning, &pCurTimer->call.node)) {
-            list_node_push(_timer_list_runningHeadGet(), &pCurTimer->call.node, LIST_HEAD);
+        if (!list_node_isExisted(pListRunning, &pCurTimer->callEntry.node)) {
+            list_node_push(_timer_list_runningHeadGet(), &pCurTimer->callEntry.node, LIST_HEAD);
         }
         request = TRUE;
     }

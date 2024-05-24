@@ -111,13 +111,13 @@ static void *_mem_take(pool_context_t *pCurPool)
     u8_t i = 0u;
 
     do {
-        if (!(free & SBIT(i))) {
+        if (!(free & SET_BIT(i))) {
             continue;
         }
 
         pMemTake = (void *)((u32_t)((i * pCurPool->elementLength) + (u32_t)pCurPool->pMemAddress));
         os_memset((char_t *)pMemTake, 0x0u, pCurPool->elementLength);
-        pCurPool->elementFreeBits &= ~SBIT(i);
+        pCurPool->elementFreeBits &= ~SET_BIT(i);
         break;
 
     } while (i++ < num);
@@ -140,14 +140,14 @@ static bool _mem_release(pool_context_t *pCurPool, void *pUserMem)
     u8_t i = 0u;
 
     do {
-        if (free & SBIT(i)) {
+        if (free & SET_BIT(i)) {
             continue;
         }
 
         pMemTake = (void *)((u32_t)((i * pCurPool->elementLength) + (u32_t)pCurPool->pMemAddress));
         if (pMemTake == pUserMem) {
             os_memset((char_t *)pMemTake, 0x0u, pCurPool->elementLength);
-            pCurPool->elementFreeBits |= SBIT(i);
+            pCurPool->elementFreeBits |= SET_BIT(i);
             break;
         }
     } while (i++ < num);
@@ -247,7 +247,7 @@ static u32_t _pool_init_privilege_routine(arguments_t *pArgs)
         pCurPool->pMemAddress = pMemAddr;
         pCurPool->elementLength = elementLen;
         pCurPool->elementNumber = elementNum;
-        pCurPool->elementFreeBits = SBITS(0u, (elementNum - 1u));
+        pCurPool->elementFreeBits = SET_BITS(0u, (elementNum - 1u));
 
         _pool_list_transferToInit((linker_head_t *)&pCurPool->head);
 

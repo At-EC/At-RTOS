@@ -17,8 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED                    PC_FAILED(PC_CMPT_SEMAPHORE_3)
-#define _SEMAPHORE_AVAILABLE_COUNT_MAXIMUM (0xFEu)
+#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_SEMAPHORE_3)
 
 static void _semaphore_schedule(os_id_t id);
 

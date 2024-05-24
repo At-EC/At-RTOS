@@ -841,6 +841,148 @@ static inline u32p_t os_pool_release(os_pool_id_t id, void **ppUserBuffer)
 }
 
 /**
+ * @brief Initialize a new publish.
+ *
+ * @param pName The publish name.
+ *
+ * @return The publish unique id.
+ *
+ **
+ * demo usage:
+ *
+ *     os_publish_id_t id = os_publish_init("sample");
+ *     if (os_id_is_invalid(id)) {
+ *         printf("Message publisher %s init failed\n", id.pName);
+ *     }
+ */
+static inline os_publish_id_t os_publish_init(const char_t *pName)
+{
+    extern u32_t _impl_publish_os_id_to_number(os_id_t id);
+    extern os_id_t _impl_publish_init(const char_t *pName);
+
+    os_publish_id_t id = {0u};
+
+    id.val = _impl_publish_init(pName);
+    id.number = _impl_publish_os_id_to_number(id.val);
+    id.pName = pName;
+
+    return id;
+}
+
+/**
+ * @brief Publisher Submits the report data.
+ *
+ * @param id The publish unique id.
+ * @param pPublishData The pointer of the data buffer address.
+ * @param publishSize The data buffer size.
+ *
+ * @return Value The result of the publisher data operation.
+ **
+ * demo usage:
+ *     u8_t publish_data = 0u;
+ *     u32p_t ret = os_publish_data_submit(id, (u8_t*)&publish_data, 1u);
+ *     if (PC_IER(ret)) {
+ *         printf("Publisher %d data submit failed\n", id.pName);
+ *     }
+ */
+static inline u32p_t os_publish_data_submit(os_publish_id_t id, const void *pPublishData, u16_t publishSize)
+{
+    extern u32p_t _impl_publish_data_submit(os_id_t id, const void *pPublishData, u16_t publishSize);
+
+    return _impl_publish_data_submit(id.val, pPublishData, publishSize);
+}
+
+/**
+ * @brief Initialize a new subscribe.
+ *
+ * @param pDataAddr The pointer of the data buffer address.
+ * @param dataSize The data buffer size.
+ * @param pName The subscribe name.
+ *
+ * @return Value The result fo subscribe init operation.
+ **
+ * demo usage:
+ *
+ *     os_subscribe_id_t id = os_subscribe_init("sample");
+ *     if (os_id_is_invalid(id)) {
+ *         printf("Message subscriber %s init failed\n", id.pName);
+ *     }
+ */
+static inline os_subscribe_id_t os_subscribe_init(void *pDataAddr, u16_t dataSize, const char_t *pName)
+{
+    extern u32_t _impl_subscribe_os_id_to_number(os_id_t id);
+    extern os_id_t _impl_subscribe_init(void *pDataAddr, u16_t dataSize, const char_t *pName);
+
+    os_subscribe_id_t id = {0u};
+
+    id.val = _impl_subscribe_init(pDataAddr, dataSize, pName);
+    id.number = _impl_subscribe_os_id_to_number(id.val);
+    id.pName = pName;
+
+    return id;
+}
+
+/**
+ * @brief To check if the publisher submits new data and that is not applied by subscriber.
+ *
+ * @param subscribe_id The subscribe unique id.
+ *
+ * @return Value The result of subscribe data is ready.
+ * demo usage:
+ *     if (!os_subscribe_data_is_ready(id)) {
+ *         printf("subscriber %d data is not ready\n", id.pName);
+ *     }
+ */
+static inline b_t os_subscribe_data_is_ready(os_subscribe_id_t id)
+{
+    extern b_t _impl_subscribe_data_is_ready(os_id_t subscribe_id);
+
+    return _impl_subscribe_data_is_ready(id.val);
+}
+
+/**
+ * @brief The subscribe register the corresponding publish.
+ *
+ * @param subscribe_id The subscribe unique id.
+ * @param publish_id The publish unique id.
+ * @param isMute The set of notification operation.
+ * @param pFuncHandler The notification function handler pointer.
+ *
+ * @return Value The result fo subscribe init operation.
+ */
+static inline u32p_t os_subscribe_register(os_subscribe_id_t subscribe_id, os_publish_id_t publish_id, b_t isMute,
+                                           pSubscribe_callbackFunc_t pNotificationHandler)
+{
+    extern u32p_t _impl_subscribe_register(os_id_t subscribe_id, os_id_t publish_id, b_t isMute,
+                                           pSubscribe_callbackFunc_t pNotificationHandler);
+
+    return _impl_subscribe_register(subscribe_id.val, publish_id.val, isMute, pNotificationHandler);
+}
+
+/**
+ * @brief The subscriber wait publisher put new data with a timeout option.
+ *
+ * @param subscribe_id The subscribe unique id.
+ * @param pDataBuffer The pointer of data buffer.
+ * @param pDataLen The pointer of data buffer len.
+ *
+ * @return Value The result of subscribe init operation.
+ **
+ * demo usage:
+ *     u8_t subscribe_data = 0u;
+ *     u32p_t ret = os_subscribe_data_apply(id, (u8_t*)&publish_data, 1u);
+ *     if (PC_IER(ret)) {
+ *         printf("subscriber %d data apply failed\n", id.pName);
+ *     }
+ */
+static inline u32p_t os_subscribe_data_apply(os_subscribe_id_t subscribe_id, void *pDataBuffer, u16_t *pDataLen)
+{
+    extern u32p_t _impl_subscribe_data_apply(os_id_t subscribe_id, void *pDataBuffer, u16_t *pDataLen);
+
+    return _impl_subscribe_data_apply(subscribe_id.val, pDataBuffer, pDataLen);
+}
+
+/**
  * @brief Check if the thread unique id if is's invalid.
  *
  * @param id The provided unique id.
@@ -992,6 +1134,13 @@ typedef struct {
     os_pool_id_t (*pool_init)(const void *, u16_t, u16_t, const char_t *);
     u32p_t (*pool_take)(os_pool_id_t, void **, u16_t, u32_t);
     u32p_t (*pool_release)(os_pool_id_t, void **);
+
+    os_publish_id_t (*publish_init)(const char_t *);
+    u32p_t (*publish_data_submit)(os_publish_id_t, const void *, u16_t);
+    os_subscribe_id_t (*subscribe_init)(void *, u16_t, const char_t *);
+    u32p_t (*subscribe_register)(os_subscribe_id_t, os_publish_id_t, b_t, pSubscribe_callbackFunc_t);
+    u32p_t (*subscribe_data_apply)(os_subscribe_id_t, void *, u16_t *);
+    b_t (*subscribe_data_is_ready)(os_subscribe_id_t);
 
     b_t (*id_isInvalid)(struct os_id);
     os_thread_id_t (*id_current_thread)(void);

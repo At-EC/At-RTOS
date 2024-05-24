@@ -77,6 +77,10 @@ typedef struct {
 } timer_snapshot_t;
 
 typedef struct {
+    u32_t refresh_count;
+} publish_snapshot_t;
+
+typedef struct {
     u32_t id;
     const char_t *pName;
     const char_t *pState;
@@ -94,6 +98,8 @@ typedef struct {
         pool_snapshot_t pool;
 
         timer_snapshot_t timer;
+
+        publish_snapshot_t publish;
     };
 } kernel_snapshot_t;
 
@@ -111,6 +117,7 @@ b_t event_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
 b_t queue_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
 b_t pool_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
 b_t timer_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
+b_t publish_snapshot(u32_t instance, kernel_snapshot_t *pMsgs);
 
 void _impl_trace_firmware_snapshot_print(void);
 void _impl_trace_postcode_snapshot_print(void);
