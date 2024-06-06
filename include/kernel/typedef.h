@@ -83,8 +83,8 @@ typedef u32_t u32p_t;
 #define SIZEOF(arr)          (sizeof(arr))
 #define DIMOF(arr)           (SIZEOF(arr) / SIZEOF(arr[0]))
 
-#define MINI(a, b) (((a) < (b)) ? (a) : (b))
-#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#define MINI_AB(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX_AB(a, b)  (((a) > (b)) ? (a) : (b))
 
 #define ROUND_UP(size, align)   (((u32_t)(size) + (align - 1u)) & (~(align - 1)))
 #define ROUND_DOWN(size, align) (((u32_t)(size)) & (~(align - 1)))

@@ -251,7 +251,7 @@ static u32_t _publish_data_submit_privilege_routine(arguments_t *pArgs)
     subscribe_context_t *pCurSubscribe = NULL;
     while (list_iterator_next_condition(&it, (void *)&pCurSubscribe)) {
         os_memcpy((u8_t *)pCurSubscribe->callEntry.pDataAddress, (const u8_t *)pPublishData,
-                  MINI(publishSize, pCurSubscribe->callEntry.dataSize));
+                  MINI_AB(publishSize, pCurSubscribe->callEntry.dataSize));
 
         if ((!pCurSubscribe->isMute) && (pCurSubscribe->callEntry.pNotificationHandler)) {
             list_t *pListPending = (list_t *)_publish_list_pendingHeadGet();
@@ -386,7 +386,7 @@ static u32_t _subscribe_apply_data_privilege_routine(arguments_t *pArgs)
     publish_context_t *pCurPublish = _publish_object_contextGet(pCurSubscribe->hold);
 
     if (pCurSubscribe->last_count < pCurPublish->refresh_count) {
-        *pDataLen = MINI(*pDataLen, pCurSubscribe->callEntry.dataSize);
+        *pDataLen = MINI_AB(*pDataLen, pCurSubscribe->callEntry.dataSize);
         os_memcpy(pDataBuffer, pCurSubscribe->callEntry.pDataAddress, *pDataLen);
         pCurSubscribe->last_count = pCurPublish->refresh_count;
 
