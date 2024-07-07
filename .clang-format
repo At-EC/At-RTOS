@@ -40,4 +40,5 @@ SortIncludes: Never
 UseTab: Never
 WhitespaceSensitiveMacros:
   - PRINTF
+  - BS_MAP
   
