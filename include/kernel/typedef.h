@@ -91,6 +91,56 @@ typedef u32_t u32p_t;
 #define RANGE_ADDRESS_CONDITION(address, pool)                                                                                             \
     (((u32_t)(address) >= (u32_t)(pool)) && ((u32_t)(address) < ((u32_t)(pool) + (u16_t)SIZEOF(pool))))
 
+#define CBITS           .bits.
+#define CV_3(pre, post) MAGIC(pre, post)
+#define CV_2(pre, post) CV_3(pre, post)
+#define CV(m)           CV_2(CBITS, m)
+
+#define CM_Va(a, va)                                                                                                                       \
+    {                                                                                                                                      \
+        CV(a) = va                                                                                                                         \
+    }
+#define CM_Vb(a, b, va, vb)                                                                                                                \
+    {                                                                                                                                      \
+        CV(a) = va, CV(b) = vb                                                                                                             \
+    }
+#define CM_Vc(a, b, c, va, vb, vc)                                                                                                         \
+    {                                                                                                                                      \
+        CV(a) = va, CV(b) = vb, CV(c) = vc                                                                                                 \
+    }
+#define CM_Vd(a, b, c, d, va, vb, vc, vd)                                                                                                  \
+    {                                                                                                                                      \
+        CV(a) = va, CV(b) = vb, CV(c) = vc, CV(d) = vd                                                                                     \
+    }
+#define CM_Ve(a, b, c, d, e, va, vb, vc, vd, ve)                                                                                           \
+    {                                                                                                                                      \
+        CV(a) = va, CV(b) = vb, CV(c) = vc, CV(d) = vd, CV(e) = ve                                                                         \
+    }
+#define CM_Vf(a, b, c, d, e, f, va, vb, vc, vd, ve, vf)                                                                                    \
+    {                                                                                                                                      \
+        CV(a) = va, CV(b) = vb, CV(c) = vc, CV(d) = vd, CV(e) = ve, CV(f) = vf                                                             \
+    }
+#define CM_Vg(a, b, c, d, e, f, g, va, vb, vc, vd, ve, vf, vg)                                                                             \
+    {                                                                                                                                      \
+        CV(a) = va, CV(b) = vb, CV(c) = vc, CV(d) = vd, CV(e) = ve, CV(f) = vf, CV(g) = vg                                                 \
+    }
+#define CM_Vh(a, b, c, d, e, f, g, h, va, vb, vc, vd, ve, vf, vg, vh)                                                                      \
+    {                                                                                                                                      \
+        CV(a) = va, CV(b) = vb, CV(c) = vc, CV(d) = vd, CV(e) = ve, CV(f) = vf, CV(g) = vg, CV(h) = vh                                     \
+    }
+
+#define BS_MAP(c, ...)                                                                                                                     \
+    switch (c) {                                                                                                                           \
+        ##__VA_ARGS__                                                                                                                      \
+    }
+#define BS_CASE(v, a, b)                                                                                                                   \
+    case a:                                                                                                                                \
+        v = b;                                                                                                                             \
+        break
+#define BS_ERR(e)                                                                                                                          \
+    default:                                                                                                                               \
+        return e
+
 #ifdef __cplusplus
 }
 #endif
