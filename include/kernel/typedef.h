@@ -78,6 +78,12 @@ typedef u32_t u32p_t;
 #define SET_BITS(start, end)          (u32_t)((0xFFFFFFFFul << (start)) & (0xFFFFFFFFul >> (31u - (u32_t)(end))))
 #define DUMP_BITS(regval, start, end) (u32_t)(((regval) & SET_BITS((start), (end))) >> (start))
 
+#define BV_C(v, m, p)    v &= ~((MASK_BIT(m)) << ((p) * (m)))
+#define BV_S(v, m, p, n) v |= ((n) << ((p) * (m)))
+#define BV_CS(v, m, p, n)                                                                                                                  \
+    BV_C(v, m, p);                                                                                                                         \
+    BV_S(v, m, p, n)
+
 #define DEQUALIFY(s, v)      ((s)(u32_t)(const volatile void *)(v))
 #define OFFSETOF(s, m)       ((u32_t)(&((s *)0)->m))
 #define CONTAINEROF(p, s, m) (DEQUALIFY(s *, ((const vu8_t *)(p)-OFFSETOF(s, m))))
@@ -93,10 +99,10 @@ typedef u32_t u32p_t;
     (((u32_t)(address) >= (u32_t)(pool)) && ((u32_t)(address) < ((u32_t)(pool) + (u16_t)SIZEOF(pool))))
 
 #define REVERSE_NUMBER_32                                                                                                                  \
-    31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
+    32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
 
 #define ARGS_INTERGRATION_32(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23,     \
-                             _24, _25, _26, _27, _28, _29, _30, _31, N, ...)                                                               \
+                             _24, _25, _26, _27, _28, _29, _30, _31, _32, N, ...)                                                          \
     N
 #define ARGS_SHIFT_32(...) ARGS_INTERGRATION_32(__VA_ARGS__)
 #define ARGS_NUM_32(...)   ARGS_SHIFT_32(__VA_ARGS__, REVERSE_NUMBER_32)
@@ -390,12 +396,191 @@ typedef u32_t u32p_t;
                                                                 : ((c == ARGS_N(19, __VA_ARGS__)) ? (ARGS_N(20, __VA_ARGS__))              \
                                                                                                   : BS_MISMATCH)))))))))
 
+#define BS_V22(c, ...)                                                                                                                     \
+    (c == ARGS_N(1, __VA_ARGS__))                                                                                                          \
+        ? (ARGS_N(2, __VA_ARGS__))                                                                                                         \
+        : ((c == ARGS_N(3, __VA_ARGS__))                                                                                                   \
+               ? (ARGS_N(4, __VA_ARGS__))                                                                                                  \
+               : ((c == ARGS_N(5, __VA_ARGS__))                                                                                            \
+                      ? (ARGS_N(6, __VA_ARGS__))                                                                                           \
+                      : ((c == ARGS_N(7, __VA_ARGS__))                                                                                     \
+                             ? (ARGS_N(8, __VA_ARGS__))                                                                                    \
+                             : ((c == ARGS_N(9, __VA_ARGS__))                                                                              \
+                                    ? (ARGS_N(10, __VA_ARGS__))                                                                            \
+                                    : ((c == ARGS_N(11, __VA_ARGS__))                                                                      \
+                                           ? (ARGS_N(12, __VA_ARGS__))                                                                     \
+                                           : ((c == ARGS_N(13, __VA_ARGS__))                                                               \
+                                                  ? (ARGS_N(14, __VA_ARGS__))                                                              \
+                                                  : ((c == ARGS_N(15, __VA_ARGS__))                                                        \
+                                                         ? (ARGS_N(16, __VA_ARGS__))                                                       \
+                                                         : ((c == ARGS_N(17, __VA_ARGS__))                                                 \
+                                                                ? (ARGS_N(18, __VA_ARGS__))                                                \
+                                                                : ((c == ARGS_N(19, __VA_ARGS__))                                          \
+                                                                       ? (ARGS_N(20, __VA_ARGS__))                                         \
+                                                                       : ((c == ARGS_N(21, __VA_ARGS__)) ? (ARGS_N(22, __VA_ARGS__))       \
+                                                                                                         : BS_MISMATCH))))))))))
+
+#define BS_V24(c, ...)                                                                                                                     \
+    (c == ARGS_N(1, __VA_ARGS__))                                                                                                          \
+        ? (ARGS_N(2, __VA_ARGS__))                                                                                                         \
+        : ((c == ARGS_N(3, __VA_ARGS__))                                                                                                   \
+               ? (ARGS_N(4, __VA_ARGS__))                                                                                                  \
+               : ((c == ARGS_N(5, __VA_ARGS__))                                                                                            \
+                      ? (ARGS_N(6, __VA_ARGS__))                                                                                           \
+                      : ((c == ARGS_N(7, __VA_ARGS__))                                                                                     \
+                             ? (ARGS_N(8, __VA_ARGS__))                                                                                    \
+                             : ((c == ARGS_N(9, __VA_ARGS__)) ? (ARGS_N(10, __VA_ARGS__))                                                  \
+                                                              : ((c == ARGS_N(11, __VA_ARGS__))                                            \
+                                                                     ? (ARGS_N(12, __VA_ARGS__))                                           \
+                                                                     : ((c == ARGS_N(13, __VA_ARGS__))                                     \
+                                                                            ? (ARGS_N(14, __VA_ARGS__))                                    \
+                                                                            : ((c == ARGS_N(15, __VA_ARGS__))                              \
+                                                                                   ? (ARGS_N(16, __VA_ARGS__))                             \
+                                                                                   : ((c == ARGS_N(17, __VA_ARGS__))                       \
+                                                                                          ? (ARGS_N(18, __VA_ARGS__))                      \
+                                                                                          : ((c == ARGS_N(19, __VA_ARGS__))                \
+                                                                                                 ? (ARGS_N(20, __VA_ARGS__))               \
+                                                                                                 : ((c == ARGS_N(21, __VA_ARGS__))         \
+                                                                                                        ? (ARGS_N(22, __VA_ARGS__))        \
+                                                                                                        : ((c == ARGS_N(23, __VA_ARGS__))  \
+                                                                                                               ? (ARGS_N(24, __VA_ARGS__)) \
+                                                                                                               : BS_MISMATCH)))))))))))
+
+#define BS_V26(c, ...)                                                                                                                     \
+    (c == ARGS_N(1, __VA_ARGS__))                                                                                                          \
+        ? (ARGS_N(2, __VA_ARGS__))                                                                                                         \
+        : ((c == ARGS_N(3, __VA_ARGS__))                                                                                                   \
+               ? (ARGS_N(4, __VA_ARGS__))                                                                                                  \
+               : ((c == ARGS_N(5, __VA_ARGS__))                                                                                            \
+                      ? (ARGS_N(6, __VA_ARGS__))                                                                                           \
+                      : ((c == ARGS_N(7, __VA_ARGS__))                                                                                     \
+                             ? (ARGS_N(8, __VA_ARGS__))                                                                                    \
+                             : ((c == ARGS_N(9, __VA_ARGS__))                                                                              \
+                                    ? (ARGS_N(10, __VA_ARGS__))                                                                            \
+                                    : ((c == ARGS_N(11, __VA_ARGS__))                                                                      \
+                                           ? (ARGS_N(12, __VA_ARGS__))                                                                     \
+                                           : ((c == ARGS_N(13, __VA_ARGS__))                                                               \
+                                                  ? (ARGS_N(14, __VA_ARGS__))                                                              \
+                                                  : ((c == ARGS_N(15, __VA_ARGS__))                                                        \
+                                                         ? (ARGS_N(16, __VA_ARGS__))                                                       \
+                                                         : ((c == ARGS_N(17, __VA_ARGS__))                                                 \
+                                                                ? (ARGS_N(18, __VA_ARGS__))                                                \
+                                                                : ((c == ARGS_N(19, __VA_ARGS__))                                          \
+                                                                       ? (ARGS_N(20, __VA_ARGS__))                                         \
+                                                                       : ((c == ARGS_N(21, __VA_ARGS__))                                   \
+                                                                              ? (ARGS_N(22, __VA_ARGS__))                                  \
+                                                                              : ((c == ARGS_N(23, __VA_ARGS__))                            \
+                                                                                     ? (ARGS_N(24, __VA_ARGS__))                           \
+                                                                                     : ((c == ARGS_N(25, __VA_ARGS__))                     \
+                                                                                            ? (ARGS_N(26, __VA_ARGS__))                    \
+                                                                                            : BS_MISMATCH))))))))))))
+
+#define BS_V28(c, ...)                                                                                                                     \
+    (c == ARGS_N(1, __VA_ARGS__))                                                                                                          \
+        ? (ARGS_N(2, __VA_ARGS__))                                                                                                         \
+        : ((c == ARGS_N(3, __VA_ARGS__))                                                                                                   \
+               ? (ARGS_N(4, __VA_ARGS__))                                                                                                  \
+               : ((c == ARGS_N(5, __VA_ARGS__))                                                                                            \
+                      ? (ARGS_N(6, __VA_ARGS__))                                                                                           \
+                      : ((c == ARGS_N(7, __VA_ARGS__))                                                                                     \
+                             ? (ARGS_N(8, __VA_ARGS__))                                                                                    \
+                             : ((c == ARGS_N(9, __VA_ARGS__))                                                                              \
+                                    ? (ARGS_N(10, __VA_ARGS__))                                                                            \
+                                    : ((c == ARGS_N(11, __VA_ARGS__))                                                                      \
+                                           ? (ARGS_N(12, __VA_ARGS__))                                                                     \
+                                           : ((c == ARGS_N(13, __VA_ARGS__))                                                               \
+                                                  ? (ARGS_N(14, __VA_ARGS__))                                                              \
+                                                  : ((c == ARGS_N(15, __VA_ARGS__))                                                        \
+                                                         ? (ARGS_N(16, __VA_ARGS__))                                                       \
+                                                         : ((c == ARGS_N(17, __VA_ARGS__))                                                 \
+                                                                ? (ARGS_N(18, __VA_ARGS__))                                                \
+                                                                : ((c == ARGS_N(19, __VA_ARGS__))                                          \
+                                                                       ? (ARGS_N(20, __VA_ARGS__))                                         \
+                                                                       : ((c == ARGS_N(21, __VA_ARGS__))                                   \
+                                                                              ? (ARGS_N(22, __VA_ARGS__))                                  \
+                                                                              : ((c == ARGS_N(23, __VA_ARGS__))                            \
+                                                                                     ? (ARGS_N(24, __VA_ARGS__))                           \
+                                                                                     : ((c == ARGS_N(25, __VA_ARGS__))                     \
+                                                                                            ? (ARGS_N(26, __VA_ARGS__))                    \
+                                                                                            : ((c == ARGS_N(27, __VA_ARGS__))              \
+                                                                                                   ? (ARGS_N(28, __VA_ARGS__))             \
+                                                                                                   : BS_MISMATCH)))))))))))))
+
+#define BS_V30(c, ...)                                                                                                                     \
+    (c == ARGS_N(1, __VA_ARGS__))                                                                                                          \
+        ? (ARGS_N(2, __VA_ARGS__))                                                                                                         \
+        : ((c == ARGS_N(3, __VA_ARGS__))                                                                                                   \
+               ? (ARGS_N(4, __VA_ARGS__))                                                                                                  \
+               : ((c == ARGS_N(5, __VA_ARGS__))                                                                                            \
+                      ? (ARGS_N(6, __VA_ARGS__))                                                                                           \
+                      : ((c == ARGS_N(7, __VA_ARGS__))                                                                                     \
+                             ? (ARGS_N(8, __VA_ARGS__))                                                                                    \
+                             : ((c == ARGS_N(9, __VA_ARGS__))                                                                              \
+                                    ? (ARGS_N(10, __VA_ARGS__))                                                                            \
+                                    : ((c == ARGS_N(11, __VA_ARGS__))                                                                      \
+                                           ? (ARGS_N(12, __VA_ARGS__))                                                                     \
+                                           : ((c == ARGS_N(13, __VA_ARGS__))                                                               \
+                                                  ? (ARGS_N(14, __VA_ARGS__))                                                              \
+                                                  : ((c == ARGS_N(15, __VA_ARGS__))                                                        \
+                                                         ? (ARGS_N(16, __VA_ARGS__))                                                       \
+                                                         : ((c == ARGS_N(17, __VA_ARGS__))                                                 \
+                                                                ? (ARGS_N(18, __VA_ARGS__))                                                \
+                                                                : ((c == ARGS_N(19, __VA_ARGS__))                                          \
+                                                                       ? (ARGS_N(20, __VA_ARGS__))                                         \
+                                                                       : ((c == ARGS_N(21, __VA_ARGS__))                                   \
+                                                                              ? (ARGS_N(22, __VA_ARGS__))                                  \
+                                                                              : ((c == ARGS_N(23, __VA_ARGS__))                            \
+                                                                                     ? (ARGS_N(24, __VA_ARGS__))                           \
+                                                                                     : ((c == ARGS_N(25, __VA_ARGS__))                     \
+                                                                                            ? (ARGS_N(26, __VA_ARGS__))                    \
+                                                                                            : ((c == ARGS_N(27, __VA_ARGS__))              \
+                                                                                                   ? (ARGS_N(28, __VA_ARGS__))             \
+                                                                                                   : ((c == ARGS_N(29, __VA_ARGS__))       \
+                                                                                                          ? (ARGS_N(30, __VA_ARGS__))      \
+                                                                                                          : BS_MISMATCH))))))))))))))
+
+#define BS_V32(c, ...)                                                                                                                     \
+    (c == ARGS_N(1, __VA_ARGS__))                                                                                                          \
+        ? (ARGS_N(2, __VA_ARGS__))                                                                                                         \
+        : ((c == ARGS_N(3, __VA_ARGS__))                                                                                                   \
+               ? (ARGS_N(4, __VA_ARGS__))                                                                                                  \
+               : ((c == ARGS_N(5, __VA_ARGS__))                                                                                            \
+                      ? (ARGS_N(6, __VA_ARGS__))                                                                                           \
+                      : ((c == ARGS_N(7, __VA_ARGS__))                                                                                     \
+                             ? (ARGS_N(8, __VA_ARGS__))                                                                                    \
+                             : ((c == ARGS_N(9, __VA_ARGS__))                                                                              \
+                                    ? (ARGS_N(10, __VA_ARGS__))                                                                            \
+                                    : ((c == ARGS_N(11, __VA_ARGS__))                                                                      \
+                                           ? (ARGS_N(12, __VA_ARGS__))                                                                     \
+                                           : ((c == ARGS_N(13, __VA_ARGS__))                                                               \
+                                                  ? (ARGS_N(14, __VA_ARGS__))                                                              \
+                                                  : ((c == ARGS_N(15, __VA_ARGS__))                                                        \
+                                                         ? (ARGS_N(16, __VA_ARGS__))                                                       \
+                                                         : ((c == ARGS_N(17, __VA_ARGS__))                                                 \
+                                                                ? (ARGS_N(18, __VA_ARGS__))                                                \
+                                                                : ((c == ARGS_N(19, __VA_ARGS__))                                          \
+                                                                       ? (ARGS_N(20, __VA_ARGS__))                                         \
+                                                                       : ((c == ARGS_N(21, __VA_ARGS__))                                   \
+                                                                              ? (ARGS_N(22, __VA_ARGS__))                                  \
+                                                                              : ((c == ARGS_N(23, __VA_ARGS__))                            \
+                                                                                     ? (ARGS_N(24, __VA_ARGS__))                           \
+                                                                                     : ((c == ARGS_N(25, __VA_ARGS__))                     \
+                                                                                            ? (ARGS_N(26, __VA_ARGS__))                    \
+                                                                                            : ((c == ARGS_N(27, __VA_ARGS__))              \
+                                                                                                   ? (ARGS_N(28, __VA_ARGS__))             \
+                                                                                                   : ((c == ARGS_N(29, __VA_ARGS__))       \
+                                                                                                          ? (ARGS_N(30, __VA_ARGS__))      \
+                                                                                                          : ((c ==                         \
+                                                                                                              ARGS_N(31, __VA_ARGS__))     \
+                                                                                                                 ? (ARGS_N(32,             \
+                                                                                                                           __VA_ARGS__))   \
+                                                                                                                 : BS_MISMATCH)))))))))))))))
+
 #define BSV              BS_V
 #define BSV_3(pre, post) MAGIC(pre, post)
 #define BSV_2(pre, post) CMV_3(pre, post)
 #define BS(m)            CMV_2(BSV, m)
-
-#define BS_MAP(c, ...) BS(ARGS_NUM(__VA_ARGS__))(c, __VA_ARGS__)
+#define BS_MAP(c, ...)   BS(ARGS_NUM(__VA_ARGS__))(c, __VA_ARGS__)
 
 #ifdef __cplusplus
 }
