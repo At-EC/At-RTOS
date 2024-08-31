@@ -189,7 +189,7 @@ static b_t _kernel_thread_node_Order_compare_condition(list_node_t *pCurNode, li
         return FALSE;
     }
 
-    if (pCurThread->priority.level < pExtractThread->priority.level) {
+    if (pCurThread->priority.level <= pExtractThread->priority.level) {
         /* Find a right position and doesn't has to do schedule */
         return FALSE;
     }
