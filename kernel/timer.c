@@ -18,7 +18,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_TIMER_7)
+#define _PCER PC_IER(PC_OS_CMPT_TIMER_8)
 
 /**
  * Data structure for location timer
@@ -282,7 +282,7 @@ static b_t _timer_object_isInit(u32_t id)
  *
  * @return The result of privilege routine.
  */
-static u32_t _timer_schedule_request_privilege_routine(arguments_t *pArgs)
+static i32p_t _timer_schedule_request_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -294,7 +294,7 @@ static u32_t _timer_schedule_request_privilege_routine(arguments_t *pArgs)
     }
 
     EXIT_CRITICAL_SECTION();
-    return PC_SC_SUCCESS;
+    return 0;
 }
 
 /**
@@ -302,7 +302,7 @@ static u32_t _timer_schedule_request_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of timer schedule request.
  */
-static u32p_t _timer_schedule(void)
+static i32p_t _timer_schedule(void)
 {
     return kernel_privilege_invoke((const void *)_timer_schedule_request_privilege_routine, NULL);
 }
@@ -353,7 +353,7 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
     } while ((u32_t)++pCurTimer < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return OS_INVALID_ID;
+    return OS_INVALID_ID_VAL;
 }
 
 /**
@@ -389,7 +389,7 @@ static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
     _timer_schedule();
 
     EXIT_CRITICAL_SECTION();
-    return PC_SC_SUCCESS;
+    return 0;
 }
 
 /**
@@ -416,7 +416,7 @@ static u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
     _timer_schedule();
 
     EXIT_CRITICAL_SECTION();
-    return PC_SC_SUCCESS;
+    return 0;
 }
 
 /**
@@ -515,18 +515,18 @@ os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t time
  *
  * @return The result of timer start operation.
  */
-u32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
+i32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
 {
     if (_timer_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_timer_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!timeout_ms) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -545,14 +545,14 @@ u32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
  *
  * @return The result of timer stop operation.
  */
-u32p_t _impl_timer_stop(os_id_t id)
+i32p_t _impl_timer_stop(os_id_t id)
 {
     if (_timer_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_timer_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -773,7 +773,7 @@ b_t timer_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
 #if defined KTRACE
     timer_context_t *pCurTimer = NULL;
     u32_t offset = 0u;
-    os_id_t id = OS_INVALID_ID;
+    os_id_t id = OS_INVALID_ID_VAL;
 
     ENTER_CRITICAL_SECTION();
 
@@ -826,10 +826,10 @@ b_t timer_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
  *
  * @return The result of timer stop operation.
  */
-u32p_t timer_stop_for_thread(os_id_t id)
+i32p_t timer_stop_for_thread(os_id_t id)
 {
     if (kernel_member_unified_id_toId(id) != KERNEL_MEMBER_TIMER_INTERNAL) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     return _impl_timer_stop(id);
@@ -872,7 +872,7 @@ u32_t timer_total_system_us_get(void)
  *
  * @return The result of timer schedule request.
  */
-u32p_t timer_schedule(void)
+i32p_t timer_schedule(void)
 {
     return _timer_schedule();
 }

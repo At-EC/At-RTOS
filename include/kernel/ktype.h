@@ -63,8 +63,6 @@ typedef struct {
 #define OS_TIME_INVALID_VAL (0xFFFFFFFFu)
 #define OS_TIME_FOREVER_VAL (0xFFFFFFFEu)
 #define OS_TIME_NOWAIT_VAL  (0x0u)
-#define OS_WAIT_FOREVER     (OS_TIME_FOREVER_VAL)
-#define OS_WAIT_NOSUSPEND   (OS_TIME_NOWAIT_VAL)
 
 #define OS_PRIOTITY_INVALID_LEVEL (0xFFu)
 #define OS_PRIOTITY_LOWEST_LEVEL  (0xFEu)
@@ -76,9 +74,12 @@ typedef struct {
 #define OS_PRIORITY_USER_THREAD_LOWEST_LEVEL     (OS_PRIOTITY_LOWEST_LEVEL - 1u)
 #define OS_PRIORITY_USER_THREAD_HIGHEST_LEVEL    (OS_PRIOTITY_HIGHEST_LEVEL + 1u)
 
-#define OS_SEMPHORE_TICKET_BINARY (1u)
-
-#define OS_INVALID_ID OS_INVALID_ID_VAL
+enum {
+    PC_OS_OK = 0,
+    PC_OS_WAIT_TIMEOUT,
+    PC_OS_WAIT_AVAILABLE,
+    PC_OS_WAIT_UNAVAILABLE,
+};
 
 u8_t *kernel_member_unified_id_toContainerAddress(u32_t unified_id);
 u32_t kernel_member_containerAddress_toUnifiedid(u32_t container_address);

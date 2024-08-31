@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_KERNEL)
+#define _PCER PC_IER(PC_OS_CMPT_KERNEL_2)
 
 /* Local defined the kernel thread stack */
 static u32_t _kernel_schedule[((u32_t)(KERNEL_SCHEDULE_THREAD_STACK_SIZE) / sizeof(u32_t))] = {0u};
@@ -121,8 +121,8 @@ static _kthread_resource_t g_kernel_thread_resource = {
  */
 void kthread_message_notification(void)
 {
-    u32p_t postcode = os_sem_give(g_kernel_thread_resource.sem_id);
-    if (PC_IER(postcode)) {
+    PC_IF(os_sem_give(g_kernel_thread_resource.sem_id), PC_PASS)
+    {
         /* TODO */
     }
 }
@@ -130,7 +130,7 @@ void kthread_message_notification(void)
 /**
  * @brief To check if the kernel message arrived.
  */
-u32_t kthread_message_arrived(void)
+i32p_t kthread_message_arrived(void)
 {
     return os_sem_take(g_kernel_thread_resource.sem_id, OS_TIME_FOREVER_VAL);
 }
@@ -153,7 +153,7 @@ void kthread_init(void)
                     },
                 .priority =
                     {
-                        .level = OS_PRIORITY_KERNEL_THREAD_SCHEDULE_LEVEL,
+                        .level = OS_PRIOTITY_HIGHEST_LEVEL,
                     },
                 .pEntryFunc = kernel_schedule_thread,
                 .pStackAddr = (u32_t *)&_kernel_schedule[0],
@@ -173,7 +173,7 @@ void kthread_init(void)
                     },
                 .priority =
                     {
-                        .level = OS_PRIORITY_KERNEL_THREAD_IDLE_LEVEL,
+                        .level = OS_PRIOTITY_LOWEST_LEVEL,
                     },
                 .pEntryFunc = kernel_idle_thread,
                 .pStackAddr = (u32_t *)&_kernel_idle[0],
@@ -203,7 +203,7 @@ void kthread_init(void)
                         .linker = LINKER_NULL,
                     },
                 .remains = 0u,
-                .limits = OS_SEMPHORE_TICKET_BINARY,
+                .limits = OS_SEM_BINARY,
             },
     };
 

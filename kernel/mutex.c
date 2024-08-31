@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_MUTEX_4)
+#define _PCER PC_IER(PC_OS_CMPT_MUTEX_5)
 
 /**
  * @brief Get the mutex context based on provided unique id.
@@ -167,8 +167,8 @@ static u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
         pCurMutex->head.id = id;
         pCurMutex->head.pName = pName;
 
-        pCurMutex->holdThreadId = OS_INVALID_ID;
-        pCurMutex->originalPriority.level = OS_PRIORITY_INVALID;
+        pCurMutex->holdThreadId = OS_INVALID_ID_VAL;
+        pCurMutex->originalPriority.level = OS_PRIOTITY_INVALID_LEVEL;
 
         _mutex_list_transfer_toUnlock((linker_head_t *)&pCurMutex->head);
 
@@ -177,7 +177,7 @@ static u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
     } while ((u32_t)++pCurMutex < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return OS_INVALID_ID;
+    return OS_INVALID_ID_VAL;
 }
 
 /**
@@ -187,7 +187,7 @@ static u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _mutex_lock_privilege_routine(arguments_t *pArgs)
+static i32p_t _mutex_lock_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -195,7 +195,7 @@ static u32_t _mutex_lock_privilege_routine(arguments_t *pArgs)
     mutex_context_t *pCurMutex = NULL;
     thread_context_t *pCurThread = NULL;
     thread_context_t *pLockThread = NULL;
-    u32p_t postcode = PC_SC_SUCCESS;
+    i32p_t postcode = 0;
 
     pCurMutex = _mutex_object_contextGet(id);
     pCurThread = kernel_thread_runContextGet();
@@ -227,7 +227,7 @@ static u32_t _mutex_lock_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
+static i32p_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -235,7 +235,7 @@ static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
     mutex_context_t *pCurMutex = NULL;
     thread_context_t *pMutexHighestBlockingThread = NULL;
     thread_context_t *pLockThread = NULL;
-    u32p_t postcode = PC_SC_SUCCESS;
+    i32p_t postcode = 0;
 
     pCurMutex = _mutex_object_contextGet(id);
     pMutexHighestBlockingThread = (thread_context_t *)_mutex_linker_head_fromBlocking(id);
@@ -244,15 +244,15 @@ static u32_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
     pLockThread->priority = pCurMutex->originalPriority;
     if (!pMutexHighestBlockingThread) {
         // no blocking thread
-        pCurMutex->originalPriority.level = OS_PRIORITY_INVALID;
-        pCurMutex->holdThreadId = OS_INVALID_ID;
+        pCurMutex->originalPriority.level = OS_PRIOTITY_INVALID_LEVEL;
+        pCurMutex->holdThreadId = OS_INVALID_ID_VAL;
 
         _mutex_list_transfer_toUnlock((linker_head_t *)&pCurMutex->head);
     } else {
         /* The next thread take the ticket */
         pCurMutex->holdThreadId = pMutexHighestBlockingThread->head.id;
         pCurMutex->originalPriority = pMutexHighestBlockingThread->priority;
-        postcode = kernel_thread_entry_trigger(pMutexHighestBlockingThread->head.id, id, PC_SC_SUCCESS, NULL);
+        postcode = kernel_thread_entry_trigger(pMutexHighestBlockingThread->head.id, id, 0, NULL);
     }
 
     EXIT_CRITICAL_SECTION();
@@ -298,18 +298,18 @@ os_id_t _impl_mutex_init(const char_t *pName)
  *
  * @return The result of the operation.
  */
-u32p_t _impl_mutex_lock(os_id_t id)
+i32p_t _impl_mutex_lock(os_id_t id)
 {
     if (_mutex_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_mutex_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!kernel_isInThreadMode()) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -326,14 +326,14 @@ u32p_t _impl_mutex_lock(os_id_t id)
  *
  * @return The result of the operation.
  */
-u32p_t _impl_mutex_unlock(os_id_t id)
+i32p_t _impl_mutex_unlock(os_id_t id)
 {
     if (_mutex_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_mutex_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -356,7 +356,7 @@ b_t mutex_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
 #if defined KTRACE
     mutex_context_t *pCurMutex = NULL;
     u32_t offset = 0u;
-    os_id_t id = OS_INVALID_ID;
+    os_id_t id = OS_INVALID_ID_VAL;
 
     ENTER_CRITICAL_SECTION();
 

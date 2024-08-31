@@ -19,11 +19,11 @@ extern "C" {
  */
 void timer_init_for_thread(os_id_t id);
 void timer_start_for_thread(os_id_t id, u32_t timeout_ms, void (*pCallback)(os_id_t));
-u32p_t timer_stop_for_thread(os_id_t id);
+i32p_t timer_stop_for_thread(os_id_t id);
 b_t timer_busy(os_id_t id);
 u32_t timer_total_system_ms_get(void);
 u32_t timer_total_system_us_get(void);
-u32p_t timer_schedule(void);
+i32p_t timer_schedule(void);
 void timer_reamining_elapsed_handler(void);
 void timer_elapsed_handler(u32_t elapsed_us);
 

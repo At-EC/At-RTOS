@@ -38,7 +38,7 @@ typedef volatile signed short vi16_t;
 typedef volatile signed int vi32_t;
 typedef volatile signed long long vi64_t;
 typedef bool b_t;
-typedef u32_t u32p_t;
+typedef i32_t i32p_t;
 
 #ifndef FALSE
 #define FALSE false
@@ -48,12 +48,12 @@ typedef u32_t u32p_t;
 #define TRUE true
 #endif
 
-#define U8_B  (8u)
-#define U16_B (16u)
-#define U32_B (32u)
-#define U8_V  (0xFFu)
-#define U16_V (0xFFFFu)
-#define U32_V (0xFFFFFFFFu)
+#define U8_B    (8u)
+#define U16_B   (16u)
+#define U32_B   (32u)
+#define U8_MAX  ((u8_t)-1)
+#define U16_MAX ((u16_t)-1)
+#define U32_MAX ((u32_t)-1)
 
 #define UNUSED_MSG(x) (void)(x)
 #define UNUSED_ARG    (0u)
@@ -68,6 +68,25 @@ typedef u32_t u32p_t;
 #else
 #define COMPLIER_UNIQUE_NUMBER __LINE__
 #endif
+#define COMPLIER_LINE_NUMBER __LINE__
+
+/* To generating a unique token */
+#define _STATIC_MAGIC_3(pre, post) MAGIC(pre, post)
+#define _STATIC_MAGIC_2(pre, post) _STATIC_MAGIC_3(pre, post)
+
+#if defined __COUNTER__
+#define _STATIC_MAGIC(pre) _STATIC_MAGIC_2(pre, COMPLIER_UNIQUE_NUMBER)
+#else
+#define _STATIC_MAGIC(pre) _STATIC_MAGIC_2(pre, COMPLIER_UNIQUE_NUMBER)
+#endif
+#define BUILD_ASSERT(cond, msg) typedef char_t _STATIC_MAGIC(static_assert)[FLAG(cond) * 2 - 1]
+
+#define RUN_ASSERT(c)                                                                                                                      \
+    if (UNFLAG(c)) {                                                                                                                       \
+        while (1) {};                                                                                                                      \
+    }
+
+#define RUN_UNREACHABLE() RUN_ASSERT(0)
 
 #define VREG32(addr) (*(volatile u32_t *)(u32_t)(addr))
 #define VREG16(addr) (*(volatile u16_t *)(u32_t)(addr))
@@ -78,11 +97,12 @@ typedef u32_t u32p_t;
 #define SET_BITS(start, end)          (u32_t)((0xFFFFFFFFul << (start)) & (0xFFFFFFFFul >> (31u - (u32_t)(end))))
 #define DUMP_BITS(regval, start, end) (u32_t)(((regval) & SET_BITS((start), (end))) >> (start))
 
-#define BV_C(v, m, p)    v &= ~((MASK_BIT(m)) << ((p) * (m)))
-#define BV_S(v, m, p, n) v |= ((n) << ((p) * (m)))
+#define BV_GET(v, m, p)    ((v >> ((p) * (m))) & (MASK_BIT(m)))
+#define BV_CLR(v, m, p)    (v &= ~((MASK_BIT(m)) << ((p) * (m))))
+#define BV_SET(v, m, p, n) (v |= ((n) << ((p) * (m))))
 #define BV_CS(v, m, p, n)                                                                                                                  \
-    BV_C(v, m, p);                                                                                                                         \
-    BV_S(v, m, p, n)
+    BV_CLR(v, m, p);                                                                                                                       \
+    BV_SET(v, m, p, n)
 
 #define DEQUALIFY(s, v)      ((s)(u32_t)(const volatile void *)(v))
 #define OFFSETOF(s, m)       ((u32_t)(&((s *)0)->m))
@@ -97,6 +117,25 @@ typedef u32_t u32p_t;
 #define ROUND_DOWN(size, align) (((u32_t)(size)) & (~(align - 1)))
 #define RANGE_ADDRESS_CONDITION(address, pool)                                                                                             \
     (((u32_t)(address) >= (u32_t)(pool)) && ((u32_t)(address) < ((u32_t)(pool) + (u16_t)SIZEOF(pool))))
+
+#define PC_COMMON_NUMBER_POS    (0u)
+#define PC_COMMON_NUMBER_MSK    (MASK_BIT(8)) /* The maximum pass information number up to 31 */
+#define PC_LINE_NUMBER_POS      (8u)
+#define PC_LINE_NUMBER_MSK      (MASK_BIT(13)) /* The maximum line number up to 8191 */
+#define PC_COMPONENT_NUMBER_POS (21u)
+#define PC_COMPONENT_NUMBER_MSK (MASK_BIT(10)) /* The maximum component number up to 1024 */
+
+#define _PC_COMMON_VALUE(n)    (((n) & PC_COMMON_NUMBER_MSK) << PC_COMMON_NUMBER_POS)
+#define _PC_LINE_VALUE(e)      (((e) & PC_LINE_NUMBER_MSK) << PC_LINE_NUMBER_POS)
+#define _PC_COMPONENT_VALUE(c) (((c) & PC_COMPONENT_NUMBER_MSK) << PC_COMPONENT_NUMBER_POS)
+#define _PC_VALUE(c, n)        (_PC_COMPONENT_VALUE(c) | _PC_LINE_VALUE(COMPLIER_LINE_NUMBER) | _PC_COMMON_VALUE(n))
+#define PC_NEGATIVE(v)         (i32_t)(U32_MAX - (i32_t)(v))
+#define PC_IER(c)              (PC_NEGATIVE(_PC_VALUE(c, 0)))
+#define PC_NER(c, n)           (PC_NEGATIVE(_PC_VALUE(c, n)))
+
+#define PC_CMPT_NUMBER_INIT (1u)
+#define PC_CMPT_ASSERT      (PC_CMPT_NUMBER_INIT)
+#define PC_CMPT_NUMBER_USER (PC_CMPT_NUMBER_INIT + 1u)
 
 #define REVERSE_NUMBER_32                                                                                                                  \
     32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0

@@ -17,9 +17,9 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED        PC_FAILED(PC_CMPT_QUEUE_5)
-#define _QUEUE_WAKEUP_SENDER   PC_SC_B
-#define _QUEUE_WAKEUP_RECEIVER PC_SC_A
+#define _PCER                  PC_IER(PC_OS_CMPT_QUEUE_6)
+#define _QUEUE_WAKEUP_SENDER   10
+#define _QUEUE_WAKEUP_RECEIVER 11
 
 /**
  * @brief Get the queue context based on provided unique id.
@@ -210,19 +210,19 @@ static void _queue_schedule(os_id_t id)
     b_t isRxAvail = FALSE;
 
     if (kernel_member_unified_id_toId(pEntryThread->schedule.hold) != KERNEL_MEMBER_QUEUE) {
-        pEntryThread->schedule.entry.result = _PC_CMPT_FAILED;
+        pEntryThread->schedule.entry.result = _PCER;
         return;
     }
 
     pCurQueue = _queue_object_contextGet(pEntryThread->schedule.hold);
     pEntry = &pEntryThread->schedule.entry;
-    if (pEntry->result == PC_SC_TIMEOUT) {
-        pEntry->result = PC_SC_TIMEOUT;
+    if (pEntry->result == PC_OS_WAIT_TIMEOUT) {
+        pEntry->result = PC_OS_WAIT_TIMEOUT;
     } else if (pEntry->result == _QUEUE_WAKEUP_RECEIVER) {
         // Release function doesn't kill the timer node from waiting list
         if (!timer_busy(kernel_member_unified_id_threadToTimer(pEntryThread->head.id))) {
             if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_TIMER_INTERNAL) {
-                pEntry->result = PC_SC_TIMEOUT;
+                pEntry->result = PC_OS_WAIT_TIMEOUT;
             } else {
                 isRxAvail = true;
             }
@@ -230,13 +230,13 @@ static void _queue_schedule(os_id_t id)
             timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
             isRxAvail = true;
         } else {
-            pEntry->result = _PC_CMPT_FAILED;
+            pEntry->result = _PCER;
         }
     } else if (pEntry->result == _QUEUE_WAKEUP_SENDER) {
         // Release function doesn't kill the timer node from waiting list
         if (!timer_busy(kernel_member_unified_id_threadToTimer(pEntryThread->head.id))) {
             if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_TIMER_INTERNAL) {
-                pEntry->result = PC_SC_TIMEOUT;
+                pEntry->result = PC_OS_WAIT_TIMEOUT;
             } else {
                 isTxAvail = true;
             }
@@ -244,10 +244,10 @@ static void _queue_schedule(os_id_t id)
             timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
             isTxAvail = true;
         } else {
-            pEntry->result = _PC_CMPT_FAILED;
+            pEntry->result = _PCER;
         }
     } else {
-        pEntry->result = _PC_CMPT_FAILED;
+        pEntry->result = _PCER;
     }
 
     if ((isRxAvail) || (isTxAvail)) {
@@ -266,7 +266,7 @@ static void _queue_schedule(os_id_t id)
                 _message_send((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
             }
         }
-        pEntry->result = PC_SC_SUCCESS;
+        pEntry->result = 0;
     }
 }
 
@@ -277,7 +277,7 @@ static void _queue_schedule(os_id_t id)
  */
 static void _queue_callback_fromTimeOut(os_id_t id)
 {
-    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_SC_TIMEOUT, _queue_schedule);
+    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_OS_WAIT_TIMEOUT, _queue_schedule);
 }
 
 /**
@@ -327,7 +327,7 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
     } while ((u32_t)++pCurQueue < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return OS_INVALID_ID;
+    return OS_INVALID_ID_VAL;
 }
 
 /**
@@ -337,7 +337,7 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
+static i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -348,19 +348,19 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
     u32_t timeout_ms = (u32_t)pArgs[4].u32_val;
     queue_context_t *pCurQueue = NULL;
     thread_context_t *pCurThread = NULL;
-    u32p_t postcode = PC_SC_SUCCESS;
+    i32p_t postcode = 0;
 
     pCurQueue = _queue_object_contextGet(id);
     pCurThread = kernel_thread_runContextGet();
     if (bufferSize > pCurQueue->elementLength) {
         EXIT_CRITICAL_SECTION();
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (pCurQueue->cacheSize == pCurQueue->elementNumber) {
         if (timeout_ms == OS_TIME_NOWAIT_VAL) {
             EXIT_CRITICAL_SECTION();
-            return _PC_CMPT_FAILED;
+            return _PCER;
         }
 
         os_memset((char *)&pCurThread->queue, 0x0u, sizeof(action_queue_t));
@@ -372,8 +372,9 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
         postcode =
             kernel_thread_exit_trigger(pCurThread->head.id, id, _queue_list_inBlockingHeadGet(id), timeout_ms, _queue_callback_fromTimeOut);
 
-        if (PC_IOK(postcode)) {
-            postcode = PC_SC_UNAVAILABLE;
+        PC_IF(postcode, PC_PASS)
+        {
+            postcode = PC_OS_WAIT_UNAVAILABLE;
         }
     } else {
         if (pCurThread->queue.toFront) {
@@ -402,7 +403,7 @@ static u32_t _queue_send_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
+static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -413,19 +414,19 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
     u32_t timeout_ms = (u32_t)pArgs[4].u32_val;
     queue_context_t *pCurQueue = NULL;
     thread_context_t *pCurThread = NULL;
-    u32p_t postcode = PC_SC_SUCCESS;
+    i32p_t postcode = 0;
 
     pCurQueue = _queue_object_contextGet(id);
     pCurThread = (thread_context_t *)kernel_thread_runContextGet();
     if (bufferSize > pCurQueue->elementLength) {
         EXIT_CRITICAL_SECTION();
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!pCurQueue->cacheSize) {
         if (timeout_ms == OS_TIME_NOWAIT_VAL) {
             EXIT_CRITICAL_SECTION();
-            return _PC_CMPT_FAILED;
+            return _PCER;
         }
 
         os_memset((char *)&pCurThread->queue, 0x0u, sizeof(action_queue_t));
@@ -436,8 +437,9 @@ static u32_t _queue_receive_privilege_routine(arguments_t *pArgs)
         postcode = kernel_thread_exit_trigger(pCurThread->head.id, id, _queue_list_OutBlockingHeadGet(id), timeout_ms,
                                               _queue_callback_fromTimeOut);
 
-        if (PC_IOK(postcode)) {
-            postcode = PC_SC_UNAVAILABLE;
+        PC_IF(postcode, PC_PASS)
+        {
+            postcode = PC_OS_WAIT_UNAVAILABLE;
         }
     } else {
         if (pCurThread->queue.fromBack) {
@@ -488,15 +490,15 @@ u32_t _impl_queue_os_id_to_number(os_id_t id)
 os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
 {
     if (!pQueueBufferAddr) {
-        return OS_INVALID_ID;
+        return OS_INVALID_ID_VAL;
     }
 
     if (!elementLen) {
-        return OS_INVALID_ID;
+        return OS_INVALID_ID_VAL;
     }
 
     if (!elementNum) {
-        return OS_INVALID_ID;
+        return OS_INVALID_ID_VAL;
     }
 
     arguments_t arguments[] = {
@@ -520,19 +522,19 @@ os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t e
  *
  * @return The result of the operation.
  */
-u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms)
+i32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms)
 {
     if (_queue_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_queue_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!kernel_isInThreadMode()) {
         if (timeout_ms != OS_TIME_NOWAIT_VAL) {
-            return _PC_CMPT_FAILED;
+            return _PCER;
         }
     }
 
@@ -541,16 +543,19 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b
         [3] = {.b_val = (b_t)isToFront}, [4] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    u32p_t postcode = kernel_privilege_invoke((const void *)_queue_send_privilege_routine, arguments);
+    i32p_t postcode = kernel_privilege_invoke((const void *)_queue_send_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
-    if (postcode == PC_SC_UNAVAILABLE) {
+    if (postcode == PC_OS_WAIT_UNAVAILABLE) {
         thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
-        postcode = (u32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
+        postcode = (i32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
     }
 
-    if (PC_IOK(postcode) && (postcode != PC_SC_TIMEOUT)) {
-        postcode = PC_SC_SUCCESS;
+    PC_IF(postcode, PC_PASS_INFO)
+    {
+        if (postcode != PC_OS_WAIT_TIMEOUT) {
+            postcode = 0;
+        }
     }
 
     EXIT_CRITICAL_SECTION();
@@ -568,19 +573,19 @@ u32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b
  *
  * @return The result of the operation.
  */
-u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms)
+i32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms)
 {
     if (_queue_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_queue_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!kernel_isInThreadMode()) {
         if (timeout_ms != OS_TIME_NOWAIT_VAL) {
-            return _PC_CMPT_FAILED;
+            return _PCER;
         }
     }
 
@@ -589,19 +594,22 @@ u32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
         [3] = {.b_val = (b_t)isFromBack}, [4] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    u32p_t postcode = kernel_privilege_invoke((const void *)_queue_receive_privilege_routine, arguments);
+    i32p_t postcode = kernel_privilege_invoke((const void *)_queue_receive_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
 
-    if (postcode == PC_SC_UNAVAILABLE) {
+    if (postcode == PC_OS_WAIT_UNAVAILABLE) {
         thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
 
-        postcode = (u32p_t)pCurThread->schedule.entry.result;
+        postcode = (i32p_t)pCurThread->schedule.entry.result;
         pCurThread->schedule.entry.result = 0u;
     }
 
-    if (PC_IOK(postcode) && (postcode != PC_SC_TIMEOUT)) {
-        postcode = PC_SC_SUCCESS;
+    PC_IF(postcode, PC_PASS_INFO)
+    {
+        if (postcode != PC_OS_WAIT_TIMEOUT) {
+            postcode = 0;
+        }
     }
 
     EXIT_CRITICAL_SECTION();
@@ -621,7 +629,7 @@ b_t queue_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
 #if defined KTRACE
     queue_context_t *pCurQueue = NULL;
     u32_t offset = 0u;
-    os_id_t id = OS_INVALID_ID;
+    os_id_t id = OS_INVALID_ID_VAL;
 
     ENTER_CRITICAL_SECTION();
 

@@ -128,7 +128,7 @@ typedef struct {
 /**
  * @brief Trigger system svc call.
  */
-__svc(SVC_KERNEL_INVOKE_NUMBER) u32_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+__svc(SVC_KERNEL_INVOKE_NUMBER) i32p_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
 
 /**
  * @brief Schedule the first thread.
@@ -173,7 +173,7 @@ static inline b_t port_isInThreadMode(void)
 /**
  * @brief Trigger system svc call.
  */
-static inline u32_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
+static inline i32p_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
 {
     register u32_t r0 __asm__("r0") = args_0;
     register u32_t r1 __asm__("r1") = args_1;
@@ -235,7 +235,7 @@ static inline b_t port_isInThreadMode(void)
 /**
  * @brief Trigger system svc call.
  */
-__swi u32_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+__swi i32p_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
 
 /**
  * @brief Schedule the first thread.
@@ -285,7 +285,7 @@ static inline b_t port_isInThreadMode(void)
 /* TODO */
 
 #elif defined(ARCH_NATIVE_GCC)
-u32_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+i32p_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
 void port_run_theFirstThread(u32_t sp);
 
 #else

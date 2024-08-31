@@ -14,8 +14,10 @@
 extern "C" {
 #endif
 
-/* Extern global postcode container */
-extern vu32_t g_postcode_cmpt_failed_container[POSTCODE_COMPONENT_NUMBER];
+/**
+ * Local trace postcode contrainer
+ */
+u32_t g_postcode_os_cmpt_failed_container[PC_OS_COMPONENT_NUMBER] = {0u};
 
 /**
  * @brief Take firmare snapshot information.
@@ -36,11 +38,12 @@ void _impl_trace_postcode_snapshot_print(void)
 {
     b_t is_failed = FALSE;
 
-    for (u32_t i = 0u; i < POSTCODE_COMPONENT_NUMBER; i++) {
-        if (g_postcode_cmpt_failed_container[i]) {
+    for (u32_t i = 0u; i < PC_OS_COMPONENT_NUMBER; i++) {
+        if (g_postcode_os_cmpt_failed_container[i]) {
             is_failed = TRUE;
 #if defined KTRACE
-            KTRACE(">> Postcode CMPT %d indicates it is failed at %d\n", i, (g_postcode_cmpt_failed_container[i] & PC_LINE_NUMBER_MASK));
+            KTRACE(">> Postcode CMPT %d indicates it is failed at %d\n", i,
+                   (((g_postcode_os_cmpt_failed_container[i] >> PC_LINE_NUMBER_POS) & PC_LINE_NUMBER_MSK)));
 #endif
         }
     }

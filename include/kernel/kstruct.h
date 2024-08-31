@@ -208,7 +208,7 @@ typedef struct {
 typedef struct {
     os_id_t release;
 
-    u32_t result;
+    i32p_t result;
 
     pThread_callbackFunc_t pEntryCallFun;
 } thread_entry_t;

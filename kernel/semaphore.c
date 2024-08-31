@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_SEMAPHORE_3)
+#define _PCER PC_IER(PC_OS_CMPT_SEMAPHORE_4)
 
 static void _semaphore_schedule(os_id_t id);
 
@@ -121,7 +121,7 @@ static b_t _semaphore_object_isInit(i32_t id)
  */
 static void _semaphore_callback_fromTimeOut(os_id_t id)
 {
-    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_SC_TIMEOUT, _semaphore_schedule);
+    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_OS_WAIT_TIMEOUT, _semaphore_schedule);
 }
 
 /**
@@ -137,11 +137,11 @@ static void _semaphore_schedule(os_id_t id)
     b_t isAvail = FALSE;
 
     if (kernel_member_unified_id_toId(pEntryThread->schedule.hold) != KERNEL_MEMBER_SEMAPHORE) {
-        pEntryThread->schedule.entry.result = _PC_CMPT_FAILED;
+        pEntryThread->schedule.entry.result = _PCER;
         return;
     }
 
-    if ((pEntryThread->schedule.entry.result != PC_SC_SUCCESS) && (pEntryThread->schedule.entry.result != PC_SC_TIMEOUT)) {
+    if ((pEntryThread->schedule.entry.result != 0) && (pEntryThread->schedule.entry.result != PC_OS_WAIT_TIMEOUT)) {
         return;
     }
 
@@ -150,7 +150,7 @@ static void _semaphore_schedule(os_id_t id)
     pCurSemaphore = _semaphore_object_contextGet(pEntryThread->schedule.hold);
     if (!timer_busy(kernel_member_unified_id_threadToTimer(pEntryThread->head.id))) {
         if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_TIMER_INTERNAL) {
-            pEntry->result = PC_SC_TIMEOUT;
+            pEntry->result = PC_OS_WAIT_TIMEOUT;
         } else {
             isAvail = true;
         }
@@ -158,14 +158,14 @@ static void _semaphore_schedule(os_id_t id)
         timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
         isAvail = true;
     } else {
-        pEntry->result = _PC_CMPT_FAILED;
+        pEntry->result = _PCER;
     }
 
     if (isAvail) {
         /* If the PC arrive, the semaphore will be available and can be acquired */
         pCurSemaphore->remains--; // The semaphore has available count
 
-        pEntry->result = PC_SC_SUCCESS;
+        pEntry->result = 0;
     }
 }
 
@@ -213,7 +213,7 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
     } while ((u32_t)++pCurSemaphore < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return OS_INVALID_ID;
+    return OS_INVALID_ID_VAL;
 }
 
 /**
@@ -223,7 +223,7 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _semaphore_take_privilege_routine(arguments_t *pArgs)
+static i32p_t _semaphore_take_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -231,7 +231,7 @@ static u32_t _semaphore_take_privilege_routine(arguments_t *pArgs)
     u32_t timeout_ms = (u32_t)pArgs[1].u32_val;
     semaphore_context_t *pCurSemaphore = NULL;
     thread_context_t *pCurThread = NULL;
-    u32p_t postcode = PC_SC_AVAILABLE;
+    i32p_t postcode = PC_OS_WAIT_AVAILABLE;
 
     pCurThread = kernel_thread_runContextGet();
     pCurSemaphore = _semaphore_object_contextGet(id);
@@ -240,8 +240,9 @@ static u32_t _semaphore_take_privilege_routine(arguments_t *pArgs)
         postcode = kernel_thread_exit_trigger(pCurThread->head.id, id, _semaphore_list_blockingHeadGet(id), timeout_ms,
                                               _semaphore_callback_fromTimeOut);
 
-        if (PC_IOK(postcode)) {
-            postcode = PC_SC_UNAVAILABLE;
+        PC_IF(postcode, PC_PASS)
+        {
+            postcode = PC_OS_WAIT_UNAVAILABLE;
         }
 
         EXIT_CRITICAL_SECTION();
@@ -262,12 +263,12 @@ static u32_t _semaphore_take_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _semaphore_give_privilege_routine(arguments_t *pArgs)
+static i32p_t _semaphore_give_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    u32p_t postcode = PC_SC_SUCCESS;
+    i32p_t postcode = 0;
 
     semaphore_context_t *pCurSemaphore = _semaphore_object_contextGet(id);
     if (pCurSemaphore->remains < pCurSemaphore->limits) {
@@ -275,7 +276,7 @@ static u32_t _semaphore_give_privilege_routine(arguments_t *pArgs)
 
         thread_context_t *pSemaphoreHighestBlockingThread = (thread_context_t *)_semaphore_linker_head_fromBlocking(id);
         if (pSemaphoreHighestBlockingThread) {
-            postcode = kernel_thread_entry_trigger(pSemaphoreHighestBlockingThread->head.id, id, PC_SC_SUCCESS, _semaphore_schedule);
+            postcode = kernel_thread_entry_trigger(pSemaphoreHighestBlockingThread->head.id, id, 0, _semaphore_schedule);
         }
     }
 
@@ -290,14 +291,14 @@ static u32_t _semaphore_give_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
+static i32p_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     semaphore_context_t *pCurSemaphore = NULL;
     thread_context_t *pCurThread = NULL;
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    u32p_t postcode = PC_SC_SUCCESS;
+    i32p_t postcode = 0;
 
     pCurSemaphore = _semaphore_object_contextGet(id);
     list_iterator_t it = {0u};
@@ -305,7 +306,7 @@ static u32_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
     pCurThread = (thread_context_t *)list_iterator_next(&it);
     while (pCurThread) {
         pCurSemaphore->remains++;
-        postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _semaphore_schedule);
+        postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, 0, _semaphore_schedule);
         if (PC_IER(postcode)) {
             break;
         }
@@ -344,11 +345,11 @@ u32_t _impl_semaphore_os_id_to_number(os_id_t id)
 os_id_t _impl_semaphore_init(u8_t remainCount, u8_t limitCount, const char_t *pName)
 {
     if (!limitCount) {
-        return OS_INVALID_ID;
+        return OS_INVALID_ID_VAL;
     }
 
     if (remainCount > limitCount) {
-        return OS_INVALID_ID;
+        return OS_INVALID_ID_VAL;
     }
 
     arguments_t arguments[] = {
@@ -367,22 +368,22 @@ os_id_t _impl_semaphore_init(u8_t remainCount, u8_t limitCount, const char_t *pN
  *
  * @return The result of the operation.
  */
-u32p_t _impl_semaphore_take(os_id_t id, u32_t timeout_ms)
+i32p_t _impl_semaphore_take(os_id_t id, u32_t timeout_ms)
 {
     if (_semaphore_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_semaphore_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!timeout_ms) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!kernel_isInThreadMode()) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -390,17 +391,20 @@ u32p_t _impl_semaphore_take(os_id_t id, u32_t timeout_ms)
         [1] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    u32p_t postcode = kernel_privilege_invoke((const void *)_semaphore_take_privilege_routine, arguments);
+    i32p_t postcode = kernel_privilege_invoke((const void *)_semaphore_take_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
 
-    if (postcode == PC_SC_UNAVAILABLE) {
+    if (postcode == PC_OS_WAIT_UNAVAILABLE) {
         thread_context_t *pCurThread = kernel_thread_runContextGet();
-        postcode = (u32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
+        postcode = (i32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
     }
 
-    if (PC_IOK(postcode) && (postcode != PC_SC_TIMEOUT)) {
-        postcode = PC_SC_SUCCESS;
+    PC_IF(postcode, PC_PASS_INFO)
+    {
+        if (postcode != PC_OS_WAIT_TIMEOUT) {
+            postcode = 0;
+        }
     }
 
     EXIT_CRITICAL_SECTION();
@@ -414,14 +418,14 @@ u32p_t _impl_semaphore_take(os_id_t id, u32_t timeout_ms)
  *
  * @return The result of the operation.
  */
-u32_t _impl_semaphore_give(os_id_t id)
+i32p_t _impl_semaphore_give(os_id_t id)
 {
     if (_semaphore_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_semaphore_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -438,14 +442,14 @@ u32_t _impl_semaphore_give(os_id_t id)
  *
  * @return The result of the operation.
  */
-u32_t _impl_semaphore_flush(os_id_t id)
+i32p_t _impl_semaphore_flush(os_id_t id)
 {
     if (_semaphore_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_semaphore_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -468,7 +472,7 @@ b_t semaphore_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
 #if defined KTRACE
     semaphore_context_t *pCurSemaphore = NULL;
     u32_t offset = 0u;
-    os_id_t id = OS_INVALID_ID;
+    os_id_t id = OS_INVALID_ID_VAL;
 
     ENTER_CRITICAL_SECTION();
 

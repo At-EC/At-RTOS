@@ -12,8 +12,8 @@ extern "C" {
 #endif
 
 /* Local defined the kernel thread stack and error postcode */
-#define _PC_CMPT_FAILED                 PC_FAILED(PC_CMPT_KERNEL)
-#define SAMPLE_THREAD_STACK_SIZE        (1024u)
+#define _PCER                    PC_IER(PC_OS_CMPT_KERNEL_2)
+#define SAMPLE_THREAD_STACK_SIZE (1024u)
 
 OS_THREAD_DEFINE(sample_thread, SAMPLE_THREAD_STACK_SIZE, 5);
 
@@ -40,8 +40,8 @@ int main(void)
 
     /* At_RTOS kernel running starts */
     os.schedule_run();
-    D_ASSERT(0);
-
+	
+    RUN_UNREACHABLE();
     while(1) {};
 }
 

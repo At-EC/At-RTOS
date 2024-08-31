@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_POOL_8)
+#define _PCER PC_IER(PC_OS_CMPT_POOL_9)
 
 /**
  * @brief Get the pool context based on provided unique id.
@@ -169,18 +169,18 @@ static void _pool_schedule(os_id_t id)
 
     pCurPool = _pool_object_contextGet(pEntryThread->schedule.hold);
     if (kernel_member_unified_id_toId(pEntryThread->schedule.hold) != KERNEL_MEMBER_POOL) {
-        pEntryThread->schedule.entry.result = _PC_CMPT_FAILED;
+        pEntryThread->schedule.entry.result = _PCER;
         return;
     }
 
-    if ((pEntryThread->schedule.entry.result != PC_SC_SUCCESS) && (pEntryThread->schedule.entry.result != PC_SC_TIMEOUT)) {
+    if ((pEntryThread->schedule.entry.result != 0) && (pEntryThread->schedule.entry.result != PC_OS_WAIT_TIMEOUT)) {
         return;
     }
 
     pEntry = &pEntryThread->schedule.entry;
     if (!timer_busy(kernel_member_unified_id_threadToTimer(pEntryThread->head.id))) {
         if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_TIMER_INTERNAL) {
-            pEntry->result = PC_SC_TIMEOUT;
+            pEntry->result = PC_OS_WAIT_TIMEOUT;
         } else {
             isAvail = true;
         }
@@ -188,15 +188,15 @@ static void _pool_schedule(os_id_t id)
         timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
         isAvail = true;
     } else {
-        pEntry->result = _PC_CMPT_FAILED;
+        pEntry->result = _PCER;
     }
 
     if (isAvail) {
         *pEntryThread->pool.ppUserMemAddress = _mem_take(pCurPool);
         if (!*pEntryThread->pool.ppUserMemAddress) {
-            pEntry->result = _PC_CMPT_FAILED;
+            pEntry->result = _PCER;
         } else {
-            pEntry->result = PC_SC_SUCCESS;
+            pEntry->result = 0;
         }
     }
 }
@@ -208,7 +208,7 @@ static void _pool_schedule(os_id_t id)
  */
 static void _pool_callback_fromTimeOut(os_id_t id)
 {
-    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_SC_TIMEOUT, _pool_schedule);
+    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_OS_WAIT_TIMEOUT, _pool_schedule);
 }
 
 /**
@@ -256,7 +256,7 @@ static u32_t _pool_init_privilege_routine(arguments_t *pArgs)
     } while ((u32_t)++pCurPool < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return OS_INVALID_ID;
+    return OS_INVALID_ID_VAL;
 }
 
 /**
@@ -266,7 +266,7 @@ static u32_t _pool_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _pool_take_privilege_routine(arguments_t *pArgs)
+static i32p_t _pool_take_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -276,20 +276,20 @@ static u32_t _pool_take_privilege_routine(arguments_t *pArgs)
     u32_t timeout_ms = (u32_t)pArgs[3].u32_val;
     pool_context_t *pCurPool = NULL;
     thread_context_t *pCurThread = NULL;
-    u32p_t postcode = PC_SC_SUCCESS;
+    i32p_t postcode = 0;
 
     pCurPool = _pool_object_contextGet(id);
     pCurThread = kernel_thread_runContextGet();
 
     if (bufferSize > pCurPool->elementLength) {
         EXIT_CRITICAL_SECTION();
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!pCurPool->elementFreeBits) {
         if ((timeout_ms == OS_TIME_NOWAIT_VAL) && (!kernel_isInThreadMode())) {
             EXIT_CRITICAL_SECTION();
-            return _PC_CMPT_FAILED;
+            return _PCER;
         }
 
         os_memset((u8_t *)&pCurThread->pool, 0x0u, sizeof(action_pool_t));
@@ -298,14 +298,15 @@ static u32_t _pool_take_privilege_routine(arguments_t *pArgs)
         postcode =
             kernel_thread_exit_trigger(pCurThread->head.id, id, _pool_list_blockingHeadGet(id), timeout_ms, _pool_callback_fromTimeOut);
 
-        if (PC_IOK(postcode)) {
-            postcode = PC_SC_UNAVAILABLE;
+        PC_IF(postcode, PC_PASS)
+        {
+            postcode = PC_OS_WAIT_TIMEOUT;
         }
     } else {
         *ppUserBuffer = _mem_take(pCurPool);
 
         if (!*ppUserBuffer) {
-            postcode = _PC_CMPT_FAILED;
+            postcode = _PCER;
         }
     }
 
@@ -320,7 +321,7 @@ static u32_t _pool_take_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _pool_release_privilege_routine(arguments_t *pArgs)
+static i32p_t _pool_release_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -328,14 +329,14 @@ static u32_t _pool_release_privilege_routine(arguments_t *pArgs)
     void **ppUserBuffer = (void **)pArgs[1].ptr_val;
     pool_context_t *pCurPool = NULL;
     thread_context_t *pCurThread = NULL;
-    u32p_t postcode = PC_SC_SUCCESS;
+    i32p_t postcode = 0;
 
     pCurPool = _pool_object_contextGet(id);
     pCurThread = (thread_context_t *)kernel_thread_runContextGet();
 
     if (!_mem_release(pCurPool, *ppUserBuffer)) {
         EXIT_CRITICAL_SECTION();
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     *ppUserBuffer = NULL;
@@ -345,7 +346,7 @@ static u32_t _pool_release_privilege_routine(arguments_t *pArgs)
     list_iterator_init(&it, _pool_list_blockingHeadGet(id));
     pCurThread = (thread_context_t *)list_iterator_next(&it);
     if (pCurThread) {
-        postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _pool_schedule);
+        postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, 0, _pool_schedule);
     }
 
     EXIT_CRITICAL_SECTION();
@@ -381,19 +382,19 @@ u32_t _impl_pool_os_id_to_number(os_id_t id)
 os_id_t _impl_pool_init(const void *pMemAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
 {
     if (!pMemAddr) {
-        return OS_INVALID_ID;
+        return OS_INVALID_ID_VAL;
     }
 
     if (!elementLen) {
-        return OS_INVALID_ID;
+        return OS_INVALID_ID_VAL;
     }
 
     if (!elementNum) {
-        return OS_INVALID_ID;
+        return OS_INVALID_ID_VAL;
     }
 
     if (elementNum > U32_B) {
-        return OS_INVALID_ID;
+        return OS_INVALID_ID_VAL;
     }
 
     arguments_t arguments[] = {
@@ -416,19 +417,19 @@ os_id_t _impl_pool_init(const void *pMemAddr, u16_t elementLen, u16_t elementNum
  *
  * @return The result of the operation.
  */
-u32p_t _impl_pool_take(os_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms)
+i32p_t _impl_pool_take(os_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms)
 {
     if (_pool_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_pool_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!kernel_isInThreadMode()) {
         if (timeout_ms != OS_TIME_NOWAIT_VAL) {
-            return _PC_CMPT_FAILED;
+            return _PCER;
         }
     }
 
@@ -439,16 +440,19 @@ u32p_t _impl_pool_take(os_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t 
         [3] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    u32p_t postcode = kernel_privilege_invoke((const void *)_pool_take_privilege_routine, arguments);
+    i32p_t postcode = kernel_privilege_invoke((const void *)_pool_take_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
-    if (postcode == PC_SC_UNAVAILABLE) {
+    if (postcode == PC_OS_WAIT_TIMEOUT) {
         thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
-        postcode = (u32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
+        postcode = (i32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
     }
 
-    if (PC_IOK(postcode) && (postcode != PC_SC_TIMEOUT)) {
-        postcode = PC_SC_SUCCESS;
+    PC_IF(postcode, PC_PASS_INFO)
+    {
+        if (postcode != PC_OS_WAIT_TIMEOUT) {
+            postcode = 0;
+        }
     }
 
     EXIT_CRITICAL_SECTION();
@@ -463,18 +467,18 @@ u32p_t _impl_pool_take(os_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t 
  *
  * @return The result of the operation.
  */
-u32p_t _impl_pool_release(os_id_t id, void **ppUserBuffer)
+i32p_t _impl_pool_release(os_id_t id, void **ppUserBuffer)
 {
     if (_pool_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_pool_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (*ppUserBuffer == NULL) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -498,7 +502,7 @@ b_t pool_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
 #if defined KTRACE
     pool_context_t *pCurPool = NULL;
     u32_t offset = 0u;
-    os_id_t id = OS_INVALID_ID;
+    os_id_t id = OS_INVALID_ID_VAL;
 
     ENTER_CRITICAL_SECTION();
 

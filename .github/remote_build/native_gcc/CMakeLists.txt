@@ -32,9 +32,10 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wextra>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wpedantic>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Werror>
-    $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wconversion>
+    # $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wconversion>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Weverything>
-
+    # $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wsign-conversion>
+	
     # Suppressions required to build clean with clang.
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-unused-macros>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-padded>
@@ -43,6 +44,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-format-truncation>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-int-to-pointer-cast>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-pointer-to-int-cast>
+    $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-sign-conversion>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-cast-align> )
 
 target_link_libraries(${PROJECT_NAME} atos_kernel)

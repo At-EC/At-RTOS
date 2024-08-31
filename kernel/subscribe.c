@@ -16,7 +16,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_PUBLISH_9)
+#define _PCER PC_IER(PC_OS_CMPT_PUBLISH_10)
 
 /**
  * @brief Get the publish context based on provided unique id.
@@ -224,7 +224,7 @@ static u32_t _publish_init_privilege_routine(arguments_t *pArgs)
     } while ((u32_t)++pCurPublish < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return OS_INVALID_ID;
+    return OS_INVALID_ID_VAL;
 }
 
 /**
@@ -242,7 +242,7 @@ static u32_t _publish_data_submit_privilege_routine(arguments_t *pArgs)
     const void *pPublishData = (const void *)pArgs[1].ptr_val;
     u16_t publishSize = (u16_t)pArgs[2].u16_val;
     b_t request = FALSE;
-    u32p_t postcode = PC_SC_SUCCESS;
+    i32p_t postcode = 0;
     publish_context_t *pCurPublish = _publish_object_contextGet(id);
     pCurPublish->refresh_count++;
 
@@ -302,7 +302,7 @@ static u32_t _subscribe_init_privilege_routine(arguments_t *pArgs)
         os_memset((char_t *)pCurSubscribe, 0x0u, sizeof(subscribe_context_t));
         pCurSubscribe->head.id = id;
         pCurSubscribe->head.pName = pName;
-        pCurSubscribe->hold = OS_INVALID_ID;
+        pCurSubscribe->hold = OS_INVALID_ID_VAL;
         pCurSubscribe->last_count = 0u;
         pCurSubscribe->isMute = FALSE;
         pCurSubscribe->callEntry.pDataAddress = pData;
@@ -317,7 +317,7 @@ static u32_t _subscribe_init_privilege_routine(arguments_t *pArgs)
     } while ((u32_t)++pCurSubscribe < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return OS_INVALID_ID;
+    return OS_INVALID_ID_VAL;
 }
 
 /**
@@ -344,7 +344,7 @@ static u32_t _subscribe_register_privilege_routine(arguments_t *pArgs)
     _subscribe_list_transfer_toTargetHead((linker_head_t *)&pCurSubscribe->head, pub);
 
     EXIT_CRITICAL_SECTION();
-    return PC_SC_SUCCESS;
+    return 0;
 }
 
 /**
@@ -391,11 +391,11 @@ static u32_t _subscribe_apply_data_privilege_routine(arguments_t *pArgs)
         pCurSubscribe->last_count = pCurPublish->refresh_count;
 
         EXIT_CRITICAL_SECTION();
-        return PC_SC_SUCCESS;
+        return 0;
     }
 
     EXIT_CRITICAL_SECTION();
-    return PC_SC_UNAVAILABLE;
+    return PC_OS_WAIT_UNAVAILABLE;
 }
 
 /**
@@ -458,11 +458,11 @@ os_id_t _impl_publish_init(const char_t *pName)
 os_id_t _impl_subscribe_init(void *pDataAddr, u16_t dataSize, const char_t *pName)
 {
     if (!pDataAddr) {
-        return _PC_CMPT_FAILED;
+        return OS_INVALID_ID_VAL;
     }
 
     if (!dataSize) {
-        return _PC_CMPT_FAILED;
+        return OS_INVALID_ID_VAL;
     }
 
     arguments_t arguments[] = {
@@ -484,22 +484,22 @@ os_id_t _impl_subscribe_init(void *pDataAddr, u16_t dataSize, const char_t *pNam
  *
  * @return Value The result fo subscribe init operation.
  */
-u32p_t _impl_subscribe_register(os_id_t subscribe_id, os_id_t publish_id, b_t isMute, pSubscribe_callbackFunc_t pNotificationHandler)
+i32p_t _impl_subscribe_register(os_id_t subscribe_id, os_id_t publish_id, b_t isMute, pSubscribe_callbackFunc_t pNotificationHandler)
 {
     if (_subscribe_id_isInvalid(subscribe_id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_subscribe_object_isInit(subscribe_id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (_publish_id_isInvalid(publish_id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_publish_object_isInit(publish_id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -521,22 +521,22 @@ u32p_t _impl_subscribe_register(os_id_t subscribe_id, os_id_t publish_id, b_t is
  *
  * @return Value The result of subscribe init operation.
  */
-u32p_t _impl_subscribe_data_apply(os_id_t subscribe_id, void *pDataBuffer, u16_t *pDataLen)
+i32p_t _impl_subscribe_data_apply(os_id_t subscribe_id, void *pDataBuffer, u16_t *pDataLen)
 {
     if (_subscribe_id_isInvalid(subscribe_id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_subscribe_object_isInit(subscribe_id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!pDataBuffer) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!pDataLen) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -558,11 +558,11 @@ u32p_t _impl_subscribe_data_apply(os_id_t subscribe_id, void *pDataBuffer, u16_t
 b_t _impl_subscribe_data_is_ready(os_id_t subscribe_id)
 {
     if (_subscribe_id_isInvalid(subscribe_id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_subscribe_object_isInit(subscribe_id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -581,14 +581,14 @@ b_t _impl_subscribe_data_is_ready(os_id_t subscribe_id)
  *
  * @return Value The result of the publisher data operation.
  */
-u32p_t _impl_publish_data_submit(os_id_t id, const void *pPublishData, u16_t publishSize)
+i32p_t _impl_publish_data_submit(os_id_t id, const void *pPublishData, u16_t publishSize)
 {
     if (_publish_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_publish_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -635,7 +635,7 @@ b_t publish_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
 #if defined KTRACE
     publish_context_t *pCurPublish = NULL;
     u32_t offset = 0u;
-    os_id_t id = OS_INVALID_ID;
+    os_id_t id = OS_INVALID_ID_VAL;
 
     ENTER_CRITICAL_SECTION();
 

@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PC_CMPT_FAILED PC_FAILED(PC_CMPT_EVENT_6)
+#define _PCER PC_IER(PC_OS_CMPT_EVENT_7)
 
 /**
  * @brief Get the event context based on provided unique id.
@@ -108,18 +108,18 @@ static void _event_schedule(os_id_t id)
     b_t isAvail = FALSE;
 
     if (kernel_member_unified_id_toId(pEntryThread->schedule.hold) != KERNEL_MEMBER_EVENT) {
-        pEntryThread->schedule.entry.result = _PC_CMPT_FAILED;
+        pEntryThread->schedule.entry.result = _PCER;
         return;
     }
 
-    if ((pEntryThread->schedule.entry.result != PC_SC_SUCCESS) && (pEntryThread->schedule.entry.result != PC_SC_TIMEOUT)) {
+    if ((pEntryThread->schedule.entry.result != 0) && (pEntryThread->schedule.entry.result != PC_OS_WAIT_TIMEOUT)) {
         return;
     }
 
     pEntry = &pEntryThread->schedule.entry;
     if (!timer_busy(kernel_member_unified_id_threadToTimer(pEntryThread->head.id))) {
         if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_TIMER_INTERNAL) {
-            pEntry->result = PC_SC_TIMEOUT;
+            pEntry->result = PC_OS_WAIT_TIMEOUT;
         } else {
             isAvail = true;
         }
@@ -127,7 +127,7 @@ static void _event_schedule(os_id_t id)
         timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
         isAvail = true;
     } else {
-        pEntry->result = _PC_CMPT_FAILED;
+        pEntry->result = _PCER;
     }
 
     /* Auto clear user configuration */
@@ -137,7 +137,7 @@ static void _event_schedule(os_id_t id)
     pEntryThread->event.pEvtVal = NULL;
 
     if (isAvail) {
-        pEntry->result = PC_SC_SUCCESS;
+        pEntry->result = 0;
     }
 }
 
@@ -148,7 +148,7 @@ static void _event_schedule(os_id_t id)
  */
 static void _event_callback_fromTimeOut(os_id_t id)
 {
-    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_SC_TIMEOUT, _event_schedule);
+    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_OS_WAIT_TIMEOUT, _event_schedule);
 }
 
 /**
@@ -197,7 +197,7 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
     } while ((u32_t)++pCurEvent < endAddr);
 
     EXIT_CRITICAL_SECTION();
-    return OS_INVALID_ID;
+    return OS_INVALID_ID_VAL;
 }
 
 /**
@@ -207,7 +207,7 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _event_set_privilege_routine(arguments_t *pArgs)
+static i32p_t _event_set_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -216,7 +216,7 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
     u32_t clear = (u32_t)pArgs[2].u32_val;
     u32_t toggle = (u32_t)pArgs[3].u32_val;
 
-    u32p_t postcode = PC_SC_SUCCESS;
+    i32p_t postcode = 0;
     event_context_t *pCurEvent = _event_object_contextGet(id);
     u32_t idx = pCurEvent->index;
     u32_t val = pCurEvent->value[idx];
@@ -253,17 +253,18 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
                 if (pCurThread->event.group == (pCurThread->event.pEvtVal->value & pCurThread->event.group)) {
                     /* group */
                     pCurThread->event.pEvtVal->depth.location = pCurEvent->index;
-                    postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _event_schedule);
+                    postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, 0, _event_schedule);
                 }
             } else {
                 if (pCurThread->event.pEvtVal->value) {
                     /* single */
                     pCurThread->event.pEvtVal->depth.location = pCurEvent->index;
-                    postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, PC_SC_SUCCESS, _event_schedule);
+                    postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, 0, _event_schedule);
                 }
             }
 
-            if (PC_IER(postcode)) {
+            PC_IF(postcode, PC_ERROR)
+            {
                 break;
             }
             pCurThread = (thread_context_t *)list_iterator_next(&it);
@@ -281,7 +282,7 @@ static u32_t _event_set_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
+static i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -291,7 +292,7 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
     u32_t listen = (u32_t)pArgs[3].u32_val;
     u32_t group = (u32_t)pArgs[4].u32_val;
     u32_t timeout_ms = (u32_t)pArgs[5].u32_val;
-    u32p_t postcode = PC_SC_SUCCESS;
+    i32p_t postcode = 0;
 
     thread_context_t *pCurThread = kernel_thread_runContextGet();
     pCurThread->event.listen = listen;
@@ -348,8 +349,9 @@ static u32_t _event_wait_privilege_routine(arguments_t *pArgs)
     postcode =
         kernel_thread_exit_trigger(pCurThread->head.id, id, _event_list_blockingHeadGet(id), timeout_ms, _event_callback_fromTimeOut);
 
-    if (PC_IOK(postcode)) {
-        postcode = PC_SC_UNAVAILABLE;
+    PC_IF(postcode, PC_PASS)
+    {
+        postcode = PC_OS_WAIT_UNAVAILABLE;
     }
 
     EXIT_CRITICAL_SECTION();
@@ -392,7 +394,7 @@ os_id_t _impl_event_init(u32_t edgeMask, u32_t clrDisMask, const char_t *pName)
     return kernel_privilege_invoke((const void *)_event_init_privilege_routine, arguments);
 }
 
-u32p_t _impl_event_wait_callfunc_register(pEvent_callbackFunc_t pCallFun)
+i32p_t _impl_event_wait_callfunc_register(pEvent_callbackFunc_t pCallFun)
 {
     return 0u;
 }
@@ -407,14 +409,14 @@ u32p_t _impl_event_wait_callfunc_register(pEvent_callbackFunc_t pCallFun)
  *
  * @return The result of the operation.
  */
-u32p_t _impl_event_set(os_id_t id, u32_t set, u32_t clear, u32_t toggle)
+i32p_t _impl_event_set(os_id_t id, u32_t set, u32_t clear, u32_t toggle)
 {
     if (_event_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_event_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -439,26 +441,26 @@ u32p_t _impl_event_set(os_id_t id, u32_t set, u32_t clear, u32_t toggle)
  *
  * @return The result of the operation.
  */
-u32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t trigger, u32_t listen_mask, u32_t group_mask, u32_t timeout_ms)
+i32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t trigger, u32_t listen_mask, u32_t group_mask, u32_t timeout_ms)
 {
     if (_event_id_isInvalid(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!_event_object_isInit(id)) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!pEvtData) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!timeout_ms) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     if (!kernel_isInThreadMode()) {
-        return _PC_CMPT_FAILED;
+        return _PCER;
     }
 
     arguments_t arguments[] = {
@@ -466,17 +468,20 @@ u32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t trigger, u32_t
         [3] = {.u32_val = (u32_t)listen_mask}, [4] = {.u32_val = (u32_t)group_mask}, [5] = {.u32_val = (u32_t)timeout_ms},
     };
 
-    u32p_t postcode = kernel_privilege_invoke((const void *)_event_wait_privilege_routine, arguments);
+    i32p_t postcode = kernel_privilege_invoke((const void *)_event_wait_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
 
-    if (postcode == PC_SC_UNAVAILABLE) {
+    if (postcode == PC_OS_WAIT_UNAVAILABLE) {
         thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
-        postcode = (u32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
+        postcode = (i32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
     }
 
-    if (PC_IOK(postcode) && (postcode != PC_SC_TIMEOUT)) {
-        postcode = PC_SC_SUCCESS;
+    PC_IF(postcode, PC_PASS)
+    {
+        if (postcode != PC_OS_WAIT_TIMEOUT) {
+            postcode = 0;
+        }
     }
 
     EXIT_CRITICAL_SECTION();
@@ -496,7 +501,7 @@ b_t event_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
 #if defined KTRACE
     event_context_t *pCurEvent = NULL;
     u32_t offset = 0u;
-    os_id_t id = OS_INVALID_ID;
+    os_id_t id = OS_INVALID_ID_VAL;
 
     ENTER_CRITICAL_SECTION();
 
