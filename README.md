@@ -1,5 +1,8 @@
+<p align="center"> <img src="https://github.com/At-EC/At-RTOS/blob/main/.github/picture/At-EC.jpg" alt="@-EC" width="150" height="150" /> </p>
+
+> @ Embedded Controllers.
+
 # [At-RTOS](https://github.com/At-EC/At-RTOS) &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/At-EC/At-RTOS/blob/main/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/At-EC/At-RTOS/tree/main/.github/Welcome_PRs.md) <a href="https://github.com/At-EC/At-RTOS/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/At-EC/At-RTOS?color=success"></a> [![Discord](https://img.shields.io/discord/1208405601994932274?logo=discord)](https://discord.gg/AxfF9aH58G) <a href="https://github.com/At-EC/At-RTOS/actions"><img alt="Build" src="https://github.com/At-EC/At-RTOS/workflows/Build/badge.svg"></a> [![GitHub Release](https://img.shields.io/github/v/release/At-EC/At-RTOS)](./release-note.md) 
-<p align="center"> <img src="https://github.com/At-EC/At-RTOS/blob/main/.github/picture/At-EC.svg" alt="@-EC" width="128" height="128" /> </p>
 
 At-RTOS([@ Real-Time Operating System](https://github.com/At-EC/At-RTOS)) is an open and user-friendly Real-Time Operating System(RTOS) designed for various embedded controllers' supporting, as it's beginning it will be an important member of the At-EC family.
 
