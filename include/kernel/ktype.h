@@ -45,17 +45,8 @@ typedef struct os_priority os_priority_t;
 typedef struct os_time os_time_t;
 
 typedef struct {
-    b_t active;
-
-    b_t enable;
-
-    u8_t location;
-} evt_depth_t;
-
-typedef struct {
-    evt_depth_t depth;
-
     u32_t value;
+    u32_t trigger;
 } os_evt_val_t;
 
 #define OS_INVALID_ID_VAL (0xFFFFFFFFu)

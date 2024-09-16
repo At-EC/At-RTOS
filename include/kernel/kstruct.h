@@ -158,14 +158,8 @@ typedef struct {
 } pool_context_t;
 
 typedef struct {
-    /* the desired bits*/
-    u32_t trigger;
-
-    /* the listen bits*/
+    /* The listen bits*/
     u32_t listen;
-
-    /* If the group bits are not zero, all correspond changed bits seen can wake up the thread to handle event */
-    u32_t group;
 
     /* The user value pointer, the user only can access it until it meets with the group setting so that it can be clean */
     os_evt_val_t *pEvtVal;
@@ -175,17 +169,20 @@ typedef struct {
     /* A common struct head to link with other context */
     linker_head_t head;
 
-    /* The event value */
-    u32_t value[OS_EVENT_POOL_DEPTH];
+    /* The event signal value */
+    u32_t value;
 
-    /* Current index */
-    u8_t index;
+    /* Changed bits always trigger = 1, See dirMask below = 0. */
+    u32_t anyMask;
 
-    /* Specific the event trigger condition of edge or level. */
-    u32_t edgeMask;
+    /* Level trigger = 0, Edge trigger = 1. */
+    u32_t modeMask;
 
-    /* Automatically clear the event value. */
-    u32_t clearMask;
+    /* Fall or Low trigger = 0, Rise or high trigger = 1. */
+    u32_t dirMask;
+
+    /* The triggered value */
+    u32_t triggered;
 
     /* When the event change that meet with edge setting, the function will be called */
     struct callFun {

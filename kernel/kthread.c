@@ -51,7 +51,6 @@ const at_rtos_api_t os = {
     .evt_init = os_evt_init,
     .evt_set = os_evt_set,
     .evt_wait = os_evt_wait,
-    .evt_wait_depth = os_evt_wait_depth,
 
     .msgq_init = os_msgq_init,
     .msgq_put = os_msgq_put,

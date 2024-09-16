@@ -57,9 +57,9 @@ extern "C" {
  * demo usage:
  *#include "at_rtos.h"
  *
- * OS_THREAD_DEFINE(sample_thread, 512, 5);
+ * OS_THREAD_DEFINE(demo_thread, 512, 5);
  *
- * void thread_sample_function(void)
+ * void thread_demo_function(void)
  * {
  *     while(1) {
  *         os.thread_sleep(1000u);
@@ -68,9 +68,9 @@ extern "C" {
  *
  * int main(void)
  * {
- *     os_thread_id_t sample_id = os_thread_init(sample_thread, thread_sample_function);
- *     if (os_id_is_invalid(sample_id)) {
- *         printf("Thread %s init failed\n", sample_id.pName);
+ *     os_thread_id_t id = os_thread_init(demo_thread, thread_demo_function);
+ *     if (os_id_is_invalid(id)) {
+ *         printf("Thread %s init failed\n", id.pName);
  *     }
  *     ...
  * }
@@ -103,7 +103,7 @@ static inline os_thread_id_t os_thread_init(os_thread_symbol_t *pThread_symbol, 
  **
  * demo usage:
  *
- * void thread_sample_function(void)
+ * void thread_demo_function(void)
  * {
  *     while(1) {
  *          os_thread_sleep(1000); // Put the thread to sleep mode 1 sec.
@@ -126,7 +126,7 @@ static inline i32p_t os_thread_sleep(u32_t ms)
  **
  * demo usage:
  *
- *    os_thread_resume(sample_id); // The variable sample_id created in above thread init demo.
+ *    os_thread_resume(id); // The variable id created in above thread init demo.
  */
 static inline i32p_t os_thread_resume(os_thread_id_t id)
 {
@@ -144,7 +144,7 @@ static inline i32p_t os_thread_resume(os_thread_id_t id)
  **
  * demo usage:
  *
- *    os_thread_suspend(sample_id); // The variable sample_id created in above thread init demo.
+ *    os_thread_suspend(id); // The variable id created in above thread init demo.
  */
 static inline i32p_t os_thread_suspend(os_thread_id_t id)
 {
@@ -162,7 +162,7 @@ static inline i32p_t os_thread_suspend(os_thread_id_t id)
  **
  * demo usage:
  *
- * void thread_sample_function(void)
+ * void thread_demo_function(void)
  * {
  *     while(1) {
  *          os_thread_yield(); // Put current thread to sleep mode manually.
@@ -185,7 +185,7 @@ static inline i32p_t os_thread_yield(void)
  **
  * demo usage:
  *
- *    os_thread_delete(sample_id); // The variable sample_id created in above thread init demo.
+ *    os_thread_delete(id); // The variable id created in above thread init demo.
  */
 static inline i32p_t os_thread_delete(os_thread_id_t id)
 {
@@ -206,14 +206,14 @@ static inline i32p_t os_thread_delete(os_thread_id_t id)
  **
  * demo usage:
  *
- *    void sample_timer_function(void)
+ *    void demo_timer_function(void)
  *    {
  *        // The function will be called per 1 seconds.
  *    }
  *
- *    os_timer_id_t sample_id = os_timer_init(sample_timer_function, TRUE, 1000u, "sample");
- *     if (os_id_is_invalid(sample_id)) {
- *         printf("Timer %s init failed\n", sample_id.pName);
+ *    os_timer_id_t id = os_timer_init(demo_timer_function, TRUE, 1000u, "demo");
+ *     if (os_id_is_invalid(id)) {
+ *         printf("Timer %s init failed\n", id.pName);
  *     }
  *     ...
  */
@@ -243,7 +243,7 @@ static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, b_t i
  **
  * demo usage:
  *
- *     i32p_t postcode = os_timer_start(sample_id, FALSE, 1000u);
+ *     i32p_t postcode = os_timer_start(id, FALSE, 1000u);
  *     PC_IF(postcode, PC_PASS) {
  *         printf("Timer start successful\n");
  *     }
@@ -264,7 +264,7 @@ static inline i32p_t os_timer_start(os_timer_id_t id, b_t isCycle, u32_t timeout
  **
  * demo usage:
  *
- *     i32p_t postcode = os_timer_stop(sample_id);
+ *     i32p_t postcode = os_timer_stop(id);
  *     PC_IF(postcode, PC_PASS) {
  *         printf("Timer stop successful\n");
  *     }
@@ -285,8 +285,8 @@ static inline i32p_t os_timer_stop(os_timer_id_t id)
  **
  * demo usage:
  *
- *    if(os_timer_busy(sample_id)) {
- *        printf("Timer %s is busy\n", sample_id.pName);
+ *    if(os_timer_busy(id)) {
+ *        printf("Timer %s is busy\n", id.pName);
  *    }
  */
 static inline i32p_t os_timer_busy(os_timer_id_t id)
@@ -324,9 +324,9 @@ static inline u32_t os_timer_system_total_ms(void)
  * demo usage:
  *
  *    // Init a binary semaphore count.
- *     os_sem_id_t sample_id = os_sem_init(0u, 1u, FALSE, "sample");
- *     if (os_id_is_invalid(sample_id)) {
- *         printf("Semaphore %s init failed\n", sample_id.pName);
+ *     os_sem_id_t id = os_sem_init(0u, 1u, FALSE, "demo");
+ *     if (os_id_is_invalid(id)) {
+ *         printf("Semaphore %s init failed\n", id.pName);
  *     }
  *     ...
  */
@@ -353,7 +353,7 @@ static inline os_sem_id_t os_sem_init(u8_t remain, u8_t limit, const char_t *pNa
  **
  * demo usage:
  *
- *     i32p_t postcode = os_sem_take(sample_id, 1000u);
+ *     i32p_t postcode = os_sem_take(id, 1000u);
  *     PC_IF(postcode, PC_PASS_INFO) {
  *         if (postcode == OS_PC_TIMEOUT) {
  *             printf("Semaphore take wait timeout\n");
@@ -364,8 +364,8 @@ static inline os_sem_id_t os_sem_init(u8_t remain, u8_t limit, const char_t *pNa
  *         printf("Semaphore take error: 0x%x\n", postcode);
  *     }
  *
- *     i32p_t postcode = os_sem_take(sample_id, OS_TIME_WAIT_FOREVER);
- *     postcode = os_sem_take(sample_id, 1000u);
+ *     i32p_t postcode = os_sem_take(id, OS_TIME_WAIT_FOREVER);
+ *     postcode = os_sem_take(id, 1000u);
  *     PC_IF(postcode, PC_PASS) {
  *        printf("Semaphore take successful\n");
  *     } else {
@@ -388,7 +388,7 @@ static inline i32p_t os_sem_take(os_sem_id_t id, u32_t timeout_ms)
  **
  * demo usage:
  *
- *     i32p_t postcode = os_sem_give(sample_id);
+ *     i32p_t postcode = os_sem_give(id);
  *     PC_IF(postcode, PC_PASS) {
  *         printf("Semaphore give successful\n");
  *     } else {
@@ -411,7 +411,7 @@ static inline i32p_t os_sem_give(os_sem_id_t id)
  **
  * demo usage:
  *
- *     i32p_t postcode = os_sem_flush(sample_id);
+ *     i32p_t postcode = os_sem_flush(id);
  *     PC_IF(postcode, PC_PASS) {
  *         printf("Semaphore flush successful\n");
  *     } else {
@@ -434,9 +434,9 @@ static inline i32p_t os_sem_flush(os_sem_id_t id)
  **
  * demo usage:
  *
- *     os_mutex_id_t sample_id = os_mutex_init("sample");
- *     if (os_id_is_invalid(sample_id)) {
- *         printf("Mutex %s init failed\n", sample_id.pName);
+ *     os_mutex_id_t id = os_mutex_init("demo");
+ *     if (os_id_is_invalid(id)) {
+ *         printf("Mutex %s init failed\n", id.pName);
  *     }
  *     ...
  */
@@ -463,7 +463,7 @@ static inline os_mutex_id_t os_mutex_init(const char_t *pName)
  **
  * demo usage:
  *
- *     i32p_t postcode = os_mutex_lock(sample_id);
+ *     i32p_t postcode = os_mutex_lock(id);
  *     PC_IF(postcode, PC_PASS) {
  *         printf("Mutex lock successful\n");
  *     } else {
@@ -486,7 +486,7 @@ static inline i32p_t os_mutex_lock(os_mutex_id_t id)
  **
  * demo usage:
  *
- *     i32p_t postcode = os_mutex_unlock(sample_id);
+ *     i32p_t postcode = os_mutex_unlock(id);
  *     PC_IF(postcode, PC_PASS) {
  *         printf("Mutex unlock successful\n");
  *     } else {
@@ -503,29 +503,30 @@ static inline i32p_t os_mutex_unlock(os_mutex_id_t id)
 /**
  * @brief Initialize a new event.
  *
- * @param edgeMask Specific the event desired condition of edge or level.
- * @param clrDisMask Disable automatically clear the set events.
- * @param pName The event name.
+ * @param anyMask: Changed bits always trigger = 1. otherwise, see dirMask below = 0.
+ * @param modeMask: Level trigger = 0, Edge trigger = 1.
+ * @param dirMask: Fall or Low trigger = 0, Rise or high trigger = 1.
+ * @param init: The init signal value.
+ * @param pName: The event name.
  *
  * @return The event unique id.
- *
  **
  * demo usage:
  *
- *     os_evt_id_t sample_id = os_evt_init(0u, 0u, "sample");
- *     if (os_id_is_invalid(sample_id)) {
- *         printf("Event %s init failed\n", sample_id.pName);
+ *     os_evt_id_t id = os_evt_init(1u, 0u, 0u, 0u, "demo");
+ *     if (os_id_is_invalid(id)) {
+ *         printf("Event %s init failed\n", id.pName);
  *     }
  *     ...
  */
-static inline os_evt_id_t os_evt_init(u32_t edgeMask, u32_t clrDisMask, const char_t *pName)
+static inline os_evt_id_t os_evt_init(u32_t anyMask, u32_t modeMask, u32_t dirMask, u32_t init, const char_t *pName)
 {
     extern u32_t _impl_event_os_id_to_number(os_id_t id);
-    extern os_id_t _impl_event_init(u32_t edgeMask, u32_t clrDisMask, const char_t *pName);
+    extern os_id_t _impl_event_init(u32_t anyMask, u32_t modeMask, u32_t dirMask, u32_t init, const char_t *pName);
 
     os_msgq_id_t id = {0u};
 
-    id.val = _impl_event_init(edgeMask, clrDisMask, pName);
+    id.val = _impl_event_init(anyMask, modeMask, dirMask, init, pName);
     id.number = _impl_event_os_id_to_number(id.val);
     id.pName = pName;
 
@@ -544,7 +545,7 @@ static inline os_evt_id_t os_evt_init(u32_t edgeMask, u32_t clrDisMask, const ch
  **
  * demo usage:
  *
- *     i32p_t postcode = os_evt_set(sample_id, 0x01u, 0u, 0u);
+ *     i32p_t postcode = os_evt_set(id, 0u, 0u, 1u);
  *     PC_IF(postcode, PC_PASS) {
  *         printf("Event set successful\n");
  *     } else {
@@ -559,13 +560,11 @@ static inline i32p_t os_evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t to
 }
 
 /**
- * @brief Wait a desired single or group event bits.
+ * @brief Wait a trigger event.
  *
  * @param id The event unique id.
  * @param pEvtData The pointer of event value.
- * @param desired_val If the desired is not zero, All changed bits seen can wake up the thread to handle event.
  * @param listen_mask Current thread listen which bits in the event.
- * @param group_mask To define a group event.
  * @param timeout_ms The event wait timeout setting.
  *
  * @return The result of the operation.
@@ -573,73 +572,29 @@ static inline i32p_t os_evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t to
  * demo usage:
  *
  *     os_evt_val_t evt_val = {0u};
- *     i32p_t postcode = os_evt_wait(sample_id, &evt_val, 0xFFFFFFFu, 0x01u, 0x01u, OS_TIME_WAIT_FOREVER);
+ *     i32p_t postcode = os_evt_wait(id, &evt_val, 1u, OS_TIME_WAIT_FOREVER);
  *     PC_IF(postcode, PC_PASS) {
- *         printf("Event wait successful, The event value is 0x%x\n", evt_val->value);
+ *         printf("Event wait successful, The event value = %x, trigger = %x\n", evt_val->value, evt_val->trigger);
  *     } else {
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  *
- *     postcode = os_evt_wait(sample_id, &evt_val, 0xFFFFFFFu, 0x03u, 0x03u, 1000u);
+ *     postcode = os_evt_wait(id, &evt_val, 1u, 1000u);
  *     PC_IF(postcode, PC_PASS_INFO) {
  *         if (postcode == OS_PC_TIMEOUT) {
  *             printf("Event wait timeout\n");
  *         } else {
- *             printf("Event wait successful, The event value is 0x%x\n", evt_val->value);
+ *             printf("Event wait successful, The event value = %x, trigger = %x\n", evt_val->value, evt_val->trigger);
  *         }
  *     } else {
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  */
-static inline i32p_t os_evt_wait(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t desired_val, u32_t listen_mask, u32_t group_mask,
-                                 u32_t timeout_ms)
+static inline i32p_t os_evt_wait(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t listen_mask, u32_t timeout_ms)
 {
-    extern i32p_t _impl_event_wait(os_id_t id, os_evt_val_t * pEvtData, u32_t desired_val, u32_t listen_mask, u32_t group_mask,
-                                   u32_t timeout_ms);
+    extern i32p_t _impl_event_wait(os_id_t id, os_evt_val_t * pEvtData, u32_t listen_mask, u32_t timeout_ms);
 
-    if (pEvtData) {
-        pEvtData->depth.enable = FALSE;
-    }
-    return (i32p_t)_impl_event_wait(id.val, pEvtData, desired_val, listen_mask, group_mask, timeout_ms);
-}
-
-/**
- * @brief Wait a desired single or group event bits,
- *        but the depth function will search the past event value that from the last waiting timing.
- *
- * @param id The event unique id.
- * @param pEvtData The pointer of event value.
- * @param desired_val If the desired is not zero, All changed bits seen can wake up the thread to handle event.
- * @param listen_mask Current thread listen which bits in the event.
- * @param group_mask To define a group event.
- * @param timeout_ms The event wait timeout setting.
- *
- * @return The result of the operation.
- **
- * demo usage:
- *
- *     os_evt_val_t evt_val = {0u};
- *     i32p_t postcode = os_evt_wait_depth(sample_id, &evt_val, 0xFFFFFFFu, 0x03u, 0x03u, 1000u);
- *     PC_IF(postcode, PC_PASS_INFO) {
- *         if (postcode == OS_PC_TIMEOUT) {
- *             printf("Event wait timeout\n");
- *         } else {
- *             printf("Event wait successful, The event value is 0x%x\n", evt_val->value);
- *         }
- *     } else {
- *         printf("Event wait error: 0x%x\n", postcode);
- *     }
- */
-static inline i32p_t os_evt_wait_depth(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t desired_val, u32_t listen_mask, u32_t group_mask,
-                                       u32_t timeout_ms)
-{
-    extern i32p_t _impl_event_wait(os_id_t id, os_evt_val_t * pEvtData, u32_t desired_val, u32_t listen_mask, u32_t group_mask,
-                                   u32_t timeout_ms);
-
-    if (pEvtData) {
-        pEvtData->depth.enable = TRUE;
-    }
-    return (i32p_t)_impl_event_wait(id.val, pEvtData, desired_val, listen_mask, group_mask, timeout_ms);
+    return (i32p_t)_impl_event_wait(id.val, pEvtData, listen_mask, timeout_ms);
 }
 
 /**
@@ -653,11 +608,11 @@ static inline i32p_t os_evt_wait_depth(os_evt_id_t id, os_evt_val_t *pEvtData, u
  * @return The queue unique id.
  **
  * demo usage:
- *     static u8_t g_sample_msgq[3 * 10] = {0u};
+ *     static u8_t g_demo_msgq[3 * 10] = {0u};
  *
- *     os_msgq_id_t sample_id = os_msgq_init((u8_t*)g_sample_msgq, 3u, 10u, "sample");
- *     if (os_id_is_invalid(sample_id)) {
- *         printf("Message queue %s init failed\n", sample_id.pName);
+ *     os_msgq_id_t id = os_msgq_init((u8_t*)g_demo_msgq, 3u, 10u, "demo");
+ *     if (os_id_is_invalid(id)) {
+ *         printf("Message queue %s init failed\n", id.pName);
  *     }
  */
 static inline os_msgq_id_t os_msgq_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
@@ -688,14 +643,14 @@ static inline os_msgq_id_t os_msgq_init(const void *pQueueBufferAddr, u16_t elem
  * demo usage:
  *
  *     u8_t txdata = 0u;
- *     i32p_t postcode = os_msgq_put(sample_id, &txdata, 0x01u, FALSE, OS_TIME_WAIT_FOREVER);
+ *     i32p_t postcode = os_msgq_put(id, &txdata, 0x01u, FALSE, OS_TIME_WAIT_FOREVER);
  *     PC_IF(postcode, PC_PASS) {
  *         printf("Message queue send successful\n");
  *     } else {
  *         printf("Message queue send error: 0x%x\n", postcode);
  *     }
  *
- *     postcode = os_msgq_put(sample_id, &txdata, 0x01u, TRUE, 1000u);
+ *     postcode = os_msgq_put(id, &txdata, 0x01u, TRUE, 1000u);
  *     PC_IF(postcode, PC_PASS_INFO) {
  *         if (postcode == OS_PC_TIMEOUT) {
  *             printf("Message queue send timeout\n");
@@ -727,14 +682,14 @@ static inline i32p_t os_msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t
  * demo usage:
  *
  *     u8_t rxdata = 0u;
- *     i32p_t postcode = os_msgq_get(sample_id, &rxdata, 0x01u, TRUE, OS_TIME_WAIT_FOREVER);
+ *     i32p_t postcode = os_msgq_get(id, &rxdata, 0x01u, TRUE, OS_TIME_WAIT_FOREVER);
  *     PC_IF(postcode, PC_PASS) {
  *         printf("Message queue receive successful, the rx data is 0x%x\n", rxdata);
  *     } else {
  *         printf("Message queue receive error: 0x%x\n", postcode);
  *     }
  *
- *     postcode = os_msgq_get(sample_id, &rxdata, 0x01u, FALSE, 1000u);
+ *     postcode = os_msgq_get(id, &rxdata, 0x01u, FALSE, 1000u);
  *     PC_IF(postcode, PC_PASS) {
  *         if (postcode == OS_PC_TIMEOUT) {
  *             printf("Message queue receive timeout\n");
@@ -763,11 +718,11 @@ static inline i32p_t os_msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t
  * @return The pool unique id.
  **
  * demo usage:
- *     static u8_t g_sample_pool[3 * 10] = {0u};
+ *     static u8_t g_demo_pool[3 * 10] = {0u};
  *
- *     os_pool_id_t sample_id = os_pool_init((const void*)g_sample_pool, 10u, 3u, "sample");
- *     if (os_id_is_invalid(sample_id)) {
- *         printf("Memory pool %s init failed\n", sample_id.pName);
+ *     os_pool_id_t id = os_pool_init((const void*)g_demo_pool, 10u, 3u, "demo");
+ *     if (os_id_is_invalid(id)) {
+ *         printf("Memory pool %s init failed\n", id.pName);
  *     }
  */
 static inline os_pool_id_t os_pool_init(const void *pMemAddress, u16_t elementLen, u16_t elementNum, const char_t *pName)
@@ -797,14 +752,14 @@ static inline os_pool_id_t os_pool_init(const void *pMemAddress, u16_t elementLe
  * demo usage:
  *
  *     u8_t* pTakeMem = NULL;
- *     i32p_t postcode = os_pool_take(sample_id, (void **)&pTakeMem, 10u, OS_TIME_WAIT_FOREVER);
+ *     i32p_t postcode = os_pool_take(id, (void **)&pTakeMem, 10u, OS_TIME_WAIT_FOREVER);
  *     PC_IF(postcode, PC_PASS) {
  *         printf("Memory pool take successful\n");
  *     } else {
  *         printf("Memory pool take error: 0x%x\n", postcode);
  *     }
  *
- *     i32p_t postcode = os_pool_take(sample_id, (void **)&pTakeMem, 10u, 2000u);
+ *     i32p_t postcode = os_pool_take(id, (void **)&pTakeMem, 10u, 2000u);
  *     PC_IF(postcode, PC_PASS_INFO) {
  *         if (postcode == OS_PC_TIMEOUT) {
  *             printf("Memory pool take timeout\n");
@@ -833,11 +788,11 @@ static inline i32p_t os_pool_take(os_pool_id_t id, void **ppUserBuffer, u16_t bu
  * demo usage:
  *
  *     u8_t* pTakeMem = NULL;
- *     i32p_t postcode = os_pool_take(sample_id, (void **)&pTakeMem, 10u, OS_TIME_WAIT_FOREVER);
+ *     i32p_t postcode = os_pool_take(id, (void **)&pTakeMem, 10u, OS_TIME_WAIT_FOREVER);
  *     PC_IF(postcode, PC_PASS) {
  *         printf("Memory pool take successful\n");
  *
- *         i32p_t postcode = os_pool_release(sample_id, (void **)&pTakeMem);
+ *         i32p_t postcode = os_pool_release(id, (void **)&pTakeMem);
  *         PC_IF(postcode, PC_PASS) {
  *             printf("Memory pool release successful\n");
  *         } else {
@@ -865,7 +820,7 @@ static inline i32p_t os_pool_release(os_pool_id_t id, void **ppUserBuffer)
  **
  * demo usage:
  *
- *     os_publish_id_t id = os_publish_init("sample");
+ *     os_publish_id_t id = os_publish_init("demo");
  *     if (os_id_is_invalid(id)) {
  *         printf("Message publisher %s init failed\n", id.pName);
  *     }
@@ -918,7 +873,7 @@ static inline i32p_t os_publish_data_submit(os_publish_id_t id, const void *pPub
  **
  * demo usage:
  *
- *     os_subscribe_id_t id = os_subscribe_init("sample");
+ *     os_subscribe_id_t id = os_subscribe_init("demo");
  *     if (os_id_is_invalid(id)) {
  *         printf("Message subscriber %s init failed\n", id.pName);
  *     }
@@ -1006,9 +961,9 @@ static inline i32p_t os_subscribe_data_apply(os_subscribe_id_t subscribe_id, voi
  **
  * demo usage:
  *
- *     os_mutex_id_t sample_id = mutex_init("sample");
- *     if (os_id_is_invalid(sample_id)) {
- *         printf("Mutex %s init failed\n", sample_id.pName);
+ *     os_mutex_id_t id = mutex_init("demo");
+ *     if (os_id_is_invalid(id)) {
+ *         printf("Mutex %s init failed\n", id.pName);
  *     }
  *     ...
  */
@@ -1137,10 +1092,9 @@ typedef struct {
     i32p_t (*mutex_lock)(os_mutex_id_t);
     i32p_t (*mutex_unlock)(os_mutex_id_t);
 
-    os_evt_id_t (*evt_init)(u32_t, u32_t, const char_t *);
+    os_evt_id_t (*evt_init)(u32_t, u32_t, u32_t, u32_t, const char_t *);
     i32p_t (*evt_set)(os_evt_id_t, u32_t, u32_t, u32_t);
-    i32p_t (*evt_wait)(os_evt_id_t, os_evt_val_t *, u32_t, u32_t, u32_t, u32_t);
-    i32p_t (*evt_wait_depth)(os_evt_id_t, os_evt_val_t *, u32_t, u32_t, u32_t, u32_t);
+    i32p_t (*evt_wait)(os_evt_id_t, os_evt_val_t *, u32_t, u32_t);
 
     os_msgq_id_t (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
     i32p_t (*msgq_put)(os_msgq_id_t, const u8_t *, u16_t, b_t, u32_t);

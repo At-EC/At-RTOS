@@ -111,11 +111,9 @@ static void _event_schedule(os_id_t id)
         pEntryThread->schedule.entry.result = _PCER;
         return;
     }
-
     if ((pEntryThread->schedule.entry.result != 0) && (pEntryThread->schedule.entry.result != PC_OS_WAIT_TIMEOUT)) {
         return;
     }
-
     pEntry = &pEntryThread->schedule.entry;
     if (!timer_busy(kernel_member_unified_id_threadToTimer(pEntryThread->head.id))) {
         if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_TIMER_INTERNAL) {
@@ -130,10 +128,52 @@ static void _event_schedule(os_id_t id)
         pEntry->result = _PCER;
     }
 
+    if (isAvail) {
+        u32_t changed, any, edge, level, trigger = 0u;
+        event_context_t *pCurEvent = _event_object_contextGet(pEntryThread->schedule.hold);
+        os_evt_val_t *pEvtVal = pEntryThread->event.pEvtVal;
+        changed = pEvtVal->value ^ pCurEvent->value;
+
+        if (changed) {
+            // Any position
+            any = pCurEvent->anyMask;
+
+            // Changings trigger.
+            trigger = any & changed;
+
+            // Edge position
+            edge = pCurEvent->modeMask;
+            edge &= ~pCurEvent->anyMask;
+
+            // Edge rise trigger.
+            trigger |= edge & pCurEvent->value & pCurEvent->dirMask & changed;
+
+            // Edge fall trigger.
+            trigger |= edge & ~pCurEvent->value & ~pCurEvent->dirMask & changed;
+
+            // Level position
+            level = ~pCurEvent->modeMask;
+            level &= ~pCurEvent->anyMask;
+
+            // Level high trigger.
+            trigger |= level & pCurEvent->value & pCurEvent->dirMask & changed;
+
+            // Level low trigger.
+            trigger |= level & ~pCurEvent->value & ~pCurEvent->dirMask & changed;
+        }
+        // Triggered bits
+        trigger |= pCurEvent->triggered;
+
+        pEvtVal->value = pCurEvent->value;
+        u32_t report = trigger & pEntryThread->event.listen;
+        if (report) {
+            pEvtVal->trigger = trigger;
+            pCurEvent->triggered &= ~report;
+        }
+    }
+
     /* Auto clear user configuration */
     pEntryThread->event.listen = 0u;
-    pEntryThread->event.trigger = 0u;
-    pEntryThread->event.group = 0u;
     pEntryThread->event.pEvtVal = NULL;
 
     if (isAvail) {
@@ -162,9 +202,11 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    u32_t edgeMask = (u32_t)(pArgs[0].u32_val);
-    u32_t clrDisMask = (u32_t)(pArgs[1].u32_val);
-    const char_t *pName = (const char_t *)(pArgs[2].pch_val);
+    u32_t anyMask = (u32_t)(pArgs[0].u32_val);
+    u32_t modeMask = (u32_t)(pArgs[1].u32_val);
+    u32_t dirMask = (u32_t)(pArgs[2].u32_val);
+    u32_t init = (u32_t)(pArgs[3].u32_val);
+    const char_t *pName = (const char_t *)(pArgs[4].pch_val);
     u32_t endAddr = 0u;
     event_context_t *pCurEvent = NULL;
 
@@ -184,9 +226,11 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
         pCurEvent->head.id = id;
         pCurEvent->head.pName = pName;
 
-        os_memset((char_t *)pCurEvent->value, 0x0u, OS_EVENT_POOL_DEPTH);
-        pCurEvent->edgeMask = edgeMask;
-        pCurEvent->clearMask = ~clrDisMask;
+        pCurEvent->value = init;
+        pCurEvent->triggered = 0u;
+        pCurEvent->anyMask = anyMask;
+        pCurEvent->modeMask = modeMask;
+        pCurEvent->dirMask = dirMask;
         pCurEvent->call.pCallbackFunc = NULL;
 
         _event_list_transfer_toInit((linker_head_t *)&pCurEvent->head);
@@ -216,60 +260,71 @@ static i32p_t _event_set_privilege_routine(arguments_t *pArgs)
     u32_t clear = (u32_t)pArgs[2].u32_val;
     u32_t toggle = (u32_t)pArgs[3].u32_val;
 
-    i32p_t postcode = 0;
     event_context_t *pCurEvent = _event_object_contextGet(id);
-    u32_t idx = pCurEvent->index;
-    u32_t val = pCurEvent->value[idx];
+    u32_t val = pCurEvent->value;
+    u32_t changed, any, edge, level, trigger = 0u;
+    i32p_t postcode = 0;
 
-    /* clear bits */
+    /// Clear bits
     val &= ~clear;
-    /* set bits */
+    // Set bits
     val |= set;
-    /* toggle bits */
+    // Toggle bits
     val ^= toggle;
 
-    /* Edge trigger */
-    u32_t trigger = (val ^ pCurEvent->value[idx]) & pCurEvent->edgeMask;
+    changed = val ^ pCurEvent->value;
 
-    /* Level trigger */
-    trigger |= val & (~pCurEvent->edgeMask);
+    // Any position
+    any = pCurEvent->anyMask;
 
-    /* Order new index and value*/
-    idx = (idx + 1) % OS_EVENT_POOL_DEPTH;
-    pCurEvent->value[idx] = val;
-    pCurEvent->index = idx;
+    // Changings trigger.
+    trigger = any & changed;
 
+    // Edge position
+    edge = pCurEvent->modeMask;
+    edge &= ~pCurEvent->anyMask;
+
+    // Edge rise trigger.
+    trigger |= edge & val & pCurEvent->dirMask & changed;
+
+    // Edge fall trigger.
+    trigger |= edge & ~val & ~pCurEvent->dirMask & changed;
+
+    // Level position
+    level = ~pCurEvent->modeMask;
+    level &= ~pCurEvent->anyMask;
+
+    // Level high trigger.
+    trigger |= level & val & pCurEvent->dirMask & changed;
+
+    // Level low trigger.
+    trigger |= level & ~val & ~pCurEvent->dirMask & changed;
+
+    // Triggered bits
+    trigger |= pCurEvent->triggered;
+
+    u32_t report, reported = 0u;
     list_iterator_t it = {0u};
     list_iterator_init(&it, _event_list_blockingHeadGet(id));
     thread_context_t *pCurThread = (thread_context_t *)list_iterator_next(&it);
     while (pCurThread) {
-        /* set = desired-trigger bits & listening bits */
-        u32_t set = ~(trigger ^ pCurThread->event.trigger) & pCurThread->event.listen;
+        report = trigger & pCurThread->event.listen;
 
-        if (set) {
-            pCurThread->event.pEvtVal->value |= set;
+        if (report) {
+            reported |= report;
+            pCurThread->event.pEvtVal->trigger = trigger;
+            pCurThread->event.pEvtVal->value = val;
 
-            if (pCurThread->event.group) {
-                if (pCurThread->event.group == (pCurThread->event.pEvtVal->value & pCurThread->event.group)) {
-                    /* group */
-                    pCurThread->event.pEvtVal->depth.location = pCurEvent->index;
-                    postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, 0, _event_schedule);
-                }
-            } else {
-                if (pCurThread->event.pEvtVal->value) {
-                    /* single */
-                    pCurThread->event.pEvtVal->depth.location = pCurEvent->index;
-                    postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, 0, _event_schedule);
-                }
-            }
-
+            postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, 0, _event_schedule);
             PC_IF(postcode, PC_ERROR)
             {
                 break;
             }
-            pCurThread = (thread_context_t *)list_iterator_next(&it);
         }
+        pCurThread = (thread_context_t *)list_iterator_next(&it);
     }
+    pCurEvent->triggered = (~reported) & trigger;
+    pCurEvent->value = val;
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -288,62 +343,57 @@ static i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     os_evt_val_t *pEvtData = (os_evt_val_t *)pArgs[1].pv_val;
-    u32_t trigger = (u32_t)pArgs[2].u32_val;
-    u32_t listen = (u32_t)pArgs[3].u32_val;
-    u32_t group = (u32_t)pArgs[4].u32_val;
-    u32_t timeout_ms = (u32_t)pArgs[5].u32_val;
+    u32_t listen = (u32_t)pArgs[2].u32_val;
+    u32_t timeout_ms = (u32_t)pArgs[3].u32_val;
     i32p_t postcode = 0;
 
     thread_context_t *pCurThread = kernel_thread_runContextGet();
-    pCurThread->event.listen = listen;
-    pCurThread->event.trigger = trigger;
-    pCurThread->event.group = group;
-    pCurThread->event.pEvtVal = pEvtData;
-
     event_context_t *pCurEvent = _event_object_contextGet(id);
-    u32_t record = 0u;
+    pCurThread->event.listen = listen;
+    pCurThread->event.pEvtVal = pEvtData;
+    u32_t val = pEvtData->value;
+    u32_t changed, any, edge, level, trigger = 0u;
 
-    /* reset event value */
-    pEvtData->value = 0u;
+    changed = val ^ pCurEvent->value;
+    if (changed) {
+        // Any position
+        any = pCurEvent->anyMask;
 
-    if (!pEvtData->depth.active) {
-        pEvtData->depth.active = TRUE;
-        pEvtData->depth.location = (pCurEvent->index + 1u) % OS_EVENT_POOL_DEPTH;
+        // Changings trigger.
+        trigger = any & changed;
+
+        // Edge position
+        edge = pCurEvent->modeMask;
+        edge &= ~pCurEvent->anyMask;
+
+        // Edge rise trigger.
+        trigger |= edge & pCurEvent->value & pCurEvent->dirMask & changed;
+
+        // Edge fall trigger.
+        trigger |= edge & ~pCurEvent->value & ~pCurEvent->dirMask & changed;
+
+        // Level position
+        level = ~pCurEvent->modeMask;
+        level &= ~pCurEvent->anyMask;
+
+        // Level high trigger.
+        trigger |= level & pCurEvent->value & pCurEvent->dirMask & changed;
+
+        // Level low trigger.
+        trigger |= level & ~pCurEvent->value & ~pCurEvent->dirMask & changed;
     }
 
-    if (!pEvtData->depth.enable) {
-        record = pCurEvent->value[pCurEvent->index];
-    } else {
-        u8_t i = 0u;
-        u8_t idx = pEvtData->depth.location;
-        while ((idx != pCurEvent->index) && (i < OS_EVENT_POOL_DEPTH)) {
-            idx = (pEvtData->depth.location + i) % OS_EVENT_POOL_DEPTH;
-            record |= pCurEvent->value[idx];
-            i++;
-        };
-    }
-    /* It'll be updated again when event trigger successful */
-    pEvtData->depth.location = pCurEvent->index;
+    // Triggered bits
+    trigger |= pCurEvent->triggered;
 
-    /* set = desired-trigger bits & listening bits */
-    u32_t set = ~(record ^ pCurThread->event.trigger) & pCurThread->event.listen;
+    pEvtData->value = val;
+    u32_t report = trigger & pCurThread->event.listen;
+    if (report) {
+        pEvtData->trigger = trigger;
+        pCurEvent->triggered &= ~report;
 
-    if (set) {
-        pCurThread->event.pEvtVal->value |= set;
-
-        if (pCurThread->event.group) {
-            if (pCurThread->event.group == (pCurThread->event.pEvtVal->value & pCurThread->event.group)) {
-                /* group */
-                EXIT_CRITICAL_SECTION();
-                return postcode;
-            }
-        } else {
-            if (pCurThread->event.pEvtVal->value) {
-                /* single */
-                EXIT_CRITICAL_SECTION();
-                return postcode;
-            }
-        }
+        EXIT_CRITICAL_SECTION();
+        return postcode;
     }
 
     postcode =
@@ -377,18 +427,19 @@ u32_t _impl_event_os_id_to_number(os_id_t id)
 /**
  * @brief Initialize a new event.
  *
- * @param edgeMask specific the event desired condition of edge or level.
- * @param clearMask automatically clear the set events.
- * @param pName The event name.
+ * @param anyMask: Changed bits always trigger = 1. otherwise, see dirMask below = 0.
+ * @param modeMask: Level trigger = 0, Edge trigger = 1.
+ * @param dirMask: Fall or Low trigger = 0, Rise or high trigger = 1.
+ * @param init: The init signal value.
+ * @param pName: The event name.
  *
  * @return The event unique id.
  */
-os_id_t _impl_event_init(u32_t edgeMask, u32_t clrDisMask, const char_t *pName)
+os_id_t _impl_event_init(u32_t anyMask, u32_t modeMask, u32_t dirMask, u32_t init, const char_t *pName)
 {
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)edgeMask},
-        [1] = {.u32_val = (u32_t)clrDisMask},
-        [2] = {.pch_val = (const char_t *)pName},
+        [0] = {.u32_val = (u32_t)anyMask}, [1] = {.u32_val = (u32_t)modeMask},       [2] = {.u32_val = (u32_t)dirMask},
+        [3] = {.u32_val = (u32_t)init},    [4] = {.pch_val = (const char_t *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_event_init_privilege_routine, arguments);
@@ -400,12 +451,12 @@ i32p_t _impl_event_wait_callfunc_register(pEvent_callbackFunc_t pCallFun)
 }
 
 /**
- * @brief Set/clear/toggle a event bits.
+ * @brief Set/clear/toggle event signal bits.
  *
- * @param id The event unique id.
- * @param set The event value bits set.
- * @param clear The event value bits clear.
- * @param toggle The event value bits toggle.
+ * @param id: Event unique id.
+ * @param set: Event value bits set.
+ * @param clear: Event value bits clear.
+ * @param toggle: Event value bits toggle.
  *
  * @return The result of the operation.
  */
@@ -430,18 +481,16 @@ i32p_t _impl_event_set(os_id_t id, u32_t set, u32_t clear, u32_t toggle)
 }
 
 /**
- * @brief Wait a target event.
+ * @brief Wait a trigger event.
  *
  * @param id The event unique id.
  * @param pEvtData The pointer of event value.
- * @param trigger If the trigger is not zero, All changed bits seen can wake up the thread to handle event.
  * @param listen_mask Current thread listen which bits in the event.
- * @param group_mask To define a group event.
  * @param timeout_ms The event wait timeout setting.
  *
  * @return The result of the operation.
  */
-i32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t trigger, u32_t listen_mask, u32_t group_mask, u32_t timeout_ms)
+i32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t listen_mask, u32_t timeout_ms)
 {
     if (_event_id_isInvalid(id)) {
         return _PCER;
@@ -464,8 +513,10 @@ i32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t trigger, u32_t
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},          [1] = {.pv_val = (void *)pEvtData},   [2] = {.u32_val = (u32_t)trigger},
-        [3] = {.u32_val = (u32_t)listen_mask}, [4] = {.u32_val = (u32_t)group_mask}, [5] = {.u32_val = (u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)id},
+        [1] = {.pv_val = (void *)pEvtData},
+        [2] = {.u32_val = (u32_t)listen_mask},
+        [3] = {.u32_val = (u32_t)timeout_ms},
     };
 
     i32p_t postcode = kernel_privilege_invoke((const void *)_event_wait_privilege_routine, arguments);
@@ -529,8 +580,8 @@ b_t event_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     pMsgs->id = pCurEvent->head.id;
     pMsgs->pName = pCurEvent->head.pName;
 
-    pMsgs->event.set = pCurEvent->value[pCurEvent->index];
-    pMsgs->event.edge = pCurEvent->edgeMask;
+    pMsgs->event.set = pCurEvent->value;
+    pMsgs->event.edge = pCurEvent->modeMask;
     pMsgs->event.wait_list = pCurEvent->blockingThreadHead;
 
     EXIT_CRITICAL_SECTION();

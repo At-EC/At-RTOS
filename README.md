@@ -173,10 +173,10 @@ The following sample codes illustrate how to create your first thread:
 #include "at_rtos.h"
 
 /* Define a thread hook to specific the stack size and prioriy of the thread */
-OS_THREAD_DEFINE(your_thread_define, 1024, 7); // Set the thread stack size to 1024 bytes and the schedule prioriy level to 7.
+OS_THREAD_DEFINE(defined_thread, 1024, 7); // Set the thread stack size to 1024 bytes and the schedule prioriy level to 7.
 
 /* User thread's entry function. */
-static void your_thread_entry_function(void)
+static void the_thread_entry_function(void)
 {
     while(1) {
         os.thread_sleep(1000u);
@@ -187,13 +187,15 @@ static void your_thread_entry_function(void)
 int main(void)
 {
     /* Initialize the your your thread. */
-    os_thread_id_t your_thread_id = os.thread_init(your_thread_define, your_thread_entry_function);
-    if (os.id_isInvalid(your_thread_id)) {
-        printf("Thread %s init failed\n", your_thread_id.pName);
+    os_thread_id_t id = os.thread_init(defined_thread, the_thread_entry_function);
+    if (os.id_isInvalid(id)) {
+        printf("Thread %s init failed\n", id.pName);
     }
 	
     /* The At-RTOS kernel schedule starts to run. */
     os.schedule_run();
+	
+	RUN_UNREACHABLE();
 }
 ```
 
