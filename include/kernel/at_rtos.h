@@ -534,6 +534,21 @@ static inline os_evt_id_t os_evt_init(u32_t anyMask, u32_t modeMask, u32_t dirMa
 }
 
 /**
+ * @brief Read or write the event signal value.
+ *
+ * @param id: Event unique id.
+ * @param pValue: The pointer of the private event value.
+ *
+ * @return The result of the operation.
+ */
+static inline i32p_t os_evt_value_get(os_evt_id_t id, u32_t *pValue)
+{
+    extern i32p_t _impl_event_value_get(os_id_t id, u32_t * pValue);
+
+    return (i32p_t)_impl_event_value_get(id.val, pValue);
+}
+
+/**
  * @brief Set/clear/toggle a event bits.
  *
  * @param id The event unique id.

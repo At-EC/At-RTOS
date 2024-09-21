@@ -251,6 +251,26 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
+static i32p_t _event_value_get_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    os_id_t id = (os_id_t)pArgs[0].u32_val;
+    u32_t *pValue = (u32_t *)pArgs[1].pv_val;
+    event_context_t *pCurEvent = _event_object_contextGet(id);
+    *pValue = pCurEvent->value;
+
+    EXIT_CRITICAL_SECTION();
+    return 0u;
+}
+
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
 static i32p_t _event_set_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
@@ -448,6 +468,32 @@ os_id_t _impl_event_init(u32_t anyMask, u32_t modeMask, u32_t dirMask, u32_t ini
 i32p_t _impl_event_wait_callfunc_register(pEvent_callbackFunc_t pCallFun)
 {
     return 0u;
+}
+
+/**
+ * @brief Read or write the event signal value.
+ *
+ * @param id: Event unique id.
+ * @param pValue: The pointer of the private event value.
+ *
+ * @return The result of the operation.
+ */
+i32p_t _impl_event_value_get(os_id_t id, u32_t *pValue)
+{
+    if (_event_id_isInvalid(id)) {
+        return _PCER;
+    }
+
+    if (!_event_object_isInit(id)) {
+        return _PCER;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (u32_t)id},
+        [1] = {.pv_val = (void *)pValue},
+    };
+
+    return kernel_privilege_invoke((const void *)_event_value_get_privilege_routine, arguments);
 }
 
 /**
