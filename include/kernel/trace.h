@@ -71,7 +71,7 @@ typedef struct {
 } pool_snapshot_t;
 
 typedef struct {
-    b_t is_cycle;
+    u8_t cycle;
 
     u32_t timeout_ms;
 } timer_snapshot_t;

@@ -23,10 +23,18 @@ extern "C" {
 #define OS_PC_AVAILABLE   (PC_OS_WAIT_AVAILABLE)
 #define OS_PC_UNAVAILABLE (PC_OS_WAIT_UNAVAILABLE)
 
-#define OS_ID_INVALID        (OS_INVALID_ID_VAL)
-#define OS_TIME_WAIT_FOREVER (OS_TIME_FOREVER_VAL)
+#define OS_ID_INVALID (OS_INVALID_ID_VAL)
+#define OS_SEM_BINARY (1u)
+
+typedef u32_t os_timeout_t;
 #define OS_TIME_NOWAIT       (OS_TIME_NOWAIT_VAL)
-#define OS_SEM_BINARY        (1u)
+#define OS_TIME_WAIT_FOREVER (OS_TIME_FOREVER_VAL)
+
+typedef enum {
+    OS_TIMER_CTRL_ONCE = (TIMER_CTRL_ONCE_VAL),
+    OS_TIMER_CTRL_CYCLE = (TIMER_CTRL_CYCLE_VAL),
+    OS_TIMER_CTRL_TEMPORARY = (TIMER_CTRL_TEMPORARY_VAL),
+} os_timer_ctrl_t;
 
 #define OS_PRIORITY_INVALID             (OS_PRIOTITY_INVALID_LEVEL)
 #define OS_PRIORITY_APPLICATION_LOWEST  (OS_PRIOTITY_LOWEST_LEVEL - 1u)
@@ -195,10 +203,10 @@ static inline i32p_t os_thread_delete(os_thread_id_t id)
 }
 
 /**
- * @brief Initialize a timer.
+ * @brief Initialize a new timer, or allocate a temporary timer to run.
  *
  * @param pCallFun The timer entry function pointer.
- * @param isCycle It indicates the timer if it's cycle repeat.
+ * @param control It defines the timer running mode.
  * @param timeout_ms The expired time.
  * @param pName The timer's name, it supported NULL pointer.
  *
@@ -211,20 +219,21 @@ static inline i32p_t os_thread_delete(os_thread_id_t id)
  *        // The function will be called per 1 seconds.
  *    }
  *
- *    os_timer_id_t id = os_timer_init(demo_timer_function, TRUE, 1000u, "demo");
+ *    os_timer_id_t id = os_timer_init(demo_timer_function, OS_TIME_CTRL_CYCLE, 1000u, "demo");
  *     if (os_id_is_invalid(id)) {
  *         printf("Timer %s init failed\n", id.pName);
  *     }
  *     ...
  */
-static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, b_t isCycle, u32_t timeout_ms, const char_t *pName)
+static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, os_timer_ctrl_t control, os_timeout_t timeout_ms,
+                                          const char_t *pName)
 {
     extern u32_t _impl_timer_os_id_to_number(u32_t id);
-    extern os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t timeout_ms, const char_t *pName);
+    extern os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, u8_t control, u32_t timeout_ms, const char_t *pName);
 
     os_timer_id_t id = {0u};
 
-    id.val = _impl_timer_init(pEntryFun, isCycle, timeout_ms, pName);
+    id.val = _impl_timer_init(pEntryFun, (u8_t)control, (u32_t)timeout_ms, pName);
     id.number = _impl_timer_os_id_to_number(id.val);
     id.pName = pName;
 
@@ -236,7 +245,7 @@ static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, b_t i
  *        the new resume will override it.
  *
  * @param id The timer unique id.
- * @param isCycle It indicates the timer if it's cycle repeat.
+ * @param control It defines the timer running mode.
  * @param timeout_ms The timer expired time.
  *
  * @return The result of timer start operation.
@@ -248,11 +257,11 @@ static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, b_t i
  *         printf("Timer start successful\n");
  *     }
  */
-static inline i32p_t os_timer_start(os_timer_id_t id, b_t isCycle, u32_t timeout_ms)
+static inline i32p_t os_timer_start(os_timer_id_t id, os_timer_ctrl_t control, os_timeout_t timeout_ms)
 {
-    extern i32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms);
+    extern i32p_t _impl_timer_start(os_id_t id, u8_t control, u32_t timeout_ms);
 
-    return (i32p_t)_impl_timer_start(id.val, isCycle, timeout_ms);
+    return (i32p_t)_impl_timer_start(id.val, (u8_t)control, (u32_t)timeout_ms);
 }
 
 /**
@@ -605,11 +614,11 @@ static inline i32p_t os_evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t to
  *         printf("Event wait error: 0x%x\n", postcode);
  *     }
  */
-static inline i32p_t os_evt_wait(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t listen_mask, u32_t timeout_ms)
+static inline i32p_t os_evt_wait(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t listen_mask, os_timeout_t timeout_ms)
 {
     extern i32p_t _impl_event_wait(os_id_t id, os_evt_val_t * pEvtData, u32_t listen_mask, u32_t timeout_ms);
 
-    return (i32p_t)_impl_event_wait(id.val, pEvtData, listen_mask, timeout_ms);
+    return (i32p_t)_impl_event_wait(id.val, pEvtData, listen_mask, (u32_t)timeout_ms);
 }
 
 /**
@@ -676,11 +685,11 @@ static inline os_msgq_id_t os_msgq_init(const void *pQueueBufferAddr, u16_t elem
  *         printf("Message queue send error: 0x%x\n", postcode);
  *     }
  */
-static inline i32p_t os_msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms)
+static inline i32p_t os_msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, os_timeout_t timeout_ms)
 {
     extern i32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms);
 
-    return (i32p_t)_impl_queue_send(id.val, pUserBuffer, bufferSize, isToFront, timeout_ms);
+    return (i32p_t)_impl_queue_send(id.val, pUserBuffer, bufferSize, isToFront, (u32_t)timeout_ms);
 }
 
 /**
@@ -715,11 +724,11 @@ static inline i32p_t os_msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t
  *         printf("Message queue receive error: 0x%x\n", postcode);
  *     }
  */
-static inline i32p_t os_msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms)
+static inline i32p_t os_msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, os_timeout_t timeout_ms)
 {
     extern i32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms);
 
-    return (i32p_t)_impl_queue_receive(id.val, pUserBuffer, bufferSize, isFromBack, timeout_ms);
+    return (i32p_t)_impl_queue_receive(id.val, pUserBuffer, bufferSize, isFromBack, (u32_t)timeout_ms);
 }
 
 /**
@@ -785,11 +794,11 @@ static inline os_pool_id_t os_pool_init(const void *pMemAddress, u16_t elementLe
  *         printf("Memory pool take error: 0x%x\n", postcode);
  *     }
  */
-static inline i32p_t os_pool_take(os_pool_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms)
+static inline i32p_t os_pool_take(os_pool_id_t id, void **ppUserBuffer, u16_t bufferSize, os_timeout_t timeout_ms)
 {
     extern i32p_t _impl_pool_take(os_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms);
 
-    return (i32p_t)_impl_pool_take(id.val, ppUserBuffer, bufferSize, timeout_ms);
+    return (i32p_t)_impl_pool_take(id.val, ppUserBuffer, bufferSize, (u32_t)timeout_ms);
 }
 
 /**
@@ -1092,14 +1101,14 @@ typedef struct {
     i32p_t (*thread_yield)(void);
     i32p_t (*thread_delete)(os_thread_id_t);
 
-    os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, b_t, u32_t, const char_t *);
-    i32p_t (*timer_start)(os_timer_id_t, b_t, u32_t);
+    os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, os_timer_ctrl_t, os_timeout_t, const char_t *);
+    i32p_t (*timer_start)(os_timer_id_t, os_timer_ctrl_t, os_timeout_t);
     i32p_t (*timer_stop)(os_timer_id_t);
     i32p_t (*timer_busy)(os_timer_id_t);
     u32_t (*timer_system_total_ms)(void);
 
     os_sem_id_t (*sem_init)(u8_t, u8_t, const char_t *);
-    i32p_t (*sem_take)(os_sem_id_t, u32_t);
+    i32p_t (*sem_take)(os_sem_id_t, os_timeout_t);
     i32p_t (*sem_give)(os_sem_id_t);
     i32p_t (*sem_flush)(os_sem_id_t);
 
@@ -1109,14 +1118,14 @@ typedef struct {
 
     os_evt_id_t (*evt_init)(u32_t, u32_t, u32_t, u32_t, const char_t *);
     i32p_t (*evt_set)(os_evt_id_t, u32_t, u32_t, u32_t);
-    i32p_t (*evt_wait)(os_evt_id_t, os_evt_val_t *, u32_t, u32_t);
+    i32p_t (*evt_wait)(os_evt_id_t, os_evt_val_t *, u32_t, os_timeout_t);
 
     os_msgq_id_t (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
-    i32p_t (*msgq_put)(os_msgq_id_t, const u8_t *, u16_t, b_t, u32_t);
-    i32p_t (*msgq_get)(os_msgq_id_t, const u8_t *, u16_t, b_t, u32_t);
+    i32p_t (*msgq_put)(os_msgq_id_t, const u8_t *, u16_t, b_t, os_timeout_t);
+    i32p_t (*msgq_get)(os_msgq_id_t, const u8_t *, u16_t, b_t, os_timeout_t);
 
     os_pool_id_t (*pool_init)(const void *, u16_t, u16_t, const char_t *);
-    i32p_t (*pool_take)(os_pool_id_t, void **, u16_t, u32_t);
+    i32p_t (*pool_take)(os_pool_id_t, void **, u16_t, os_timeout_t);
     i32p_t (*pool_release)(os_pool_id_t, void **);
 
     os_publish_id_t (*publish_init)(const char_t *);

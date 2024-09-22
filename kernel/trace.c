@@ -166,7 +166,7 @@ void _impl_trace_kernel_snapshot_print(void)
     for (u32_t i = 0u; i < TIMER_INSTANCE_SUPPORTED_NUMBER; i++) {
         if (timer_snapshot(i, &snapshot_data)) {
             KTRACE("   %-6d %-15s %-5d %-7s %-1d %-11d\n", (i + 1u), snapshot_data.pName, snapshot_data.id, snapshot_data.pState,
-                   snapshot_data.timer.is_cycle, snapshot_data.timer.timeout_ms);
+                   snapshot_data.timer.cycle, snapshot_data.timer.timeout_ms);
         } else {
             unused[5]++;
         }

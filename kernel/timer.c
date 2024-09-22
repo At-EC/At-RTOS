@@ -127,8 +127,7 @@ static void _timer_list_remove_fromWaitList(linker_head_t *pCurHead)
  *
  * @retval NONE .
  */
-/* TODO
-static void _timer_list_transfer_toUninitialized(linker_head_t *pCurHead)
+static void _timer_list_transfer_toNoInitList(linker_head_t *pCurHead)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -136,7 +135,6 @@ static void _timer_list_transfer_toUninitialized(linker_head_t *pCurHead)
 
     EXIT_CRITICAL_SECTION();
 }
-*/
 
 /**
  * @brief Push one timer context into stoping list.
@@ -319,7 +317,7 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].ptr_val);
-    b_t isCycle = (b_t)(pArgs[1].b_val);
+    u8_t ctrl = (u8_t)(pArgs[1].u8_val);
     u32_t timeout_ms = (u32_t)(pArgs[2].u32_val);
     const char_t *pName = (const char_t *)pArgs[3].pch_val;
     u32_t endAddr = 0u;
@@ -341,12 +339,18 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
         pCurTimer->head.id = id;
         pCurTimer->head.pName = pName;
 
-        pCurTimer->isCycle = isCycle;
+        pCurTimer->control = ctrl;
         pCurTimer->timeout_ms = timeout_ms;
         pCurTimer->duration_us = 0u;
         pCurTimer->callEntry.pTimerCallEntry = pCallFun;
 
-        _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
+        if (ctrl == TIMER_CTRL_TEMPORARY_VAL) {
+            pCurTimer->duration_us = timeout_ms * 1000u;
+            _timer_list_transfer_toWaitList((linker_head_t *)&pCurTimer->head);
+            _timer_schedule();
+        } else {
+            _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
+        }
 
         EXIT_CRITICAL_SECTION();
         return id;
@@ -368,13 +372,13 @@ static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    b_t isCycle = (b_t)pArgs[1].b_val;
+    u8_t ctrl = (u8_t)pArgs[1].u8_val;
     u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
     timer_context_t *pCurTimer = NULL;
 
     pCurTimer = _timer_object_contextGet(id);
     pCurTimer->timeout_ms = timeout_ms;
-    pCurTimer->isCycle = isCycle;
+    pCurTimer->control = ctrl;
 
     if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
         _timer_list_remove_fromWaitList((linker_head_t *)&pCurTimer->head);
@@ -484,20 +488,24 @@ u32_t _impl_timer_os_id_to_number(u32_t id)
 }
 
 /**
- * @brief Initialize a new timer.
+ * @brief Initialize a new timer, or allocate a temporary timer to run.
  *
  * @param pCallFun The timer entry function pointer.
- * @param isCycle It indicates the timer if it's cycle repeat.
+ * @param control It defines the timer mode.
  * @param timeout_ms The expired time.
  * @param pName The timer's name, it supported NULL pointer.
  *
  * @return The value of the timer unique id.
  */
-os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t timeout_ms, const char_t *pName)
+os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, u8_t control, u32_t timeout_ms, const char_t *pName)
 {
+    if ((control != TIMER_CTRL_ONCE_VAL) && (control && TIMER_CTRL_ONCE_VAL) && (control != TIMER_CTRL_TEMPORARY_VAL)) {
+        return OS_INVALID_ID_VAL;
+    }
+
     arguments_t arguments[] = {
         [0] = {.ptr_val = (const void *)pCallFun},
-        [1] = {.b_val = (b_t)isCycle},
+        [1] = {.u8_val = (u8_t)control},
         [2] = {.u32_val = (u32_t)timeout_ms},
         [3] = {.pch_val = (const void *)pName},
     };
@@ -510,12 +518,12 @@ os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, b_t isCycle, u32_t time
  *        the newer start will override it.
  *
  * @param id The timer unique id.
- * @param isCycle It indicates the timer if it's cycle repeat.
+ * @param control It defines the timer running mode.
  * @param timeout_ms The timer expired time.
  *
  * @return The result of timer start operation.
  */
-i32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
+i32p_t _impl_timer_start(os_id_t id, u8_t control, u32_t timeout_ms)
 {
     if (_timer_id_isInvalid(id)) {
         return _PCER;
@@ -529,9 +537,13 @@ i32p_t _impl_timer_start(os_id_t id, b_t isCycle, u32_t timeout_ms)
         return _PCER;
     }
 
+    if ((control != TIMER_CTRL_ONCE_VAL) && (control != TIMER_CTRL_CYCLE_VAL)) {
+        return _PCER;
+    }
+
     arguments_t arguments[] = {
         [0] = {.u32_val = (u32_t)id},
-        [1] = {.b_val = (u32_t)isCycle},
+        [1] = {.u8_val = (u8_t)control},
         [2] = {.u32_val = (u32_t)timeout_ms},
     };
 
@@ -624,7 +636,7 @@ void timer_init_for_thread(os_id_t id)
     pCurTimer->head.id = id;
     pCurTimer->head.pName = "TH";
 
-    pCurTimer->isCycle = FALSE;
+    pCurTimer->control = TIMER_CTRL_ONCE_VAL;
     pCurTimer->timeout_ms = 0u;
     pCurTimer->duration_us = 0u;
     pCurTimer->callEntry.pThreadCallEntry = NULL;
@@ -649,7 +661,7 @@ void timer_start_for_thread(os_id_t id, u32_t timeout_ms, void (*pCallback)(os_i
 
     pCurTimer->callEntry.pThreadCallEntry = pCallback;
     pCurTimer->timeout_ms = OS_TIME_FOREVER_VAL;
-    pCurTimer->isCycle = FALSE;
+    pCurTimer->control = TIMER_CTRL_ONCE_VAL;
 
     if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
         _timer_list_remove_fromWaitList((linker_head_t *)&pCurTimer->head);
@@ -732,7 +744,7 @@ void timer_elapsed_handler(u32_t elapsed_us)
     list_t *pListPending = (list_t *)_timer_list_pendingHeadGet();
     list_iterator_init(&it, pListPending);
     while (list_iterator_next_condition(&it, (void *)&pCurTimer)) {
-        if (pCurTimer->isCycle) {
+        if (pCurTimer->control == TIMER_CTRL_CYCLE_VAL) {
             u64_t timeout_us = pCurTimer->timeout_ms * 1000u;
             u64_t elapsed_us = g_timer_resource.system_us - pCurTimer->duration_us;
 
@@ -741,9 +753,12 @@ void timer_elapsed_handler(u32_t elapsed_us)
             }
             pCurTimer->duration_us = timeout_us - elapsed_us;
             _timer_list_transfer_toWaitList((linker_head_t *)&pCurTimer->head);
-        } else {
+        } else if (pCurTimer->control == TIMER_CTRL_ONCE_VAL) {
             pCurTimer->duration_us = 0u;
             _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
+        } else if (pCurTimer->control == TIMER_CTRL_TEMPORARY_VAL) {
+            _timer_list_transfer_toNoInitList((linker_head_t *)&pCurTimer->head);
+            os_memset((u8_t *)pCurTimer, 0u, sizeof(timer_context_t));
         }
         list_t *pListRunning = (list_t *)_timer_list_runningHeadGet();
         if (!list_node_isExisted(pListRunning, &pCurTimer->callEntry.node)) {
@@ -809,7 +824,7 @@ b_t timer_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     pMsgs->id = pCurTimer->head.id;
     pMsgs->pName = pCurTimer->head.pName;
 
-    pMsgs->timer.is_cycle = pCurTimer->isCycle;
+    pMsgs->timer.cycle = pCurTimer->control;
     pMsgs->timer.timeout_ms = pCurTimer->timeout_ms;
 
     EXIT_CRITICAL_SECTION();

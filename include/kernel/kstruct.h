@@ -68,7 +68,7 @@ typedef struct {
     /* A common struct head to link with other context */
     linker_head_t head;
 
-    b_t isCycle;
+    u8_t control;
 
     u32_t timeout_ms;
 
