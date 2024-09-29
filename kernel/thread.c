@@ -86,35 +86,6 @@ static void _thread_list_transfer_toUninitialized(linker_head_t *pCurHead)
 }
 
 /**
- * @brief Push one thread context into waiting list.
- *
- * @param pCurHead The pointer of the thread linker head.
- */
-static void _thread_list_transfer_toWait(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToWaitList = (list_t *)_thread_list_waitingHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToWaitList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Push one thread context into entry list.
- *
- * @param pCurHead The pointer of the thread linker head.
- */
-static void _thread_list_transfer_toEntry(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    kernel_thread_list_transfer_toEntry(pCurHead);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
  * @brief Push one thread context into pending list.
  *
  * @param pCurHead The pointer of the thread linker head.
@@ -179,16 +150,6 @@ static b_t _thread_object_isInit(os_id_t id)
     thread_context_t *pCurThread = _thread_object_contextGet(id);
 
     return ((pCurThread) ? (((pCurThread->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
-}
-
-/**
- * @brief The thread timeout callback fucntion.
- *
- * @param id The thread unique id.
- */
-static void _thread_callback_fromTimeOut(os_id_t id)
-{
-    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_OS_WAIT_TIMEOUT, NULL);
 }
 
 /**
@@ -266,8 +227,7 @@ static i32p_t _thread_resume_privilege_routine(arguments_t *pArgs)
     }
 
     pCurThread = _thread_object_contextGet(id);
-    _thread_list_transfer_toEntry((linker_head_t *)&pCurThread->head);
-    postcode = kernel_thread_schedule_request();
+    postcode = kernel_thread_entry_trigger(pCurThread, 0, NULL);
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -292,8 +252,7 @@ static i32p_t _thread_suspend_privilege_routine(arguments_t *pArgs)
         EXIT_CRITICAL_SECTION();
         return postcode;
     }
-    _thread_list_transfer_toWait((linker_head_t *)&pCurThread->head);
-    postcode = kernel_thread_schedule_request();
+    postcode = kernel_thread_exit_trigger(pCurThread, OS_INVALID_ID_VAL, _thread_list_waitingHeadGet(), OS_TIME_FOREVER_VAL);
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -318,9 +277,7 @@ static i32p_t _thread_yield_privilege_routine(arguments_t *pArgs)
         EXIT_CRITICAL_SECTION();
         return postcode;
     }
-
-    _thread_list_transfer_toWait((linker_head_t *)&pCurThread->head);
-    postcode = kernel_thread_schedule_request();
+    postcode = kernel_thread_exit_trigger(pCurThread, OS_INVALID_ID_VAL, _thread_list_waitingHeadGet(), OS_TIME_FOREVER_VAL);
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -375,8 +332,7 @@ static i32p_t _thread_sleep_privilege_routine(arguments_t *pArgs)
     i32p_t postcode = _PCER;
 
     pCurThread = kernel_thread_runContextGet();
-    postcode = kernel_thread_exit_trigger(pCurThread->head.id, OS_INVALID_ID_VAL, _thread_list_waitingHeadGet(), timeout_ms,
-                                          _thread_callback_fromTimeOut);
+    postcode = kernel_thread_exit_trigger(pCurThread, OS_INVALID_ID_VAL, _thread_list_waitingHeadGet(), timeout_ms);
 
     EXIT_CRITICAL_SECTION();
     return postcode;

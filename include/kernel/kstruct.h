@@ -198,13 +198,9 @@ typedef struct {
     list_t *pToList;
 
     u32_t timeout_us;
-
-    pThread_callbackFunc_t pTimeoutCallFun;
 } thread_exit_t;
 
 typedef struct {
-    os_id_t release;
-
     i32p_t result;
 
     pThread_callbackFunc_t pEntryCallFun;
@@ -226,6 +222,8 @@ typedef struct {
 
 typedef struct {
     os_id_t hold;
+
+    void *pPendData;
 
 #if defined KTRACE
     analyze_t analyze;

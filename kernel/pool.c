@@ -163,52 +163,19 @@ static bool _mem_release(pool_context_t *pCurPool, void *pUserMem)
 static void _pool_schedule(os_id_t id)
 {
     thread_context_t *pEntryThread = (thread_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-    thread_entry_t *pEntry = NULL;
-    pool_context_t *pCurPool = NULL;
-    b_t isAvail = FALSE;
-
-    pCurPool = _pool_object_contextGet(pEntryThread->schedule.hold);
     if (kernel_member_unified_id_toId(pEntryThread->schedule.hold) != KERNEL_MEMBER_POOL) {
         pEntryThread->schedule.entry.result = _PCER;
         return;
     }
+    timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
+    pool_context_t *pCurPool = _pool_object_contextGet(pEntryThread->schedule.hold);
 
-    if ((pEntryThread->schedule.entry.result != 0) && (pEntryThread->schedule.entry.result != PC_OS_WAIT_TIMEOUT)) {
-        return;
-    }
-
-    pEntry = &pEntryThread->schedule.entry;
-    if (!timer_busy(kernel_member_unified_id_threadToTimer(pEntryThread->head.id))) {
-        if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_TIMER_INTERNAL) {
-            pEntry->result = PC_OS_WAIT_TIMEOUT;
-        } else {
-            isAvail = true;
-        }
-    } else if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_POOL) {
-        timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
-        isAvail = true;
+    *pEntryThread->pool.ppUserMemAddress = _mem_take(pCurPool);
+    if (!*pEntryThread->pool.ppUserMemAddress) {
+        pEntryThread->schedule.entry.result = _PCER;
     } else {
-        pEntry->result = _PCER;
+        pEntryThread->schedule.entry.result = 0;
     }
-
-    if (isAvail) {
-        *pEntryThread->pool.ppUserMemAddress = _mem_take(pCurPool);
-        if (!*pEntryThread->pool.ppUserMemAddress) {
-            pEntry->result = _PCER;
-        } else {
-            pEntry->result = 0;
-        }
-    }
-}
-
-/**
- * @brief The pool timeout callback fucntion.
- *
- * @param id The pool unique id.
- */
-static void _pool_callback_fromTimeOut(os_id_t id)
-{
-    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_OS_WAIT_TIMEOUT, _pool_schedule);
 }
 
 /**
@@ -291,16 +258,13 @@ static i32p_t _pool_take_privilege_routine(arguments_t *pArgs)
             EXIT_CRITICAL_SECTION();
             return _PCER;
         }
-
         os_memset((u8_t *)&pCurThread->pool, 0x0u, sizeof(action_pool_t));
 
         pCurThread->pool.ppUserMemAddress = ppUserBuffer;
-        postcode =
-            kernel_thread_exit_trigger(pCurThread->head.id, id, _pool_list_blockingHeadGet(id), timeout_ms, _pool_callback_fromTimeOut);
-
+        postcode = kernel_thread_exit_trigger(pCurThread, id, _pool_list_blockingHeadGet(id), timeout_ms);
         PC_IF(postcode, PC_PASS)
         {
-            postcode = PC_OS_WAIT_TIMEOUT;
+            postcode = PC_OS_WAIT_UNAVAILABLE;
         }
     } else {
         *ppUserBuffer = _mem_take(pCurPool);
@@ -346,7 +310,7 @@ static i32p_t _pool_release_privilege_routine(arguments_t *pArgs)
     list_iterator_init(&it, _pool_list_blockingHeadGet(id));
     pCurThread = (thread_context_t *)list_iterator_next(&it);
     if (pCurThread) {
-        postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, 0, _pool_schedule);
+        postcode = kernel_thread_entry_trigger(pCurThread, 0, _pool_schedule);
     }
 
     EXIT_CRITICAL_SECTION();
@@ -443,9 +407,8 @@ i32p_t _impl_pool_take(os_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t 
     i32p_t postcode = kernel_privilege_invoke((const void *)_pool_take_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
-    if (postcode == PC_OS_WAIT_TIMEOUT) {
-        thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
-        postcode = (i32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
+    if (postcode == PC_OS_WAIT_UNAVAILABLE) {
+        postcode = kernel_schedule_result_take();
     }
 
     PC_IF(postcode, PC_PASS_INFO)

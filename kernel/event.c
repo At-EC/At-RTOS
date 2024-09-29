@@ -104,91 +104,59 @@ static b_t _event_object_isInit(u32_t id)
 static void _event_schedule(os_id_t id)
 {
     thread_context_t *pEntryThread = (thread_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-    thread_entry_t *pEntry = NULL;
-    b_t isAvail = FALSE;
 
     if (kernel_member_unified_id_toId(pEntryThread->schedule.hold) != KERNEL_MEMBER_EVENT) {
         pEntryThread->schedule.entry.result = _PCER;
         return;
     }
-    if ((pEntryThread->schedule.entry.result != 0) && (pEntryThread->schedule.entry.result != PC_OS_WAIT_TIMEOUT)) {
-        return;
+    timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
+
+    u32_t changed, any, edge, level, trigger = 0u;
+    event_context_t *pCurEvent = _event_object_contextGet(pEntryThread->schedule.hold);
+    os_evt_val_t *pEvtVal = pEntryThread->event.pEvtVal;
+    changed = pEvtVal->value ^ pCurEvent->value;
+    if (changed) {
+        // Any position
+        any = pCurEvent->anyMask;
+
+        // Changings trigger.
+        trigger = any & changed;
+
+        // Edge position
+        edge = pCurEvent->modeMask;
+        edge &= ~pCurEvent->anyMask;
+
+        // Edge rise trigger.
+        trigger |= edge & pCurEvent->value & pCurEvent->dirMask & changed;
+
+        // Edge fall trigger.
+        trigger |= edge & ~pCurEvent->value & ~pCurEvent->dirMask & changed;
+
+        // Level position
+        level = ~pCurEvent->modeMask;
+        level &= ~pCurEvent->anyMask;
+
+        // Level high trigger.
+        trigger |= level & pCurEvent->value & pCurEvent->dirMask & changed;
+
+        // Level low trigger.
+        trigger |= level & ~pCurEvent->value & ~pCurEvent->dirMask & changed;
     }
-    pEntry = &pEntryThread->schedule.entry;
-    if (!timer_busy(kernel_member_unified_id_threadToTimer(pEntryThread->head.id))) {
-        if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_TIMER_INTERNAL) {
-            pEntry->result = PC_OS_WAIT_TIMEOUT;
-        } else {
-            isAvail = true;
-        }
-    } else if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_EVENT) {
-        timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
-        isAvail = true;
-    } else {
-        pEntry->result = _PCER;
-    }
+    // Triggered bits
+    trigger |= pCurEvent->triggered;
 
-    if (isAvail) {
-        u32_t changed, any, edge, level, trigger = 0u;
-        event_context_t *pCurEvent = _event_object_contextGet(pEntryThread->schedule.hold);
-        os_evt_val_t *pEvtVal = pEntryThread->event.pEvtVal;
-        changed = pEvtVal->value ^ pCurEvent->value;
-
-        if (changed) {
-            // Any position
-            any = pCurEvent->anyMask;
-
-            // Changings trigger.
-            trigger = any & changed;
-
-            // Edge position
-            edge = pCurEvent->modeMask;
-            edge &= ~pCurEvent->anyMask;
-
-            // Edge rise trigger.
-            trigger |= edge & pCurEvent->value & pCurEvent->dirMask & changed;
-
-            // Edge fall trigger.
-            trigger |= edge & ~pCurEvent->value & ~pCurEvent->dirMask & changed;
-
-            // Level position
-            level = ~pCurEvent->modeMask;
-            level &= ~pCurEvent->anyMask;
-
-            // Level high trigger.
-            trigger |= level & pCurEvent->value & pCurEvent->dirMask & changed;
-
-            // Level low trigger.
-            trigger |= level & ~pCurEvent->value & ~pCurEvent->dirMask & changed;
-        }
-        // Triggered bits
-        trigger |= pCurEvent->triggered;
-
-        pEvtVal->value = pCurEvent->value;
-        u32_t report = trigger & pEntryThread->event.listen;
-        if (report) {
-            pEvtVal->trigger = trigger;
-            pCurEvent->triggered &= ~report;
-        }
+    pEvtVal->value = pCurEvent->value;
+    u32_t report = trigger & pEntryThread->event.listen;
+    if (report) {
+        pEvtVal->trigger = trigger;
+        pCurEvent->triggered &= ~report;
     }
 
     /* Auto clear user configuration */
     pEntryThread->event.listen = 0u;
     pEntryThread->event.pEvtVal = NULL;
 
-    if (isAvail) {
-        pEntry->result = 0;
-    }
-}
-
-/**
- * @brief The event timeout callback fucntion.
- *
- * @param id The event unique id.
- */
-static void _event_callback_fromTimeOut(os_id_t id)
-{
-    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_OS_WAIT_TIMEOUT, _event_schedule);
+    pEntryThread->schedule.entry.result = 0;
 }
 
 /**
@@ -335,7 +303,7 @@ static i32p_t _event_set_privilege_routine(arguments_t *pArgs)
             pCurThread->event.pEvtVal->trigger = trigger;
             pCurThread->event.pEvtVal->value = val;
 
-            postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, 0, _event_schedule);
+            postcode = kernel_thread_entry_trigger(pCurThread, 0, _event_schedule);
             PC_IF(postcode, PC_ERROR)
             {
                 break;
@@ -416,9 +384,7 @@ static i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
         return postcode;
     }
 
-    postcode =
-        kernel_thread_exit_trigger(pCurThread->head.id, id, _event_list_blockingHeadGet(id), timeout_ms, _event_callback_fromTimeOut);
-
+    postcode = kernel_thread_exit_trigger(pCurThread, id, _event_list_blockingHeadGet(id), timeout_ms);
     PC_IF(postcode, PC_PASS)
     {
         postcode = PC_OS_WAIT_UNAVAILABLE;
@@ -570,11 +536,10 @@ i32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t listen_mask, u
     ENTER_CRITICAL_SECTION();
 
     if (postcode == PC_OS_WAIT_UNAVAILABLE) {
-        thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
-        postcode = (i32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
+        postcode = kernel_schedule_result_take();
     }
 
-    PC_IF(postcode, PC_PASS)
+    PC_IF(postcode, PC_PASS_INFO)
     {
         if (postcode != PC_OS_WAIT_TIMEOUT) {
             postcode = 0;

@@ -205,7 +205,7 @@ static i32p_t _mutex_lock_privilege_routine(arguments_t *pArgs)
         if (pCurThread->priority.level < pLockThread->priority.level) {
             pLockThread->priority = pCurThread->priority;
         }
-        postcode = kernel_thread_exit_trigger(pCurThread->head.id, id, _mutex_list_blockingHeadGet(id), 0u, NULL);
+        postcode = kernel_thread_exit_trigger(pCurThread, id, _mutex_list_blockingHeadGet(id), 0u);
 
         EXIT_CRITICAL_SECTION();
         return postcode;
@@ -252,7 +252,7 @@ static i32p_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
         /* The next thread take the ticket */
         pCurMutex->holdThreadId = pMutexHighestBlockingThread->head.id;
         pCurMutex->originalPriority = pMutexHighestBlockingThread->priority;
-        postcode = kernel_thread_entry_trigger(pMutexHighestBlockingThread->head.id, id, 0, NULL);
+        postcode = kernel_thread_entry_trigger(pMutexHighestBlockingThread, 0, NULL);
     }
 
     EXIT_CRITICAL_SECTION();

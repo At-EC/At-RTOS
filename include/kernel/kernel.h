@@ -71,9 +71,9 @@ enum {
 thread_context_t *kernel_thread_runContextGet(void);
 list_t *kernel_member_list_get(u8_t member_id, u8_t list_id);
 void kernel_thread_list_transfer_toEntry(linker_head_t *pCurHead);
-i32p_t kernel_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToList, u32_t timeout_us, void (*pCallback)(os_id_t));
-i32p_t kernel_thread_entry_trigger(os_id_t id, os_id_t release, u32_t result, void (*pCallback)(os_id_t));
-u32_t kernel_schedule_entry_result_take(action_schedule_t *pSchedule);
+i32p_t kernel_thread_exit_trigger(thread_context_t *pCurThread, os_id_t hold, list_t *pToList, u32_t timeout_us);
+i32p_t kernel_thread_entry_trigger(thread_context_t *pCurThread, u32_t result, void (*pCallback)(os_id_t));
+i32p_t kernel_schedule_result_take(void);
 void kernel_thread_list_transfer_toPend(linker_head_t *pCurHead);
 list_t *kernel_list_pendingHeadGet(void);
 u32_t kernel_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size);

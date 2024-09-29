@@ -408,16 +408,19 @@ static u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-
     timer_context_t *pCurTimer = NULL;
+    b_t request = FALSE;
 
     pCurTimer = _timer_object_contextGet(id);
     if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
         _timer_list_remove_fromWaitList((linker_head_t *)&pCurTimer->head);
+        request = TRUE;
     }
     _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
 
-    _timer_schedule();
+    if (request) {
+        _timer_schedule();
+    }
 
     EXIT_CRITICAL_SECTION();
     return 0;

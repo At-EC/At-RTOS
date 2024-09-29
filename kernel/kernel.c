@@ -230,13 +230,24 @@ static void _kernel_thread_entry_schedule(void)
         if (pEntry->pEntryCallFun) {
             pEntry->pEntryCallFun(pCurThread->head.id);
             pEntry->pEntryCallFun = NULL;
-            pEntry->release = OS_INVALID_ID_VAL;
-            pCurThread->schedule.hold = OS_INVALID_ID_VAL;
         }
+        pCurThread->schedule.hold = OS_INVALID_ID_VAL;
 
         _kernel_schedule_entry_time_analyze(pCurThread->head.id);
         kernel_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
     }
+}
+
+/**
+ * @brief The thread timeout callback fucntion.
+ *
+ * @param id The timer unique id.
+ */
+static void _kernel_thread_callback_fromTimeOut(os_id_t id)
+{
+    id = kernel_member_unified_id_timerToThread(id);
+    thread_context_t *pCurThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(id);
+    kernel_thread_entry_trigger(pCurThread, PC_OS_WAIT_TIMEOUT, NULL);
 }
 
 /**
@@ -258,7 +269,8 @@ static b_t _kernel_thread_exit_schedule(void)
         pExit = &pCurThread->schedule.exit;
 
         if (pExit->timeout_us) {
-            timer_start_for_thread(kernel_member_unified_id_threadToTimer(pCurThread->head.id), pExit->timeout_us, pExit->pTimeoutCallFun);
+            os_id_t id = kernel_member_unified_id_threadToTimer(pCurThread->head.id);
+            timer_start_for_thread(id, pExit->timeout_us, _kernel_thread_callback_fromTimeOut);
 
             if (pExit->timeout_us != OS_TIME_FOREVER_VAL) {
                 request = TRUE;
@@ -267,6 +279,7 @@ static b_t _kernel_thread_exit_schedule(void)
 
         _kernel_schedule_exit_time_analyze(pCurThread->head.id);
         _kernel_thread_list_transfer_toTargetBlocking((linker_head_t *)&pCurThread->head, (list_t *)pExit->pToList);
+        pCurThread->schedule.entry.result = _PCER;
     }
 
     return request;
@@ -749,23 +762,18 @@ void kernel_thread_list_transfer_toPend(linker_head_t *pCurHead)
 /**
  * @brief The thread is trying to exit into suspend.
  *
- * @param id The thread unique id.
+ * @param The thread pointer.
  * @param hold The member unique id hold on the thread.
  * @param pToList The blocking list.
  * @param timeout If the thread has sleep time setting.
- * @param pCallback The timeout callback function pointer.
  *
  * @return The result of exit operation.
  */
-i32p_t kernel_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToList, u32_t timeout_us, void (*pCallback)(os_id_t))
+i32p_t kernel_thread_exit_trigger(thread_context_t *pCurThread, os_id_t hold, list_t *pToList, u32_t timeout_us)
 {
-    thread_context_t *pCurThread = (thread_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-
     pCurThread->schedule.hold = hold;
     pCurThread->schedule.exit.pToList = pToList;
     pCurThread->schedule.exit.timeout_us = timeout_us;
-    pCurThread->schedule.exit.pTimeoutCallFun = pCallback;
-
     kernel_thread_list_transfer_toExit((linker_head_t *)&pCurThread->head);
     return kernel_thread_schedule_request();
 }
@@ -773,42 +781,35 @@ i32p_t kernel_thread_exit_trigger(os_id_t id, os_id_t hold, list_t *pToList, u32
 /**
  * @brief Try to trigger one thread active.
  *
- * @param id The thread unique id.
- * @param release The thread release id.
+ * @param The thread pointer.
  * @param result The thread entry result.
  * @param pCallback The timeout callback function pointer.
  *
  * @return The result of entry operation.
  */
-i32p_t kernel_thread_entry_trigger(os_id_t id, os_id_t release, u32_t result, void (*pCallback)(os_id_t))
+i32p_t kernel_thread_entry_trigger(thread_context_t *pCurThread, u32_t result, void (*pCallback)(os_id_t))
 {
-    thread_context_t *pCurThread = (thread_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-
-    pCurThread->schedule.entry.release = release;
     pCurThread->schedule.entry.result = result;
     pCurThread->schedule.entry.pEntryCallFun = pCallback;
-
     kernel_thread_list_transfer_toEntry((linker_head_t *)&pCurThread->head);
     return kernel_thread_schedule_request();
 }
 
 /**
- * @brief Read and clean the schedule entry result.
+ * @brief Read and clean the current running thread schedule entry result.
  *
  * @param pSchedule The pointer of thread action schedule.
  *
- * @return The result of entry action schedule.
+ * @return The result of the thread schedule.
  */
-u32_t kernel_schedule_entry_result_take(action_schedule_t *pSchedule)
+i32p_t kernel_schedule_result_take(void)
 {
-    if (!pSchedule) {
-        return 0u;
-    }
+    thread_context_t *pCurThread = kernel_thread_runContextGet();
 
-    u32_t ret = (i32p_t)pSchedule->entry.result;
-    pSchedule->entry.result = 0u;
+    i32p_t ret = (i32p_t)pCurThread->schedule.entry.result;
+    pCurThread->schedule.entry.result = _PCER;
 
-    return (u32_t)ret;
+    return ret;
 }
 
 /**

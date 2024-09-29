@@ -204,80 +204,29 @@ static void _message_receive_behind(queue_context_t *pCurQueue, const u8_t *pUse
 static void _queue_schedule(os_id_t id)
 {
     thread_context_t *pEntryThread = (thread_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-    queue_context_t *pCurQueue = NULL;
-    thread_entry_t *pEntry = NULL;
-    b_t isTxAvail = FALSE;
-    b_t isRxAvail = FALSE;
-
     if (kernel_member_unified_id_toId(pEntryThread->schedule.hold) != KERNEL_MEMBER_QUEUE) {
         pEntryThread->schedule.entry.result = _PCER;
         return;
     }
+    timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
 
-    pCurQueue = _queue_object_contextGet(pEntryThread->schedule.hold);
-    pEntry = &pEntryThread->schedule.entry;
-    if (pEntry->result == PC_OS_WAIT_TIMEOUT) {
-        pEntry->result = PC_OS_WAIT_TIMEOUT;
-    } else if (pEntry->result == _QUEUE_WAKEUP_RECEIVER) {
-        // Release function doesn't kill the timer node from waiting list
-        if (!timer_busy(kernel_member_unified_id_threadToTimer(pEntryThread->head.id))) {
-            if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_TIMER_INTERNAL) {
-                pEntry->result = PC_OS_WAIT_TIMEOUT;
-            } else {
-                isRxAvail = true;
-            }
-        } else if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_QUEUE) {
-            timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
-            isRxAvail = true;
-        } else {
-            pEntry->result = _PCER;
-        }
-    } else if (pEntry->result == _QUEUE_WAKEUP_SENDER) {
-        // Release function doesn't kill the timer node from waiting list
-        if (!timer_busy(kernel_member_unified_id_threadToTimer(pEntryThread->head.id))) {
-            if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_TIMER_INTERNAL) {
-                pEntry->result = PC_OS_WAIT_TIMEOUT;
-            } else {
-                isTxAvail = true;
-            }
-        } else if (kernel_member_unified_id_toId(pEntry->release) == KERNEL_MEMBER_QUEUE) {
-            timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
-            isTxAvail = true;
-        } else {
-            pEntry->result = _PCER;
-        }
-    } else {
-        pEntry->result = _PCER;
-    }
-
-    if ((isRxAvail) || (isTxAvail)) {
-        if (isRxAvail) {
-            if (pEntryThread->queue.fromBack) {
-                _message_receive_behind((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress,
-                                        pEntryThread->queue.userBufferSize);
-            } else {
-                _message_receive((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
-            }
-        } else if (isTxAvail) {
-            if (pEntryThread->queue.toFront) {
-                _message_send_front((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress,
+    queue_context_t *pCurQueue = _queue_object_contextGet(pEntryThread->schedule.hold);
+    if (pEntryThread->schedule.entry.result == _QUEUE_WAKEUP_RECEIVER) {
+        if (pEntryThread->queue.fromBack) {
+            _message_receive_behind((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress,
                                     pEntryThread->queue.userBufferSize);
-            } else {
-                _message_send((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
-            }
+        } else {
+            _message_receive((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
         }
-        pEntry->result = 0;
+        pEntryThread->schedule.entry.result = 0;
+    } else if (pEntryThread->schedule.entry.result == _QUEUE_WAKEUP_SENDER) {
+        if (pEntryThread->queue.toFront) {
+            _message_send_front((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+        } else {
+            _message_send((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+        }
+        pEntryThread->schedule.entry.result = 0;
     }
-}
-
-/**
- * @brief The queue timeout callback fucntion.
- *
- * @param id The queue unique id.
- */
-static void _queue_callback_fromTimeOut(os_id_t id)
-{
-    kernel_thread_entry_trigger(kernel_member_unified_id_timerToThread(id), id, PC_OS_WAIT_TIMEOUT, _queue_schedule);
 }
 
 /**
@@ -369,8 +318,7 @@ static i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
         pCurThread->queue.userBufferSize = bufferSize;
         pCurThread->queue.toFront = isFront;
 
-        postcode =
-            kernel_thread_exit_trigger(pCurThread->head.id, id, _queue_list_inBlockingHeadGet(id), timeout_ms, _queue_callback_fromTimeOut);
+        postcode = kernel_thread_exit_trigger(pCurThread, id, _queue_list_inBlockingHeadGet(id), timeout_ms);
 
         PC_IF(postcode, PC_PASS)
         {
@@ -388,7 +336,7 @@ static i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
         list_iterator_init(&it, _queue_list_OutBlockingHeadGet(id));
         pCurThread = (thread_context_t *)list_iterator_next(&it);
         if (pCurThread) {
-            postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, _QUEUE_WAKEUP_RECEIVER, _queue_schedule);
+            postcode = kernel_thread_entry_trigger(pCurThread, _QUEUE_WAKEUP_RECEIVER, _queue_schedule);
         }
     }
 
@@ -434,8 +382,7 @@ static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
         pCurThread->queue.userBufferSize = bufferSize;
         pCurThread->queue.fromBack = isBack;
 
-        postcode = kernel_thread_exit_trigger(pCurThread->head.id, id, _queue_list_OutBlockingHeadGet(id), timeout_ms,
-                                              _queue_callback_fromTimeOut);
+        postcode = kernel_thread_exit_trigger(pCurThread, id, _queue_list_OutBlockingHeadGet(id), timeout_ms);
 
         PC_IF(postcode, PC_PASS)
         {
@@ -453,7 +400,7 @@ static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
         list_iterator_init(&it, _queue_list_inBlockingHeadGet(id));
         pCurThread = (thread_context_t *)list_iterator_next(&it);
         if (pCurThread) {
-            postcode = kernel_thread_entry_trigger(pCurThread->head.id, id, _QUEUE_WAKEUP_SENDER, _queue_schedule);
+            postcode = kernel_thread_entry_trigger(pCurThread, _QUEUE_WAKEUP_SENDER, _queue_schedule);
         }
     }
 
@@ -547,8 +494,7 @@ i32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b
 
     ENTER_CRITICAL_SECTION();
     if (postcode == PC_OS_WAIT_UNAVAILABLE) {
-        thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
-        postcode = (i32p_t)kernel_schedule_entry_result_take((action_schedule_t *)&pCurThread->schedule);
+        postcode = kernel_schedule_result_take();
     }
 
     PC_IF(postcode, PC_PASS_INFO)
