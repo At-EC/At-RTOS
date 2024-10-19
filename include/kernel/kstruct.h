@@ -161,9 +161,8 @@ typedef struct {
     /* The listen bits*/
     u32_t listen;
 
-    /* The user value pointer, the user only can access it until it meets with the group setting so that it can be clean */
     os_evt_val_t *pEvtVal;
-} action_event_t;
+} event_sch_t;
 
 typedef struct {
     /* A common struct head to link with other context */
@@ -249,8 +248,6 @@ typedef struct {
     u32_t stackSize;
 
     u32_t PSPStartAddr;
-
-    action_event_t event;
 
     action_queue_t queue;
 

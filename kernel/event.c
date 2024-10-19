@@ -113,8 +113,11 @@ static void _event_schedule(os_id_t id)
 
     u32_t changed, any, edge, level, trigger = 0u;
     event_context_t *pCurEvent = _event_object_contextGet(pEntryThread->schedule.hold);
-    os_evt_val_t *pEvtVal = pEntryThread->event.pEvtVal;
-    changed = pEvtVal->value ^ pCurEvent->value;
+    event_sch_t *pEvt_sche = (event_sch_t *)pEntryThread->schedule.pPendData;
+    if (!pEvt_sche) {
+        return;
+    }
+    changed = pEvt_sche->pEvtVal->value ^ pCurEvent->value;
     if (changed) {
         // Any position
         any = pCurEvent->anyMask;
@@ -145,16 +148,12 @@ static void _event_schedule(os_id_t id)
     // Triggered bits
     trigger |= pCurEvent->triggered;
 
-    pEvtVal->value = pCurEvent->value;
-    u32_t report = trigger & pEntryThread->event.listen;
+    pEvt_sche->pEvtVal->value = pCurEvent->value;
+    u32_t report = trigger & pEvt_sche->listen;
     if (report) {
-        pEvtVal->trigger = trigger;
+        pEvt_sche->pEvtVal->trigger = trigger;
         pCurEvent->triggered &= ~report;
     }
-
-    /* Auto clear user configuration */
-    pEntryThread->event.listen = 0u;
-    pEntryThread->event.pEvtVal = NULL;
 
     pEntryThread->schedule.entry.result = 0;
 }
@@ -296,13 +295,15 @@ static i32p_t _event_set_privilege_routine(arguments_t *pArgs)
     list_iterator_init(&it, _event_list_blockingHeadGet(id));
     thread_context_t *pCurThread = (thread_context_t *)list_iterator_next(&it);
     while (pCurThread) {
-        report = trigger & pCurThread->event.listen;
-
+        event_sch_t *pEvt_sche = (event_sch_t *)pCurThread->schedule.pPendData;
+        if (!pEvt_sche) {
+            return _PCER;
+        }
+        report = trigger & pEvt_sche->listen;
         if (report) {
             reported |= report;
-            pCurThread->event.pEvtVal->trigger = trigger;
-            pCurThread->event.pEvtVal->value = val;
-
+            pEvt_sche->pEvtVal->trigger = trigger;
+            pEvt_sche->pEvtVal->value = val;
             postcode = kernel_thread_entry_trigger(pCurThread, 0, _event_schedule);
             PC_IF(postcode, PC_ERROR)
             {
@@ -330,19 +331,16 @@ static i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    os_evt_val_t *pEvtData = (os_evt_val_t *)pArgs[1].pv_val;
-    u32_t listen = (u32_t)pArgs[2].u32_val;
-    u32_t timeout_ms = (u32_t)pArgs[3].u32_val;
+    event_sch_t *pEvt_sch = (event_sch_t *)pArgs[1].pv_val;
+    u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
     i32p_t postcode = 0;
 
     thread_context_t *pCurThread = kernel_thread_runContextGet();
     event_context_t *pCurEvent = _event_object_contextGet(id);
-    pCurThread->event.listen = listen;
-    pCurThread->event.pEvtVal = pEvtData;
-    u32_t val = pEvtData->value;
+    os_evt_val_t *pEvtData = pEvt_sch->pEvtVal;
     u32_t changed, any, edge, level, trigger = 0u;
 
-    changed = val ^ pCurEvent->value;
+    changed = pEvtData->value ^ pCurEvent->value;
     if (changed) {
         // Any position
         any = pCurEvent->anyMask;
@@ -374,8 +372,8 @@ static i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
     // Triggered bits
     trigger |= pCurEvent->triggered;
 
-    pEvtData->value = val;
-    u32_t report = trigger & pCurThread->event.listen;
+    pEvtData->value = pCurEvent->value;
+    u32_t report = trigger & pEvt_sch->listen;
     if (report) {
         pEvtData->trigger = trigger;
         pCurEvent->triggered &= ~report;
@@ -384,6 +382,7 @@ static i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
         return postcode;
     }
 
+    pCurThread->schedule.pPendData = (void *)pEvt_sch;
     postcode = kernel_thread_exit_trigger(pCurThread, id, _event_list_blockingHeadGet(id), timeout_ms);
     PC_IF(postcode, PC_PASS)
     {
@@ -524,11 +523,14 @@ i32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t listen_mask, u
         return _PCER;
     }
 
+    event_sch_t evt_sch = {
+        .listen = listen_mask,
+        .pEvtVal = pEvtData,
+    };
     arguments_t arguments[] = {
         [0] = {.u32_val = (u32_t)id},
-        [1] = {.pv_val = (void *)pEvtData},
-        [2] = {.u32_val = (u32_t)listen_mask},
-        [3] = {.u32_val = (u32_t)timeout_ms},
+        [1] = {.pv_val = (void *)&evt_sch},
+        [2] = {.u32_val = (u32_t)timeout_ms},
     };
 
     i32p_t postcode = kernel_privilege_invoke((const void *)_event_wait_privilege_routine, arguments);
