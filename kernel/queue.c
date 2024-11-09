@@ -211,19 +211,22 @@ static void _queue_schedule(os_id_t id)
     timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
 
     queue_context_t *pCurQueue = _queue_object_contextGet(pEntryThread->schedule.hold);
+    queue_sch_t *pQue_sche = (queue_sch_t *)pEntryThread->schedule.pPendData;
+    if (!pQue_sche) {
+        return;
+    }
     if (pEntryThread->schedule.entry.result == _QUEUE_WAKEUP_RECEIVER) {
-        if (pEntryThread->queue.fromBack) {
-            _message_receive_behind((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress,
-                                    pEntryThread->queue.userBufferSize);
+        if (pQue_sche->reverse) {
+            _message_receive_behind((queue_context_t *)pCurQueue, pQue_sche->pUsrBuf, pQue_sche->size);
         } else {
-            _message_receive((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+            _message_receive((queue_context_t *)pCurQueue, pQue_sche->pUsrBuf, pQue_sche->size);
         }
         pEntryThread->schedule.entry.result = 0;
     } else if (pEntryThread->schedule.entry.result == _QUEUE_WAKEUP_SENDER) {
-        if (pEntryThread->queue.toFront) {
-            _message_send_front((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+        if (pQue_sche->reverse) {
+            _message_send_front((queue_context_t *)pCurQueue, pQue_sche->pUsrBuf, pQue_sche->size);
         } else {
-            _message_send((queue_context_t *)pCurQueue, pEntryThread->queue.pUserBufferAddress, pEntryThread->queue.userBufferSize);
+            _message_send((queue_context_t *)pCurQueue, pQue_sche->pUsrBuf, pQue_sche->size);
         }
         pEntryThread->schedule.entry.result = 0;
     }
@@ -291,17 +294,13 @@ static i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    const u8_t *pUserBuffer = (const void *)pArgs[1].ptr_val;
-    u16_t bufferSize = (u16_t)pArgs[2].u16_val;
-    b_t isFront = (b_t)pArgs[3].b_val;
-    u32_t timeout_ms = (u32_t)pArgs[4].u32_val;
-    queue_context_t *pCurQueue = NULL;
-    thread_context_t *pCurThread = NULL;
+    queue_sch_t *pQue_sch = (queue_sch_t *)pArgs[1].ptr_val;
+    u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
     i32p_t postcode = 0;
 
-    pCurQueue = _queue_object_contextGet(id);
-    pCurThread = kernel_thread_runContextGet();
-    if (bufferSize > pCurQueue->elementLength) {
+    queue_context_t *pCurQueue = _queue_object_contextGet(id);
+    thread_context_t *pCurThread = kernel_thread_runContextGet();
+    if (pQue_sch->size > pCurQueue->elementLength) {
         EXIT_CRITICAL_SECTION();
         return _PCER;
     }
@@ -312,23 +311,17 @@ static i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
             return _PCER;
         }
 
-        os_memset((char *)&pCurThread->queue, 0x0u, sizeof(action_queue_t));
-
-        pCurThread->queue.pUserBufferAddress = pUserBuffer;
-        pCurThread->queue.userBufferSize = bufferSize;
-        pCurThread->queue.toFront = isFront;
-
+        pCurThread->schedule.pPendData = (void *)pQue_sch;
         postcode = kernel_thread_exit_trigger(pCurThread, id, _queue_list_inBlockingHeadGet(id), timeout_ms);
-
         PC_IF(postcode, PC_PASS)
         {
             postcode = PC_OS_WAIT_UNAVAILABLE;
         }
     } else {
-        if (pCurThread->queue.toFront) {
-            _message_send_front(pCurQueue, pUserBuffer, bufferSize);
+        if (pQue_sch->reverse) {
+            _message_send_front(pCurQueue, pQue_sch->pUsrBuf, pQue_sch->size);
         } else {
-            _message_send(pCurQueue, pUserBuffer, bufferSize);
+            _message_send(pCurQueue, pQue_sch->pUsrBuf, pQue_sch->size);
         }
 
         /* Try to wakeup a blocking thread */
@@ -356,17 +349,13 @@ static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    const u8_t *pUserBuffer = (const u8_t *)pArgs[1].ptr_val;
-    u16_t bufferSize = (u16_t)pArgs[2].u16_val;
-    b_t isBack = (b_t)pArgs[3].b_val;
-    u32_t timeout_ms = (u32_t)pArgs[4].u32_val;
-    queue_context_t *pCurQueue = NULL;
-    thread_context_t *pCurThread = NULL;
+    queue_sch_t *pQue_sch = (queue_sch_t *)pArgs[1].ptr_val;
+    u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
     i32p_t postcode = 0;
 
-    pCurQueue = _queue_object_contextGet(id);
-    pCurThread = (thread_context_t *)kernel_thread_runContextGet();
-    if (bufferSize > pCurQueue->elementLength) {
+    queue_context_t *pCurQueue = _queue_object_contextGet(id);
+    thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
+    if (pQue_sch->size > pCurQueue->elementLength) {
         EXIT_CRITICAL_SECTION();
         return _PCER;
     }
@@ -376,23 +365,17 @@ static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
             EXIT_CRITICAL_SECTION();
             return _PCER;
         }
-
-        os_memset((char *)&pCurThread->queue, 0x0u, sizeof(action_queue_t));
-        pCurThread->queue.pUserBufferAddress = pUserBuffer;
-        pCurThread->queue.userBufferSize = bufferSize;
-        pCurThread->queue.fromBack = isBack;
-
+        pCurThread->schedule.pPendData = (void *)pQue_sch;
         postcode = kernel_thread_exit_trigger(pCurThread, id, _queue_list_OutBlockingHeadGet(id), timeout_ms);
-
         PC_IF(postcode, PC_PASS)
         {
             postcode = PC_OS_WAIT_UNAVAILABLE;
         }
     } else {
-        if (pCurThread->queue.fromBack) {
-            _message_receive_behind(pCurQueue, pUserBuffer, bufferSize);
+        if (pQue_sch->reverse) {
+            _message_receive_behind(pCurQueue, (const u8_t *)pQue_sch->pUsrBuf, pQue_sch->size);
         } else {
-            _message_receive(pCurQueue, pUserBuffer, bufferSize);
+            _message_receive(pCurQueue, (const u8_t *)pQue_sch->pUsrBuf, pQue_sch->size);
         }
 
         /* Try to wakeup a blocking thread */
@@ -485,11 +468,12 @@ i32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b
         }
     }
 
+    queue_sch_t que_sch = {.pUsrBuf = pUserBuffer, .size = bufferSize, .reverse = isToFront};
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},    [1] = {.ptr_val = (const void *)pUserBuffer}, [2] = {.u16_val = (u16_t)bufferSize},
-        [3] = {.b_val = (b_t)isToFront}, [4] = {.u32_val = (u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)id},
+        [1] = {.ptr_val = (void *)&que_sch},
+        [2] = {.u32_val = (u32_t)timeout_ms},
     };
-
     i32p_t postcode = kernel_privilege_invoke((const void *)_queue_send_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
@@ -535,11 +519,12 @@ i32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
         }
     }
 
+    queue_sch_t que_sch = {.pUsrBuf = pUserBuffer, .size = bufferSize, .reverse = isFromBack};
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},     [1] = {.ptr_val = (const void *)pUserBuffer}, [2] = {.u16_val = (u16_t)bufferSize},
-        [3] = {.b_val = (b_t)isFromBack}, [4] = {.u32_val = (u32_t)timeout_ms},
+        [0] = {.u32_val = (u32_t)id},
+        [1] = {.ptr_val = (void *)&que_sch},
+        [2] = {.u32_val = (u32_t)timeout_ms},
     };
-
     i32p_t postcode = kernel_privilege_invoke((const void *)_queue_receive_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();

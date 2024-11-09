@@ -110,15 +110,10 @@ typedef struct {
 } mutex_context_t;
 
 typedef struct {
-    const u8_t *pUserBufferAddress;
-    u16_t userBufferSize;
-    b_t toFront;
-    b_t fromBack;
-} action_queue_t;
-
-typedef struct {
-    void **ppUserMemAddress;
-} action_pool_t;
+    const u8_t *pUsrBuf;
+    u16_t size;
+    b_t reverse;
+} queue_sch_t;
 
 typedef struct {
     /* A common struct head to link with other context */
@@ -248,10 +243,6 @@ typedef struct {
     u32_t stackSize;
 
     u32_t PSPStartAddr;
-
-    action_queue_t queue;
-
-    action_pool_t pool;
 
     action_schedule_t schedule;
 } thread_context_t;

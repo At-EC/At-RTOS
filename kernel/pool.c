@@ -169,9 +169,12 @@ static void _pool_schedule(os_id_t id)
     }
     timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
     pool_context_t *pCurPool = _pool_object_contextGet(pEntryThread->schedule.hold);
-
-    *pEntryThread->pool.ppUserMemAddress = _mem_take(pCurPool);
-    if (!*pEntryThread->pool.ppUserMemAddress) {
+    void **ppUserMemAddress = (void **)pEntryThread->schedule.pPendData;
+    if (!*ppUserMemAddress) {
+        return;
+    }
+    *ppUserMemAddress = _mem_take(pCurPool);
+    if (!*ppUserMemAddress) {
         pEntryThread->schedule.entry.result = _PCER;
     } else {
         pEntryThread->schedule.entry.result = 0;
@@ -258,9 +261,7 @@ static i32p_t _pool_take_privilege_routine(arguments_t *pArgs)
             EXIT_CRITICAL_SECTION();
             return _PCER;
         }
-        os_memset((u8_t *)&pCurThread->pool, 0x0u, sizeof(action_pool_t));
-
-        pCurThread->pool.ppUserMemAddress = ppUserBuffer;
+        pCurThread->schedule.pPendData = (void *)ppUserBuffer;
         postcode = kernel_thread_exit_trigger(pCurThread, id, _pool_list_blockingHeadGet(id), timeout_ms);
         PC_IF(postcode, PC_PASS)
         {
@@ -302,7 +303,6 @@ static i32p_t _pool_release_privilege_routine(arguments_t *pArgs)
         EXIT_CRITICAL_SECTION();
         return _PCER;
     }
-
     *ppUserBuffer = NULL;
 
     /* Try to wakeup a blocking thread */
