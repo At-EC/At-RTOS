@@ -34,6 +34,7 @@ const at_rtos_api_t os = {
     .thread_delete = os_thread_delete,
 
     .timer_init = os_timer_init,
+    .timer_automatic = os_timer_automatic,
     .timer_start = os_timer_start,
     .timer_stop = os_timer_stop,
     .timer_busy = os_timer_busy,
@@ -134,6 +135,12 @@ i32p_t kthread_message_arrived(void)
     return os_sem_take(g_kernel_thread_resource.sem_id, OS_TIME_FOREVER_VAL);
 }
 
+static void _thread_callback_fromTimeOut(void *pLinker)
+{
+    thread_context_t* pCurThread = (thread_context_t*)CONTAINEROF(pLinker, thread_context_t, expire);
+    kernel_thread_entry_trigger(pCurThread, PC_OS_WAIT_TIMEOUT, NULL);
+}
+
 /**
  * @brief The AtOS kernel internal use thread and semaphore init.
  */
@@ -157,9 +164,8 @@ void kthread_init(void)
                 .pEntryFunc = kernel_schedule_thread,
                 .pStackAddr = (u32_t *)&_kernel_schedule[0],
                 .stackSize = KERNEL_SCHEDULE_THREAD_STACK_SIZE,
-                .PSPStartAddr = (u32_t)kernel_stack_frame_init(kernel_schedule_thread, (u32_t *)&_kernel_schedule[0],
-                                                               KERNEL_SCHEDULE_THREAD_STACK_SIZE),
-
+                .psp = (u32_t)kernel_stack_frame_init(kernel_schedule_thread, (u32_t *)&_kernel_schedule[0],
+                                                      KERNEL_SCHEDULE_THREAD_STACK_SIZE),
             },
 
         [KERNEL_IDLE_THREAD_INSTANCE] =
@@ -177,8 +183,7 @@ void kthread_init(void)
                 .pEntryFunc = kernel_idle_thread,
                 .pStackAddr = (u32_t *)&_kernel_idle[0],
                 .stackSize = KERNEL_IDLE_THREAD_STACK_SIZE,
-                .PSPStartAddr =
-                    (u32_t)kernel_stack_frame_init(kernel_idle_thread, (u32_t *)&_kernel_idle[0], KERNEL_IDLE_THREAD_STACK_SIZE),
+                .psp = (u32_t)kernel_stack_frame_init(kernel_idle_thread, (u32_t *)&_kernel_idle[0], KERNEL_IDLE_THREAD_STACK_SIZE),
             },
     };
 
@@ -186,11 +191,11 @@ void kthread_init(void)
     os_memcpy((u8_t *)pCurThread, (u8_t *)kernel_thread, (sizeof(thread_context_t) * KERNEL_APPLICATION_THREAD_INSTANCE));
 
     pCurThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(kernel_thread[KERNEL_SCHEDULE_THREAD_INSTANCE].head.id);
-    timer_init_for_thread(kernel_member_unified_id_threadToTimer(pCurThread->head.id));
+    timeout_init(&pCurThread->expire, _thread_callback_fromTimeOut);
     kernel_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
 
     pCurThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(kernel_thread[KERNEL_IDLE_THREAD_INSTANCE].head.id);
-    timer_init_for_thread(kernel_member_unified_id_threadToTimer(pCurThread->head.id));
+    timeout_init(&pCurThread->expire, _thread_callback_fromTimeOut);
     kernel_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
 
     semaphore_context_t kernel_semaphore[KERNEL_APPLICATION_SEMAPHORE_INSTANCE] = {
@@ -199,7 +204,7 @@ void kthread_init(void)
                 .head =
                     {
                         .pName = g_kernel_thread_resource.schedule_id.pName,
-                        .linker = LINKER_NULL,
+                        .cs = CS_INITED,
                     },
                 .remains = 0u,
                 .limits = OS_SEM_BINARY,
@@ -208,12 +213,7 @@ void kthread_init(void)
 
     semaphore_context_t *pCurSemaphore = (semaphore_context_t *)kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_SEMAPHORE);
     g_kernel_thread_resource.sem_id.val = kernel_member_containerAddress_toUnifiedid((u32_t)pCurSemaphore);
-    kernel_semaphore[KERNEL_SCHEDULE_SEMAPHORE_INSTANCE].head.id = g_kernel_thread_resource.sem_id.val;
     os_memcpy((u8_t *)pCurSemaphore, (u8_t *)kernel_semaphore, (sizeof(semaphore_context_t) * KERNEL_APPLICATION_SEMAPHORE_INSTANCE));
-
-    pCurSemaphore =
-        (semaphore_context_t *)kernel_member_unified_id_toContainerAddress(kernel_semaphore[KERNEL_SCHEDULE_SEMAPHORE_INSTANCE].head.id);
-    kernel_semaphore_list_transfer_toInit((linker_head_t *)&pCurSemaphore->head);
 }
 
 #ifdef __cplusplus

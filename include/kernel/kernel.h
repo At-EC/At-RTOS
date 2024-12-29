@@ -71,7 +71,7 @@ enum {
 thread_context_t *kernel_thread_runContextGet(void);
 list_t *kernel_member_list_get(u8_t member_id, u8_t list_id);
 void kernel_thread_list_transfer_toEntry(linker_head_t *pCurHead);
-i32p_t kernel_thread_exit_trigger(thread_context_t *pCurThread, os_id_t hold, list_t *pToList, u32_t timeout_us);
+i32p_t kernel_thread_exit_trigger(thread_context_t *pCurThread, void* pHoldCtx, list_t *pToList, u32_t timeout_us);
 i32p_t kernel_thread_entry_trigger(thread_context_t *pCurThread, u32_t result, void (*pCallback)(os_id_t));
 i32p_t kernel_schedule_result_take(void);
 void kernel_thread_list_transfer_toPend(linker_head_t *pCurHead);

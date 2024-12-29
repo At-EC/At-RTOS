@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PCER PC_IER(PC_OS_CMPT_THREAD_3)
+#define PC_EOR PC_IER(PC_OS_CMPT_THREAD_3)
 
 /**
  * @brief Get the thread context based on provided unique id.
@@ -152,6 +152,12 @@ static b_t _thread_object_isInit(os_id_t id)
     return ((pCurThread) ? (((pCurThread->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
 }
 
+static void _thread_callback_fromTimeOut(void *pLinker)
+{
+    thread_context_t* pCurThread = (thread_context_t*)CONTAINEROF(pLinker, thread_context_t, expire);
+    kernel_thread_entry_trigger(pCurThread, PC_OS_WAIT_TIMEOUT, NULL);
+}
+
 /**
  * @brief It's sub-routine running at privilege mode.
  *
@@ -193,10 +199,9 @@ static os_id_t _thread_init_privilege_routine(arguments_t *pArgs)
         pCurThread->pEntryFunc = pEntryFun;
         pCurThread->pStackAddr = pAddress;
         pCurThread->stackSize = size;
+        pCurThread->psp = (u32_t)kernel_stack_frame_init(pEntryFun, pCurThread->pStackAddr, pCurThread->stackSize);
 
-        pCurThread->PSPStartAddr = (u32_t)kernel_stack_frame_init(pEntryFun, pCurThread->pStackAddr, pCurThread->stackSize);
-        timer_init_for_thread(kernel_member_unified_id_threadToTimer(id));
-
+        timeout_init(&pCurThread->expire, _thread_callback_fromTimeOut);
         _thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
 
         EXIT_CRITICAL_SECTION();
@@ -245,14 +250,14 @@ static i32p_t _thread_suspend_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     thread_context_t *pCurThread = NULL;
-    i32p_t postcode = _PCER;
+    i32p_t postcode = PC_EOR;
 
     pCurThread = _thread_object_contextGet(id);
     if (!_thread_linker_Head_next_fromPending()) {
         EXIT_CRITICAL_SECTION();
         return postcode;
     }
-    postcode = kernel_thread_exit_trigger(pCurThread, OS_INVALID_ID_VAL, _thread_list_waitingHeadGet(), OS_TIME_FOREVER_VAL);
+    postcode = kernel_thread_exit_trigger(pCurThread, NULL, _thread_list_waitingHeadGet(), OS_TIME_FOREVER_VAL);
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -277,7 +282,7 @@ static i32p_t _thread_yield_privilege_routine(arguments_t *pArgs)
         EXIT_CRITICAL_SECTION();
         return postcode;
     }
-    postcode = kernel_thread_exit_trigger(pCurThread, OS_INVALID_ID_VAL, _thread_list_waitingHeadGet(), OS_TIME_FOREVER_VAL);
+    postcode = kernel_thread_exit_trigger(pCurThread, NULL, _thread_list_waitingHeadGet(), OS_TIME_FOREVER_VAL);
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -295,7 +300,7 @@ static i32p_t _thread_delete_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     thread_context_t *pCurThread = NULL;
-    i32p_t postcode = _PCER;
+    i32p_t postcode = PC_EOR;
 
     pCurThread = _thread_object_contextGet(id);
     if (id == _thread_id_runtime_get()) {
@@ -329,10 +334,10 @@ static i32p_t _thread_sleep_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
     u32_t timeout_ms = (u32_t)pArgs[0].u32_val;
     thread_context_t *pCurThread = NULL;
-    i32p_t postcode = _PCER;
+    i32p_t postcode = PC_EOR;
 
     pCurThread = kernel_thread_runContextGet();
-    postcode = kernel_thread_exit_trigger(pCurThread, OS_INVALID_ID_VAL, _thread_list_waitingHeadGet(), timeout_ms);
+    postcode = kernel_thread_exit_trigger(pCurThread, NULL, _thread_list_waitingHeadGet(), timeout_ms);
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -425,11 +430,11 @@ os_id_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t 
 i32p_t _impl_thread_resume(os_id_t id)
 {
     if (_thread_id_isInvalid(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
     if (!_thread_object_isInit(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
     arguments_t arguments[] = {
@@ -449,11 +454,11 @@ i32p_t _impl_thread_resume(os_id_t id)
 i32p_t _impl_thread_suspend(os_id_t id)
 {
     if (_thread_id_isInvalid(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
     if (!_thread_object_isInit(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
     arguments_t arguments[] = {
@@ -473,7 +478,7 @@ i32p_t _impl_thread_suspend(os_id_t id)
 i32p_t _impl_thread_yield(void)
 {
     if (!kernel_isInThreadMode()) {
-        return _PCER;
+        return PC_EOR;
     }
 
     return kernel_privilege_invoke((const void *)_thread_yield_privilege_routine, NULL);
@@ -489,11 +494,11 @@ i32p_t _impl_thread_yield(void)
 i32p_t _impl_thread_delete(os_id_t id)
 {
     if (_thread_id_isInvalid(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
     if (!_thread_object_isInit(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
     arguments_t arguments[] = {
@@ -513,11 +518,11 @@ i32p_t _impl_thread_delete(os_id_t id)
 i32p_t _impl_thread_sleep(u32_t timeout_ms)
 {
     if (!timeout_ms) {
-        return _PCER;
+        return PC_EOR;
     }
 
     if (!kernel_isInThreadMode()) {
-        return _PCER;
+        return PC_EOR;
     }
 
     arguments_t arguments[] = {
@@ -581,7 +586,7 @@ b_t thread_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
     pMsgs->pName = pCurThread->head.pName;
 
     pMsgs->thread.priority = pCurThread->priority.level;
-    pMsgs->thread.current_psp = (u32_t)pCurThread->PSPStartAddr;
+    pMsgs->thread.current_psp = (u32_t)pCurThread->psp;
 
     u32_t *pData_u32 = (u32_t *)pCurThread->pStackAddr;
     u32_t unused = 0u;

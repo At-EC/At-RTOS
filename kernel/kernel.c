@@ -153,7 +153,7 @@ static u32_t *_kernel_thread_PSP_Get(os_id_t id)
 {
     thread_context_t *pCurThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(id);
 
-    return (u32_t *)&pCurThread->PSPStartAddr;
+    return (u32_t *)&pCurThread->psp;
 }
 
 /**
@@ -231,23 +231,11 @@ static void _kernel_thread_entry_schedule(void)
             pEntry->pEntryCallFun(pCurThread->head.id);
             pEntry->pEntryCallFun = NULL;
         }
-        pCurThread->schedule.hold = OS_INVALID_ID_VAL;
+        pCurThread->schedule.pPendCtx = NULL;
 
         _kernel_schedule_entry_time_analyze(pCurThread->head.id);
         kernel_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
     }
-}
-
-/**
- * @brief The thread timeout callback fucntion.
- *
- * @param id The timer unique id.
- */
-static void _kernel_thread_callback_fromTimeOut(os_id_t id)
-{
-    id = kernel_member_unified_id_timerToThread(id);
-    thread_context_t *pCurThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(id);
-    kernel_thread_entry_trigger(pCurThread, PC_OS_WAIT_TIMEOUT, NULL);
 }
 
 /**
@@ -260,7 +248,7 @@ static b_t _kernel_thread_exit_schedule(void)
     list_iterator_t it = ITERATION_NULL;
     thread_context_t *pCurThread = NULL;
     thread_exit_t *pExit = NULL;
-    b_t request = FALSE;
+    b_t need = false;
 
     /* The thread block */
     list_t *pList = (list_t *)kernel_member_list_get(KERNEL_MEMBER_THREAD, KERNEL_MEMBER_LIST_THREAD_EXIT);
@@ -270,19 +258,17 @@ static b_t _kernel_thread_exit_schedule(void)
 
         if (pExit->timeout_us) {
             os_id_t id = kernel_member_unified_id_threadToTimer(pCurThread->head.id);
-            timer_start_for_thread(id, pExit->timeout_us, _kernel_thread_callback_fromTimeOut);
-
+            timeout_set(&pCurThread->expire, pExit->timeout_us, false);
             if (pExit->timeout_us != OS_TIME_FOREVER_VAL) {
-                request = TRUE;
+                need = true;
             }
         }
-
         _kernel_schedule_exit_time_analyze(pCurThread->head.id);
         _kernel_thread_list_transfer_toTargetBlocking((linker_head_t *)&pCurThread->head, (list_t *)pExit->pToList);
         pCurThread->schedule.entry.result = _PCER;
     }
 
-    return request;
+    return need;
 }
 
 /**
@@ -300,7 +286,7 @@ static i32p_t _kernel_start_privilege_routine(arguments_t *pArgs)
 
     kthread_init();
     port_interrupt_init();
-    clock_time_init(timer_elapsed_handler);
+    clock_time_init(timeout_handler);
 
     g_kernel_resource.current = _kernel_thread_nextIdGet();
     g_kernel_resource.run = TRUE;
@@ -769,9 +755,9 @@ void kernel_thread_list_transfer_toPend(linker_head_t *pCurHead)
  *
  * @return The result of exit operation.
  */
-i32p_t kernel_thread_exit_trigger(thread_context_t *pCurThread, os_id_t hold, list_t *pToList, u32_t timeout_us)
+i32p_t kernel_thread_exit_trigger(thread_context_t *pCurThread, void* pHoldCtx, list_t *pToList, u32_t timeout_us)
 {
-    pCurThread->schedule.hold = hold;
+    pCurThread->schedule.pPendCtx = pHoldCtx;
     pCurThread->schedule.exit.pToList = pToList;
     pCurThread->schedule.exit.timeout_us = timeout_us;
     kernel_thread_list_transfer_toExit((linker_head_t *)&pCurThread->head);

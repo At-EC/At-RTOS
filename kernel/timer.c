@@ -18,7 +18,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PCER PC_IER(PC_OS_CMPT_TIMER_8)
+#define PC_EOR PC_IER(PC_OS_CMPT_TIMER_8)
 
 /**
  * Data structure for location timer
@@ -29,6 +29,14 @@ typedef struct {
 
     /* The clock time total count value */
     u32_t remaining_us;
+
+    list_t tt_wait_list;
+
+    list_t tt_pend_list;
+
+    list_t tt_idle_list;
+
+    list_t callback_list;
 } _timer_resource_t;
 
 /**
@@ -43,200 +51,9 @@ _timer_resource_t g_timer_resource = {0u};
  *
  * @return The pointer of the current unique id timer context.
  */
-static timer_context_t *_timer_object_contextGet(os_id_t id)
+static timer_context_t *_timer_context_get(os_id_t id)
 {
     return (timer_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-}
-
-/**
- * @brief Get the stoping timer list head.
- *
- * @return The value of the stoping list head.
- */
-static list_t *_timer_list_stopingHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_TIMER, KERNEL_MEMBER_LIST_TIMER_STOP);
-}
-
-/**
- * @brief Get the waiting timer list head.
- *
- * @return The value of the waiting list head.
- */
-static list_t *_timer_list_waitingHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_TIMER, KERNEL_MEMBER_LIST_TIMER_WAIT);
-}
-
-/**
- * @brief Get the ending timer list head.
- *
- * @return The value of the ending list head.
- */
-static list_t *_timer_list_endingHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_TIMER, KERNEL_MEMBER_LIST_TIMER_END);
-}
-
-/**
- * @brief Get the pending timer list head.
- *
- * @return The value of the pending list head.
- */
-static list_t *_timer_list_pendingHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_TIMER, KERNEL_MEMBER_LIST_TIMER_PEND);
-}
-
-/**
- * @brief Get the running timer list head.
- *
- * @return The value of the running list head.
- */
-static list_t *_timer_list_runningHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_TIMER, KERNEL_MEMBER_LIST_TIMER_RUN);
-}
-
-/**
- * @brief Remove a list node from the waiting list and push the duration time into the next node.
- *
- * @param The node linker head pointer.
- */
-static void _timer_list_remove_fromWaitList(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    timer_context_t *pCurTimer = (timer_context_t *)&pCurHead->linker.node;
-    timer_context_t *pNext = (timer_context_t *)pCurTimer->head.linker.node.pNext;
-
-    if (pNext) {
-        pNext->duration_us += pCurTimer->duration_us;
-    }
-    pCurTimer->duration_us = 0u;
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Push one timer context into uninitialized status.
- *
- * Push one timer context into uninitialized status.
- *
- * @param pCurHead The pointer of the timer linker head.
- *
- * @retval NONE .
- */
-static void _timer_list_transfer_toNoInitList(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    linker_list_transaction_common(&pCurHead->linker, NULL, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Push one timer context into stoping list.
- *
- * @param pCurHead The pointer of the timer linker head.
- */
-static void _timer_list_transfer_toStopList(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToStopList = (list_t *)_timer_list_stopingHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToStopList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Push one timer context into ending list.
- *
- * @param pCurHead The pointer of the timer linker head.
- */
-static void _timer_list_transfer_toEndList(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToEndList = (list_t *)_timer_list_endingHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToEndList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Push one timer context into pending list.
- *
- * @param pCurHead The pointer of the timer linker head.
- */
-static void _timer_list_transfer_toPendList(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToPendList = (list_t *)_timer_list_pendingHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToPendList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Compare the customization value between the current and extract thread.
- *
- * @param pCurNode The pointer of the current thread node.
- * @param pExtractNode The pointer of the extract thread node.
- *
- * @return The false value indicates it is right position and it can kiil the loop routine,
- *         otherwise is not a correct position.
- */
-static b_t _timer_node_Order_compare_condition(list_node_t *pCurNode, list_node_t *pExtractNode)
-{
-    timer_context_t *pCurTimer = (timer_context_t *)pCurNode;
-    timer_context_t *pExtractTimer = (timer_context_t *)pExtractNode;
-
-    if ((!pCurTimer) || (!pExtractTimer)) {
-        /* no available timer */
-        return FALSE;
-    }
-
-    if (pCurTimer->duration_us > pExtractTimer->duration_us) {
-        pCurTimer->duration_us -= pExtractTimer->duration_us;
-        return TRUE;
-    } else {
-        pExtractTimer->duration_us -= pCurTimer->duration_us;
-        return FALSE;
-    }
-}
-
-/**
- * @brief Push one timer context into waiting list,
- *        but it has to compared the existed duration time, and calculate the divided time.
- *
- * @param pCurHead The pointer of the timer linker head.
- */
-static void _timer_list_transfer_toWaitList(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToWaitList = (list_t *)_timer_list_waitingHeadGet();
-    linker_list_transaction_specific(&pCurHead->linker, pToWaitList, _timer_node_Order_compare_condition);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Pick up a shortest remaining time from the waiting list.
- *
- * @return The value of waiting linker head pointer.
- */
-static linker_head_t *_timer_linker_head_fromWaiting(void)
-{
-    ENTER_CRITICAL_SECTION();
-    list_t *pListWaiting = (list_t *)_timer_list_waitingHeadGet();
-    EXIT_CRITICAL_SECTION();
-
-    return (linker_head_t *)(pListWaiting->pHead);
 }
 
 /**
@@ -266,11 +83,166 @@ static b_t _timer_id_isInvalid(u32_t id)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _timer_object_isInit(u32_t id)
+static b_t _timer_id_isInit(u32_t id)
 {
-    timer_context_t *pCurTimer = _timer_object_contextGet(id);
+    timer_context_t *pCurTimer = _timer_context_get(id);
 
-    return ((pCurTimer) ? (((pCurTimer->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
+    return ((pCurTimer) ? (((pCurTimer->head.cs) ? (TRUE) : (FALSE))) : FALSE);
+}
+
+/**
+ * @brief Compare the customization value between the current and extract thread.
+ *
+ * @param pCurNode The pointer of the current thread node.
+ * @param pExtractNode The pointer of the extract thread node.
+ *
+ * @return The false value indicates it is right position and it can kiil the loop routine,
+ *         otherwise is not a correct position.
+ */
+static b_t _timeout_node_Order_compare_condition(list_node_t *pCurNode, list_node_t *pExtractNode)
+{
+    struct expired_time *pCurTime = (struct expired_time *)pCurNode;
+    struct expired_time *pExtractTime = (struct expired_time *)pExtractNode;
+
+    if ((!pCurTime) || (!pExtractTime)) {
+        /* no available timer */
+        return false;
+    }
+
+    if (pCurTime->duration_us >= pExtractTime->duration_us) {
+        pCurTime->duration_us -= pExtractTime->duration_us;
+        return true;
+    } else {
+        pExtractTime->duration_us -= pCurTime->duration_us;
+        return false;
+    }
+}
+
+/**
+ * @brief Push one timer context into waiting list,
+ *        but it has to compared the existed duration time, and calculate the divided time.
+ *
+ * @param pCurHead The pointer of the timer linker head.
+ */
+static void _timeout_transfer_toWaitList(linker_t *pLinker)
+{
+    ENTER_CRITICAL_SECTION();
+
+    list_t *pToTimeoutList = (list_t *)&g_timer_resource.tt_wait_list;
+    linker_list_transaction_specific(pLinker, pToTimeoutList, _timeout_node_Order_compare_condition);
+
+    EXIT_CRITICAL_SECTION();
+}
+
+/**
+ * @brief Push one timer context into waiting list,
+ *        but it has to compared the existed duration time, and calculate the divided time.
+ *
+ * @param pCurHead The pointer of the timer linker head.
+ */
+static void _timeout_transfer_toPendList(linker_t *pLinker)
+{
+    ENTER_CRITICAL_SECTION();
+
+    list_t *pToTimeoutList = (list_t *)&g_timer_resource.tt_pend_list;
+    linker_list_transaction_common(pLinker, pToTimeoutList, LIST_TAIL);
+
+    EXIT_CRITICAL_SECTION();
+}
+
+/**
+ * @brief Push one timer context into waiting list,
+ *        but it has to compared the existed duration time, and calculate the divided time.
+ *
+ * @param pCurHead The pointer of the timer linker head.
+ */
+static void _timeout_transfer_toIdleList(linker_t *pLinker)
+{
+    ENTER_CRITICAL_SECTION();
+
+    list_t *pToTimeoutList = (list_t *)&g_timer_resource.tt_idle_list;
+    linker_list_transaction_common(pLinker, pToTimeoutList, LIST_TAIL);
+
+    EXIT_CRITICAL_SECTION();
+}
+
+/**
+ * @brief Push one timer context into uninitialized status.
+ *
+ * Push one timer context into uninitialized status.
+ *
+ * @param pCurHead The pointer of the timer linker head.
+ *
+ * @retval NONE .
+ */
+static void _timeout_transfer_toNoInitList(linker_t *pLinker)
+{
+    ENTER_CRITICAL_SECTION();
+
+    linker_list_transaction_common(pLinker, NULL, LIST_TAIL);
+
+    EXIT_CRITICAL_SECTION();
+}
+
+/**
+ * @brief Remove a list node from the waiting list and push the duration time into the next node.
+ *
+ * @param The node linker head pointer.
+ */
+static void _timeout_remove_fromWaitList(linker_t *pLinker)
+{
+    ENTER_CRITICAL_SECTION();
+
+    struct expired_time *pCurTime = (struct expired_time *)&pLinker->node;
+    struct expired_time *pNext = (struct expired_time *)pCurTime->linker.node.pNext;
+
+    if (pNext) {
+        pNext->duration_us += pCurTime->duration_us;
+    }
+    pCurTime->duration_us = 0u;
+
+    EXIT_CRITICAL_SECTION();
+}
+
+static void _timeout_schedule(void)
+{
+    ENTER_CRITICAL_SECTION();
+
+    struct expired_time *pCurExpired = (struct expired_time *)g_timer_resource.tt_wait_list.pHead;
+    if (pCurExpired) {
+        clock_time_interval_set(pCurExpired->duration_us);
+    } else {
+        clock_time_interval_set(OS_TIME_FOREVER_VAL);
+    }
+
+    EXIT_CRITICAL_SECTION();
+}
+
+static void _timer_callback_fromTimeOut(void *pLinker)
+{
+    timer_context_t* pCurTimer = (timer_context_t*)CONTAINEROF(pLinker, timer_context_t, expire);
+    struct expired_time *pExpired = (struct expired_time *)&pCurTimer->expire;
+
+    if (pCurTimer->control == TIMER_CTRL_CYCLE_VAL) {
+        u64_t timeout_us = pCurTimer->timeout_ms * 1000u;
+        u64_t elapsed_us = g_timer_resource.system_us - pExpired->duration_us;
+
+        while (elapsed_us >= timeout_us) {
+            elapsed_us -= timeout_us;
+        }
+        pExpired->duration_us = timeout_us - elapsed_us;
+        _timeout_transfer_toWaitList((linker_t *)&pExpired->linker);
+    } else if (pCurTimer->control == TIMER_CTRL_ONCE_VAL) {
+        _timeout_transfer_toIdleList((linker_t *)&pExpired->linker);
+    } else if (pCurTimer->control == TIMER_CTRL_TEMPORARY_VAL) {
+        _timeout_transfer_toNoInitList((linker_t *)&pExpired->linker);
+        os_memset((u8_t *)pCurTimer, 0u, sizeof(timer_context_t));
+    }
+
+    list_t *pCallback_list = (list_t *)&g_timer_resource.callback_list;
+    if (!list_node_isExisted(pCallback_list, &pCurTimer->call.node)) {
+        list_node_push((list_t *)&g_timer_resource.callback_list, &pCurTimer->call.node, LIST_HEAD);
+    }
 }
 
 /**
@@ -284,12 +256,7 @@ static i32p_t _timer_schedule_request_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    timer_context_t *pCurTimer = (timer_context_t *)_timer_linker_head_fromWaiting();
-    if (pCurTimer) {
-        clock_time_interval_set(pCurTimer->duration_us);
-    } else {
-        clock_time_interval_set(OS_TIME_FOREVER_VAL);
-    }
+    _timeout_schedule();
 
     EXIT_CRITICAL_SECTION();
     return 0;
@@ -317,9 +284,7 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].ptr_val);
-    u8_t ctrl = (u8_t)(pArgs[1].u8_val);
-    u32_t timeout_ms = (u32_t)(pArgs[2].u32_val);
-    const char_t *pName = (const char_t *)pArgs[3].pch_val;
+    const char_t *pName = (const char_t *)pArgs[1].pch_val;
     u32_t endAddr = 0u;
     timer_context_t *pCurTimer = NULL;
 
@@ -331,30 +296,64 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
             break;
         }
 
-        if (_timer_object_isInit(id)) {
+        if (_timer_id_isInit(id)) {
             continue;
         }
 
         os_memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
-        pCurTimer->head.id = id;
+        pCurTimer->head.cs = CS_INITED;
         pCurTimer->head.pName = pName;
-
-        pCurTimer->control = ctrl;
-        pCurTimer->timeout_ms = timeout_ms;
-        pCurTimer->duration_us = 0u;
-        pCurTimer->callEntry.pTimerCallEntry = pCallFun;
-
-        if (ctrl == TIMER_CTRL_TEMPORARY_VAL) {
-            pCurTimer->duration_us = timeout_ms * 1000u;
-            _timer_list_transfer_toWaitList((linker_head_t *)&pCurTimer->head);
-            _timer_schedule();
-        } else {
-            _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
-        }
+        pCurTimer->call.pTimerCallEntry = pCallFun;
+        timeout_init(&pCurTimer->expire, _timer_callback_fromTimeOut);
 
         EXIT_CRITICAL_SECTION();
         return id;
-    } while ((u32_t)++pCurTimer < endAddr);
+    }
+    while ((u32_t)++pCurTimer < endAddr);
+
+    EXIT_CRITICAL_SECTION();
+    return OS_INVALID_ID_VAL;
+}
+
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static u32_t _timer_automatic_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].ptr_val);
+    const char_t *pName = (const char_t *)pArgs[1].pch_val;
+    u32_t endAddr = 0u;
+    timer_context_t *pCurTimer = NULL;
+
+    pCurTimer = (timer_context_t *)kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_TIMER);
+    endAddr = (u32_t)kernel_member_id_toContainerEndAddress(KERNEL_MEMBER_TIMER);
+    do {
+        os_id_t id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurTimer);
+        if (_timer_id_isInvalid(id)) {
+            break;
+        }
+
+        if (_timer_id_isInit(id)) {
+            continue;
+        }
+
+        os_memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
+        pCurTimer->head.cs = CS_INITED;
+        pCurTimer->head.pName = pName;
+        pCurTimer->control = TIMER_CTRL_TEMPORARY_VAL;
+        pCurTimer->call.pTimerCallEntry = pCallFun;
+        timeout_init(&pCurTimer->expire, _timer_callback_fromTimeOut);
+
+        EXIT_CRITICAL_SECTION();
+        return id;
+    }
+    while ((u32_t)++pCurTimer < endAddr);
 
     EXIT_CRITICAL_SECTION();
     return OS_INVALID_ID_VAL;
@@ -374,23 +373,11 @@ static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     u8_t ctrl = (u8_t)pArgs[1].u8_val;
     u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
-    timer_context_t *pCurTimer = NULL;
 
-    pCurTimer = _timer_object_contextGet(id);
+    timer_context_t *pCurTimer = _timer_context_get(id);
     pCurTimer->timeout_ms = timeout_ms;
     pCurTimer->control = ctrl;
-
-    if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
-        _timer_list_remove_fromWaitList((linker_head_t *)&pCurTimer->head);
-    }
-
-    if (pCurTimer->timeout_ms == OS_TIME_FOREVER_VAL) {
-        _timer_list_transfer_toEndList((linker_head_t *)&pCurTimer->head);
-    } else {
-        pCurTimer->duration_us = timeout_ms * 1000u;
-        _timer_list_transfer_toWaitList((linker_head_t *)&pCurTimer->head);
-    }
-    _timer_schedule();
+    timeout_set(&pCurTimer->expire, timeout_ms, true);
 
     EXIT_CRITICAL_SECTION();
     return 0;
@@ -408,19 +395,9 @@ static u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
-    timer_context_t *pCurTimer = NULL;
-    b_t request = FALSE;
 
-    pCurTimer = _timer_object_contextGet(id);
-    if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
-        _timer_list_remove_fromWaitList((linker_head_t *)&pCurTimer->head);
-        request = TRUE;
-    }
-    _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
-
-    if (request) {
-        _timer_schedule();
-    }
+    timer_context_t *pCurTimer = _timer_context_get(id);
+    timeout_remove(&pCurTimer->expire, true);
 
     EXIT_CRITICAL_SECTION();
     return 0;
@@ -494,27 +471,38 @@ u32_t _impl_timer_os_id_to_number(u32_t id)
  * @brief Initialize a new timer, or allocate a temporary timer to run.
  *
  * @param pCallFun The timer entry function pointer.
- * @param control It defines the timer mode.
- * @param timeout_ms The expired time.
  * @param pName The timer's name, it supported NULL pointer.
  *
  * @return The value of the timer unique id.
  */
-os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, u8_t control, u32_t timeout_ms, const char_t *pName)
+os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, const char_t *pName)
 {
-    if ((control != TIMER_CTRL_ONCE_VAL) && (control && TIMER_CTRL_ONCE_VAL) && (control != TIMER_CTRL_TEMPORARY_VAL)) {
-        return OS_INVALID_ID_VAL;
-    }
-
     arguments_t arguments[] = {
         [0] = {.ptr_val = (const void *)pCallFun},
-        [1] = {.u8_val = (u8_t)control},
-        [2] = {.u32_val = (u32_t)timeout_ms},
-        [3] = {.pch_val = (const void *)pName},
+        [1] = {.pch_val = (const void *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_timer_init_privilege_routine, arguments);
 }
+
+/**
+ * @brief Allocate a temporary timer to run.
+ *
+ * @param pCallFun The timer entry function pointer.
+ * @param pName The timer's name, it supported NULL pointer.
+ *
+ * @return The value of the timer unique id.
+ */
+os_id_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, const char_t *pName)
+{
+    arguments_t arguments[] = {
+        [0] = {.ptr_val = (const void *)pCallFun},
+        [1] = {.pch_val = (const void *)pName},
+    };
+
+    return kernel_privilege_invoke((const void *)_timer_automatic_privilege_routine, arguments);
+}
+
 
 /**
  * @brief Timer starts operation, be careful if the timer's last time isn't expired or be handled,
@@ -529,19 +517,19 @@ os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, u8_t control, u32_t tim
 i32p_t _impl_timer_start(os_id_t id, u8_t control, u32_t timeout_ms)
 {
     if (_timer_id_isInvalid(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
-    if (!_timer_object_isInit(id)) {
-        return _PCER;
+    if (!_timer_id_isInit(id)) {
+        return PC_EOR;
     }
 
     if (!timeout_ms) {
-        return _PCER;
+        return PC_EOR;
     }
 
     if ((control != TIMER_CTRL_ONCE_VAL) && (control != TIMER_CTRL_CYCLE_VAL)) {
-        return _PCER;
+        return PC_EOR;
     }
 
     arguments_t arguments[] = {
@@ -563,11 +551,11 @@ i32p_t _impl_timer_start(os_id_t id, u8_t control, u32_t timeout_ms)
 i32p_t _impl_timer_stop(os_id_t id)
 {
     if (_timer_id_isInvalid(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
-    if (!_timer_object_isInit(id)) {
-        return _PCER;
+    if (!_timer_id_isInit(id)) {
+        return PC_EOR;
     }
 
     arguments_t arguments[] = {
@@ -590,15 +578,13 @@ b_t _impl_timer_busy(os_id_t id)
         return FALSE;
     }
 
-    if (!_timer_object_isInit(id)) {
+    if (!_timer_id_isInit(id)) {
         return FALSE;
     }
 
     ENTER_CRITICAL_SECTION();
-
-    linker_head_t *pCurHead = (linker_head_t *)_timer_object_contextGet(id);
-    b_t isBusy = (pCurHead->linker.pList == (list_t *)_timer_list_waitingHeadGet());
-    isBusy |= (pCurHead->linker.pList == (list_t *)_timer_list_endingHeadGet());
+    timer_context_t* pCurTimer = _timer_context_get(id);
+    b_t isBusy = (pCurTimer->expire.linker.pList == (list_t *)&g_timer_resource.tt_wait_list) ? TRUE : FALSE;
 
     EXIT_CRITICAL_SECTION();
     return isBusy;
@@ -622,235 +608,6 @@ u32_t _impl_timer_total_system_ms_get(void)
 u32_t _impl_timer_total_system_us_get(void)
 {
     return kernel_privilege_invoke((const void *)_timer_total_system_us_get_privilege_routine, NULL);
-}
-
-/**
- * @brief Initialize a timer for internal thread context use.
- *
- * @param id The thread unique id is same as timer.
- */
-void timer_init_for_thread(os_id_t id)
-{
-    ENTER_CRITICAL_SECTION();
-
-    timer_context_t *pCurTimer = _timer_object_contextGet(id);
-
-    os_memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
-    pCurTimer->head.id = id;
-    pCurTimer->head.pName = "TH";
-
-    pCurTimer->control = TIMER_CTRL_ONCE_VAL;
-    pCurTimer->timeout_ms = 0u;
-    pCurTimer->duration_us = 0u;
-    pCurTimer->callEntry.pThreadCallEntry = NULL;
-
-    _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Timer start for internal thread context use.
- *
- * @param id The thread unique id is same as timer.
- * @param timeout_ms The thread timer timeout time.
- * @param pCallback The thread timeout callback function.
- */
-void timer_start_for_thread(os_id_t id, u32_t timeout_ms, void (*pCallback)(os_id_t))
-{
-    ENTER_CRITICAL_SECTION();
-
-    timer_context_t *pCurTimer = _timer_object_contextGet(id); // Only for internal thread use
-
-    pCurTimer->callEntry.pThreadCallEntry = pCallback;
-    pCurTimer->timeout_ms = OS_TIME_FOREVER_VAL;
-    pCurTimer->control = TIMER_CTRL_ONCE_VAL;
-
-    if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
-        _timer_list_remove_fromWaitList((linker_head_t *)&pCurTimer->head);
-    }
-
-    if (timeout_ms == OS_TIME_FOREVER_VAL) {
-        _timer_list_transfer_toEndList((linker_head_t *)&pCurTimer->head);
-    } else {
-        pCurTimer->duration_us = (timeout_ms * 1000u);
-        _timer_list_transfer_toWaitList((linker_head_t *)&pCurTimer->head);
-    }
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Timer callback function handle in the kernel thread.
- */
-void timer_reamining_elapsed_handler(void)
-{
-    list_t *pListRunning = (list_t *)_timer_list_runningHeadGet();
-
-    ENTER_CRITICAL_SECTION();
-    struct callTimerEntry *pCallFunEntry = (struct callTimerEntry *)list_node_pop(pListRunning, LIST_TAIL);
-    EXIT_CRITICAL_SECTION();
-
-    while (pCallFunEntry) {
-        if (pCallFunEntry->pTimerCallEntry) {
-            pCallFunEntry->pTimerCallEntry();
-        }
-
-        ENTER_CRITICAL_SECTION();
-        pCallFunEntry = (struct callTimerEntry *)list_node_pop(pListRunning, LIST_TAIL);
-        EXIT_CRITICAL_SECTION();
-    }
-}
-
-/**
- * @brief kernel RTOS handle the clock time.
- *
- * @param elapsed_us Clock time reported elapsed time.
- */
-void timer_elapsed_handler(u32_t elapsed_us)
-{
-    ENTER_CRITICAL_SECTION();
-
-    timer_context_t *pCurTimer = NULL;
-    g_timer_resource.remaining_us = elapsed_us;
-
-    list_iterator_t it = {0u};
-    list_t *pListWaiting = (list_t *)_timer_list_waitingHeadGet();
-    list_iterator_init(&it, pListWaiting);
-    while (list_iterator_next_condition(&it, (void *)&pCurTimer)) {
-        if (g_timer_resource.remaining_us >= pCurTimer->duration_us) {
-            g_timer_resource.remaining_us -= pCurTimer->duration_us;
-            g_timer_resource.system_us += pCurTimer->duration_us;
-            pCurTimer->duration_us = 0u;
-
-            if (kernel_member_unified_id_toId(pCurTimer->head.id) == KERNEL_MEMBER_TIMER_INTERNAL) {
-                _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
-
-                if (pCurTimer->callEntry.pThreadCallEntry) {
-                    pCurTimer->callEntry.pThreadCallEntry(pCurTimer->head.id);
-                }
-                pCurTimer->callEntry.pThreadCallEntry = NULL;
-            } else {
-                pCurTimer->duration_us = g_timer_resource.system_us;
-                _timer_list_transfer_toPendList((linker_head_t *)&pCurTimer->head);
-            }
-        } else {
-            pCurTimer->duration_us -= g_timer_resource.remaining_us;
-            break;
-        }
-    }
-
-    g_timer_resource.system_us += g_timer_resource.remaining_us;
-    g_timer_resource.remaining_us = 0u;
-
-    b_t request = FALSE;
-    list_t *pListPending = (list_t *)_timer_list_pendingHeadGet();
-    list_iterator_init(&it, pListPending);
-    while (list_iterator_next_condition(&it, (void *)&pCurTimer)) {
-        if (pCurTimer->control == TIMER_CTRL_CYCLE_VAL) {
-            u64_t timeout_us = pCurTimer->timeout_ms * 1000u;
-            u64_t elapsed_us = g_timer_resource.system_us - pCurTimer->duration_us;
-
-            while (elapsed_us >= timeout_us) {
-                elapsed_us -= timeout_us;
-            }
-            pCurTimer->duration_us = timeout_us - elapsed_us;
-            _timer_list_transfer_toWaitList((linker_head_t *)&pCurTimer->head);
-        } else if (pCurTimer->control == TIMER_CTRL_ONCE_VAL) {
-            pCurTimer->duration_us = 0u;
-            _timer_list_transfer_toStopList((linker_head_t *)&pCurTimer->head);
-        } else if (pCurTimer->control == TIMER_CTRL_TEMPORARY_VAL) {
-            _timer_list_transfer_toNoInitList((linker_head_t *)&pCurTimer->head);
-            os_memset((u8_t *)pCurTimer, 0u, sizeof(timer_context_t));
-        }
-        list_t *pListRunning = (list_t *)_timer_list_runningHeadGet();
-        if (!list_node_isExisted(pListRunning, &pCurTimer->callEntry.node)) {
-            list_node_push(_timer_list_runningHeadGet(), &pCurTimer->callEntry.node, LIST_HEAD);
-        }
-        request = TRUE;
-    }
-
-    if (request) {
-        kernel_message_notification();
-    }
-    _timer_schedule();
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Get timer snapshot informations.
- *
- * @param instance The timer instance number.
- * @param pMsgs The kernel snapshot information pointer.
- *
- * @return TRUE: Operation pass, FALSE: Operation failed.
- */
-b_t timer_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
-{
-#if defined KTRACE
-    timer_context_t *pCurTimer = NULL;
-    u32_t offset = 0u;
-    os_id_t id = OS_INVALID_ID_VAL;
-
-    ENTER_CRITICAL_SECTION();
-
-    offset = sizeof(timer_context_t) * instance;
-    pCurTimer = (timer_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_TIMER) + offset);
-    id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurTimer);
-    os_memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
-
-    if (_timer_id_isInvalid(id)) {
-        EXIT_CRITICAL_SECTION();
-        return FALSE;
-    }
-
-    if (pCurTimer->head.linker.pList == _timer_list_stopingHeadGet()) {
-        pMsgs->pState = "stop";
-    } else if (pCurTimer->head.linker.pList == _timer_list_waitingHeadGet()) {
-        pMsgs->pState = "wait";
-    } else if (pCurTimer->head.linker.pList == _timer_list_endingHeadGet()) {
-        pMsgs->pState = "end";
-    } else if (pCurTimer->head.linker.pList == _timer_list_pendingHeadGet()) {
-        pMsgs->pState = "pend";
-    } else if (pCurTimer->head.linker.pList == _timer_list_runningHeadGet()) {
-        pMsgs->pState = "run";
-    } else if (pCurTimer->head.linker.pList) {
-        pMsgs->pState = "*";
-    } else {
-        pMsgs->pState = "unused";
-
-        EXIT_CRITICAL_SECTION();
-        return FALSE;
-    }
-
-    pMsgs->id = pCurTimer->head.id;
-    pMsgs->pName = pCurTimer->head.pName;
-
-    pMsgs->timer.cycle = pCurTimer->control;
-    pMsgs->timer.timeout_ms = pCurTimer->timeout_ms;
-
-    EXIT_CRITICAL_SECTION();
-    return TRUE;
-#else
-    return FALSE;
-#endif
-}
-
-/**
- * @brief timer stops operation.
- *
- * @param id The timer unique id.
- *
- * @return The result of timer stop operation.
- */
-i32p_t timer_stop_for_thread(os_id_t id)
-{
-    if (kernel_member_unified_id_toId(id) != KERNEL_MEMBER_TIMER_INTERNAL) {
-        return _PCER;
-    }
-
-    return _impl_timer_stop(id);
 }
 
 /**
@@ -893,6 +650,132 @@ u32_t timer_total_system_us_get(void)
 i32p_t timer_schedule(void)
 {
     return _timer_schedule();
+}
+
+/**
+ * @brief Timer callback function handle in the kernel thread.
+ */
+void timer_reamining_elapsed_handler(void)
+{
+    list_t *pListRunning = (list_t *)&g_timer_resource.callback_list;
+
+    ENTER_CRITICAL_SECTION();
+    struct timer_callback *pCallFunEntry = (struct timer_callback *)list_node_pop(pListRunning, LIST_TAIL);
+    EXIT_CRITICAL_SECTION();
+
+    while (pCallFunEntry) {
+        if (pCallFunEntry->pTimerCallEntry) {
+            pCallFunEntry->pTimerCallEntry();
+        }
+
+        ENTER_CRITICAL_SECTION();
+        pCallFunEntry = (struct timer_callback *)list_node_pop(pListRunning, LIST_TAIL);
+        EXIT_CRITICAL_SECTION();
+    }
+}
+
+void timeout_init(struct expired_time *pExpire, pTimeout_callbackFunc_t fun)
+{
+    pExpire->duration_us = 0u;
+    pExpire->fn = fun;
+    _timeout_transfer_toIdleList((linker_t *)pExpire);
+}
+
+void timeout_set(struct expired_time *pExpire, u32_t timeout_ms, b_t immediately)
+{
+    ENTER_CRITICAL_SECTION();
+    b_t need = false;
+    if (pExpire->linker.pList == &g_timer_resource.tt_wait_list) {
+        _timeout_remove_fromWaitList((linker_t *)&pExpire->linker);
+        need = true;
+    }
+
+    if (timeout_ms == OS_TIME_FOREVER_VAL) {
+        _timeout_transfer_toIdleList((linker_t *)&pExpire->linker);
+    } else {
+        pExpire->duration_us = timeout_ms * 1000u;
+        _timeout_transfer_toWaitList((linker_t *)&pExpire->linker);
+        need = true;
+    }
+
+    if (need && immediately) {
+        _timer_schedule();
+    }
+    EXIT_CRITICAL_SECTION();
+}
+
+void timeout_remove(struct expired_time *pExpire, b_t immediately)
+{
+    ENTER_CRITICAL_SECTION();
+
+    b_t need = false;
+    if (pExpire->linker.pList == &g_timer_resource.tt_wait_list) {
+        _timeout_remove_fromWaitList((linker_t *)&pExpire->linker);
+        need = true;
+    }
+    _timeout_transfer_toIdleList((linker_t *)&pExpire->linker);
+
+    if (need && immediately) {
+        _timer_schedule();
+    }
+
+    EXIT_CRITICAL_SECTION();
+}
+
+/**
+ * @brief kernel RTOS handle the clock time.
+ *
+ * @param elapsed_us Clock time reported elapsed time.
+ */
+void timeout_handler(u32_t elapsed_us)
+{
+    ENTER_CRITICAL_SECTION();
+
+    struct expired_time *pCurExpired = NULL;
+    g_timer_resource.remaining_us = elapsed_us;
+
+    list_iterator_t it = {0u};
+    list_t *pListWaiting = (list_t *)&g_timer_resource.tt_wait_list;
+    list_iterator_init(&it, pListWaiting);
+    while (list_iterator_next_condition(&it, (void *)&pCurExpired)) {
+        if (g_timer_resource.remaining_us >= pCurExpired->duration_us) {
+            g_timer_resource.remaining_us -= pCurExpired->duration_us;
+            g_timer_resource.system_us += pCurExpired->duration_us;
+            pCurExpired->duration_us = 0u;
+
+            if (pCurExpired->fn != _timer_callback_fromTimeOut) {
+                pCurExpired->fn((void *)pCurExpired);
+
+                _timeout_transfer_toIdleList((linker_t *)&pCurExpired->linker);
+            } else {
+                pCurExpired->duration_us = g_timer_resource.system_us;
+                _timeout_transfer_toPendList((linker_t *)&pCurExpired->linker);
+            }
+        } else {
+            pCurExpired->duration_us -= g_timer_resource.remaining_us;
+            break;
+        }
+    }
+
+    g_timer_resource.system_us += g_timer_resource.remaining_us;
+    g_timer_resource.remaining_us = 0u;
+
+    b_t need = FALSE;
+    list_t *pListPending = (list_t *)&g_timer_resource.tt_pend_list;
+    list_iterator_init(&it, pListPending);
+    while (list_iterator_next_condition(&it, (void *)&pCurExpired)) {
+        if (pCurExpired->fn != NULL) {
+            pCurExpired->fn((void *)pCurExpired);
+            need = TRUE;
+        }
+    }
+
+    if (need) {
+        kernel_message_notification();
+    }
+    _timer_schedule();
+
+    EXIT_CRITICAL_SECTION();
 }
 
 #ifdef __cplusplus

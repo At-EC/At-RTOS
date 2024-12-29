@@ -33,61 +33,84 @@ typedef void (*pThread_callbackFunc_t)(os_id_t);
 typedef void (*pThread_entryFunc_t)(void);
 typedef void (*pEvent_callbackFunc_t)(void);
 typedef void (*pSubscribe_callbackFunc_t)(const void *, u16_t);
+typedef void (*pTimeout_callbackFunc_t)(void *);
+typedef void (*pNotify_callbackFunc_t)(void *);
 
-typedef struct {
-    /* A common struct head to link with other context */
-    linker_head_t head;
+#define CS_INITED (1u)
 
-    u32_t refresh_count;
+struct base_head {
+    u8_t cs; // control and status
+
+    const char_t *pName;
+};
+
+struct publish_context {
+    struct base_head head;
 
     list_t subscribeListHead;
-} publish_context_t;
+};
+typedef struct publish_context publish_context_t;
+
+struct notify_callback {
+    linker_t linker;
+
+    u32_t updated;
+
+    u32_t muted;
+
+    void *pData;
+
+    u16_t len;
+
+    pNotify_callbackFunc_t fn;
+};
+
+struct subscribe_callback {
+    list_node_t node;
+
+    pSubscribe_callbackFunc_t pSubCallEntry;
+};
 
 typedef struct {
-    /* A common struct head to link with other context */
-    linker_head_t head;
+    struct base_head head;
 
-    os_id_t hold;
+    struct publish_context *pPublisher;
 
-    u32_t last_count;
+    u32_t accepted;
 
-    u32_t isMute;
+    struct notify_callback notify;
 
-    struct callSubEntry {
-        list_node_t node;
-
-        void *pDataAddress;
-
-        u16_t dataSize;
-
-        pSubscribe_callbackFunc_t pNotificationHandler;
-    } callEntry;
+    struct subscribe_callback call;
 } subscribe_context_t;
 
+struct expired_time {
+    linker_t linker;
+
+    u64_t duration_us;
+
+    pTimeout_callbackFunc_t fn;
+};
+
+struct timer_callback {
+    list_node_t node;
+
+    pTimer_callbackFunc_t pTimerCallEntry;
+};
+
 typedef struct {
-    /* A common struct head to link with other context */
-    linker_head_t head;
+    struct base_head head;
 
     u8_t control;
 
     u32_t timeout_ms;
 
-    u64_t duration_us;
+    struct expired_time expire;
 
-    struct callTimerEntry {
-        list_node_t node;
-
-        union {
-            pTimer_callbackFunc_t pTimerCallEntry;
-
-            pThread_callbackFunc_t pThreadCallEntry;
-        };
-    } callEntry;
+    struct timer_callback call;
 } timer_context_t;
 
 typedef struct {
-    /* A common struct head to link with other context */
-    linker_head_t head;
+    struct base_head head;
 
     u8_t remains;
 
@@ -99,10 +122,11 @@ typedef struct {
 } semaphore_context_t;
 
 typedef struct {
-    /* A common struct head to link with other context */
-    linker_head_t head;
+    struct base_head head;
 
-    os_id_t holdThreadId;
+    b_t locked;
+
+    struct thread_context *pHoldThread;
 
     os_priority_t originalPriority;
 
@@ -116,8 +140,7 @@ typedef struct {
 } queue_sch_t;
 
 typedef struct {
-    /* A common struct head to link with other context */
-    linker_head_t head;
+    struct base_head head;
 
     const void *pQueueBufferAddress;
 
@@ -139,7 +162,7 @@ typedef struct {
 } queue_context_t;
 
 typedef struct {
-    linker_head_t head;
+    struct base_head head;
 
     const void *pMemAddress;
 
@@ -159,9 +182,14 @@ typedef struct {
     os_evt_val_t *pEvtVal;
 } event_sch_t;
 
+struct event_callback {
+    list_node_t node;
+
+    pTimer_callbackFunc_t pEvtCallEntry;
+};
+
 typedef struct {
-    /* A common struct head to link with other context */
-    linker_head_t head;
+    struct base_head head;
 
     /* The event signal value */
     u32_t value;
@@ -179,10 +207,7 @@ typedef struct {
     u32_t triggered;
 
     /* When the event change that meet with edge setting, the function will be called */
-    struct callFun {
-        list_node_t node;
-        pEvent_callbackFunc_t pCallbackFunc;
-    } call;
+    struct event_callback call;
 
     /* The blocked thread list */
     list_t blockingThreadHead;
@@ -215,7 +240,7 @@ typedef struct {
 } analyze_t;
 
 typedef struct {
-    os_id_t hold;
+    void *pPendCtx;
 
     void *pPendData;
 
@@ -230,7 +255,9 @@ typedef struct {
     };
 } action_schedule_t;
 
-typedef struct {
+
+
+struct thread_context {
     /* A common struct head to link with other context */
     linker_head_t head;
 
@@ -242,10 +269,13 @@ typedef struct {
 
     u32_t stackSize;
 
-    u32_t PSPStartAddr;
+    u32_t psp;
+
+    struct expired_time expire;
 
     action_schedule_t schedule;
-} thread_context_t;
+};
+typedef struct thread_context thread_context_t;
 
 /** @brief The kernel object type enum. */
 enum {

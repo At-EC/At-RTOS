@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PCER PC_IER(PC_OS_CMPT_EVENT_7)
+#define PC_EOR PC_IER(PC_OS_CMPT_EVENT_7)
 
 /**
  * @brief Get the event context based on provided unique id.
@@ -26,48 +26,9 @@ extern "C" {
  *
  * @return The pointer of the current unique id event context.
  */
-static event_context_t *_event_object_contextGet(os_id_t id)
+static event_context_t *_event_context_get(os_id_t id)
 {
     return (event_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-}
-
-/**
- * @brief Get the init event list head.
- *
- * @return The value of the init list head.
- */
-static list_t *_event_list_initHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_EVENT, KERNEL_MEMBER_LIST_EVENT_INIT);
-}
-
-/**
- * @brief Pick up a highest priority thread that blocking by the event pending list.
- *
- * @param The event unique id.
- *
- * @return The highest blocking thread head.
- */
-static list_t *_event_list_blockingHeadGet(os_id_t id)
-{
-    event_context_t *pCurEvent = _event_object_contextGet(id);
-
-    return (list_t *)((pCurEvent) ? (&pCurEvent->blockingThreadHead) : (NULL));
-}
-
-/**
- * @brief Push one event context into init list.
- *
- * @param pCurHead The pointer of the timer linker head.
- */
-static void _event_list_transfer_toInit(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToInitList = (list_t *)_event_list_initHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToInitList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
 }
 
 /**
@@ -89,11 +50,25 @@ static b_t _event_id_isInvalid(u32_t id)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _event_object_isInit(u32_t id)
+static b_t _event_id_isInit(u32_t id)
 {
-    event_context_t *pCurEvent = _event_object_contextGet(id);
+    event_context_t *pCurEvent = _event_context_get(id);
 
-    return ((pCurEvent) ? (((pCurEvent->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
+    return ((pCurEvent) ? (((pCurEvent->head.cs) ? (TRUE) : (FALSE))) : FALSE);
+}
+
+/**
+ * @brief Pick up a highest priority thread that blocking by the event pending list.
+ *
+ * @param The event unique id.
+ *
+ * @return The highest blocking thread head.
+ */
+static list_t *_event_list_blockingHeadGet(os_id_t id)
+{
+    event_context_t *pCurEvent = _event_context_get(id);
+
+    return (list_t *)((pCurEvent) ? (&pCurEvent->blockingThreadHead) : (NULL));
 }
 
 /**
@@ -105,14 +80,10 @@ static void _event_schedule(os_id_t id)
 {
     thread_context_t *pEntryThread = (thread_context_t *)(kernel_member_unified_id_toContainerAddress(id));
 
-    if (kernel_member_unified_id_toId(pEntryThread->schedule.hold) != KERNEL_MEMBER_EVENT) {
-        pEntryThread->schedule.entry.result = _PCER;
-        return;
-    }
-    timer_stop_for_thread(kernel_member_unified_id_threadToTimer(pEntryThread->head.id));
+    timeout_remove(&pEntryThread->expire, true);
 
     u32_t changed, any, edge, level, trigger = 0u;
-    event_context_t *pCurEvent = _event_object_contextGet(pEntryThread->schedule.hold);
+    event_context_t *pCurEvent = (event_context_t*)pEntryThread->schedule.pPendCtx;
     event_sch_t *pEvt_sche = (event_sch_t *)pEntryThread->schedule.pPendData;
     if (!pEvt_sche) {
         return;
@@ -185,12 +156,12 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
             break;
         }
 
-        if (_event_object_isInit(id)) {
+        if (_event_id_isInit(id)) {
             continue;
         }
 
         os_memset((char_t *)pCurEvent, 0x0u, sizeof(event_context_t));
-        pCurEvent->head.id = id;
+        pCurEvent->head.cs = CS_INITED;
         pCurEvent->head.pName = pName;
 
         pCurEvent->value = init;
@@ -198,9 +169,7 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
         pCurEvent->anyMask = anyMask;
         pCurEvent->modeMask = modeMask;
         pCurEvent->dirMask = dirMask;
-        pCurEvent->call.pCallbackFunc = NULL;
-
-        _event_list_transfer_toInit((linker_head_t *)&pCurEvent->head);
+        pCurEvent->call.pEvtCallEntry = NULL;
 
         EXIT_CRITICAL_SECTION();
         return id;
@@ -224,7 +193,7 @@ static i32p_t _event_value_get_privilege_routine(arguments_t *pArgs)
 
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     u32_t *pValue = (u32_t *)pArgs[1].pv_val;
-    event_context_t *pCurEvent = _event_object_contextGet(id);
+    event_context_t *pCurEvent = _event_context_get(id);
     *pValue = pCurEvent->value;
 
     EXIT_CRITICAL_SECTION();
@@ -247,7 +216,7 @@ static i32p_t _event_set_privilege_routine(arguments_t *pArgs)
     u32_t clear = (u32_t)pArgs[2].u32_val;
     u32_t toggle = (u32_t)pArgs[3].u32_val;
 
-    event_context_t *pCurEvent = _event_object_contextGet(id);
+    event_context_t *pCurEvent = _event_context_get(id);
     u32_t val = pCurEvent->value;
     u32_t changed, any, edge, level, trigger = 0u;
     i32p_t postcode = 0;
@@ -297,7 +266,7 @@ static i32p_t _event_set_privilege_routine(arguments_t *pArgs)
     while (pCurThread) {
         event_sch_t *pEvt_sche = (event_sch_t *)pCurThread->schedule.pPendData;
         if (!pEvt_sche) {
-            return _PCER;
+            return PC_EOR;
         }
         report = trigger & pEvt_sche->listen;
         if (report) {
@@ -336,7 +305,7 @@ static i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
     i32p_t postcode = 0;
 
     thread_context_t *pCurThread = kernel_thread_runContextGet();
-    event_context_t *pCurEvent = _event_object_contextGet(id);
+    event_context_t *pCurEvent = _event_context_get(id);
     os_evt_val_t *pEvtData = pEvt_sch->pEvtVal;
     u32_t changed, any, edge, level, trigger = 0u;
 
@@ -383,7 +352,7 @@ static i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
     }
 
     pCurThread->schedule.pPendData = (void *)pEvt_sch;
-    postcode = kernel_thread_exit_trigger(pCurThread, id, _event_list_blockingHeadGet(id), timeout_ms);
+    postcode = kernel_thread_exit_trigger(pCurThread, pCurEvent, _event_list_blockingHeadGet(id), timeout_ms);
     PC_IF(postcode, PC_PASS)
     {
         postcode = PC_OS_WAIT_UNAVAILABLE;
@@ -446,11 +415,11 @@ i32p_t _impl_event_wait_callfunc_register(pEvent_callbackFunc_t pCallFun)
 i32p_t _impl_event_value_get(os_id_t id, u32_t *pValue)
 {
     if (_event_id_isInvalid(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
-    if (!_event_object_isInit(id)) {
-        return _PCER;
+    if (!_event_id_isInit(id)) {
+        return PC_EOR;
     }
 
     arguments_t arguments[] = {
@@ -474,11 +443,11 @@ i32p_t _impl_event_value_get(os_id_t id, u32_t *pValue)
 i32p_t _impl_event_set(os_id_t id, u32_t set, u32_t clear, u32_t toggle)
 {
     if (_event_id_isInvalid(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
-    if (!_event_object_isInit(id)) {
-        return _PCER;
+    if (!_event_id_isInit(id)) {
+        return PC_EOR;
     }
 
     arguments_t arguments[] = {
@@ -504,23 +473,23 @@ i32p_t _impl_event_set(os_id_t id, u32_t set, u32_t clear, u32_t toggle)
 i32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t listen_mask, u32_t timeout_ms)
 {
     if (_event_id_isInvalid(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
-    if (!_event_object_isInit(id)) {
-        return _PCER;
+    if (!_event_id_isInit(id)) {
+        return PC_EOR;
     }
 
     if (!pEvtData) {
-        return _PCER;
+        return PC_EOR;
     }
 
     if (!timeout_ms) {
-        return _PCER;
+        return PC_EOR;
     }
 
     if (!kernel_isInThreadMode()) {
-        return _PCER;
+        return PC_EOR;
     }
 
     event_sch_t evt_sch = {
@@ -550,58 +519,6 @@ i32p_t _impl_event_wait(os_id_t id, os_evt_val_t *pEvtData, u32_t listen_mask, u
 
     EXIT_CRITICAL_SECTION();
     return postcode;
-}
-
-/**
- * @brief Get event snapshot informations.
- *
- * @param instance The event instance number.
- * @param pMsgs The kernel snapshot information pointer.
- *
- * @return TRUE: Operation pass, FALSE: Operation failed.
- */
-b_t event_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
-{
-#if defined KTRACE
-    event_context_t *pCurEvent = NULL;
-    u32_t offset = 0u;
-    os_id_t id = OS_INVALID_ID_VAL;
-
-    ENTER_CRITICAL_SECTION();
-
-    offset = sizeof(event_context_t) * instance;
-    pCurEvent = (event_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_EVENT) + offset);
-    id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurEvent);
-    os_memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
-
-    if (_event_id_isInvalid(id)) {
-        EXIT_CRITICAL_SECTION();
-        return FALSE;
-    }
-
-    if (pCurEvent->head.linker.pList == _event_list_initHeadGet()) {
-        pMsgs->pState = "init";
-    } else if (pCurEvent->head.linker.pList) {
-        pMsgs->pState = "*";
-    } else {
-        pMsgs->pState = "unused";
-
-        EXIT_CRITICAL_SECTION();
-        return FALSE;
-    }
-
-    pMsgs->id = pCurEvent->head.id;
-    pMsgs->pName = pCurEvent->head.pName;
-
-    pMsgs->event.set = pCurEvent->value;
-    pMsgs->event.edge = pCurEvent->modeMask;
-    pMsgs->event.wait_list = pCurEvent->blockingThreadHead;
-
-    EXIT_CRITICAL_SECTION();
-    return TRUE;
-#else
-    return FALSE;
-#endif
 }
 
 #ifdef __cplusplus

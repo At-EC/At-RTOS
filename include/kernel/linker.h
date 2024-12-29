@@ -73,6 +73,8 @@ typedef struct {
     /* The head id */
     u32_t id;
 
+    u8_t sts;
+
     /* The head string name, NULL is available */
     const char_t *pName;
 } linker_head_t;

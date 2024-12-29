@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Local unique postcode.
  */
-#define _PCER PC_IER(PC_OS_CMPT_MUTEX_5)
+#define PC_EOR PC_IER(PC_OS_CMPT_MUTEX_5)
 
 /**
  * @brief Get the mutex context based on provided unique id.
@@ -26,88 +26,9 @@ extern "C" {
  *
  * @return The pointer of the current unique id timer context.
  */
-static mutex_context_t *_mutex_object_contextGet(os_id_t id)
+static mutex_context_t *_mutex_context_get(os_id_t id)
 {
     return (mutex_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-}
-
-/**
- * @brief Get the locking mutex list head.
- *
- * @return The value of the locking list head.
- */
-static list_t *_mutex_list_lockingHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_MUTEX, KERNEL_MEMBER_LIST_MUTEX_LOCK);
-}
-
-/**
- * @brief Get the unlocking mutex list head.
- *
- * @return The value of the unlocking list head.
- */
-static list_t *_mutex_list_unlockingHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_MUTEX, KERNEL_MEMBER_LIST_MUTEX_UNLOCK);
-}
-
-/**
- * @brief Get the mutex blocking thread list head address.
- *
- * @return The blocking thread list head address.
- */
-static list_t *_mutex_list_blockingHeadGet(os_id_t id)
-{
-    mutex_context_t *pCurMutex = _mutex_object_contextGet(id);
-
-    return (list_t *)((pCurMutex) ? (&pCurMutex->blockingThreadHead) : (NULL));
-}
-
-/**
- * @brief Push one mutex context into lock list.
- *
- * @param pCurHead The pointer of the mutex linker head.
- */
-static void _mutex_list_transfer_toLock(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToLockingList = (list_t *)_mutex_list_lockingHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToLockingList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Push one mutex context into unlock list.
- *
- * @param pCurHead The pointer of the mutex linker head.
- */
-static void _mutex_list_transfer_toUnlock(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToUnlockingList = (list_t *)_mutex_list_unlockingHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToUnlockingList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Pick up a highest priority thread from the mutex blocking list.
- *
- * @param id The mutex context id
- *
- * @return The highest thread head.
- */
-static linker_head_t *_mutex_linker_head_fromBlocking(os_id_t id)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pListBlocking = (list_t *)_mutex_list_blockingHeadGet(id);
-
-    EXIT_CRITICAL_SECTION();
-    return (linker_head_t *)(pListBlocking->pHead);
 }
 
 /**
@@ -129,11 +50,40 @@ static b_t _mutex_id_isInvalid(u32_t id)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _mutex_object_isInit(i32_t id)
+static b_t _mutex_id_isInit(i32_t id)
 {
-    mutex_context_t *pCurMutex = _mutex_object_contextGet(id);
+    mutex_context_t *pCurMutex = _mutex_context_get(id);
 
-    return ((pCurMutex) ? (((pCurMutex->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
+    return ((pCurMutex) ? (((pCurMutex->head.cs) ? (TRUE) : (FALSE))) : FALSE);
+}
+
+/**
+ * @brief Get the mutex blocking thread list head address.
+ *
+ * @return The blocking thread list head address.
+ */
+static list_t *_mutex_list_blockingHeadGet(os_id_t id)
+{
+    mutex_context_t *pCurMutex = _mutex_context_get(id);
+
+    return (list_t *)((pCurMutex) ? (&pCurMutex->blockingThreadHead) : (NULL));
+}
+
+/**
+ * @brief Pick up a highest priority thread from the mutex blocking list.
+ *
+ * @param id The mutex context id
+ *
+ * @return The highest thread head.
+ */
+static linker_head_t *_mutex_linker_head_fromBlocking(os_id_t id)
+{
+    ENTER_CRITICAL_SECTION();
+
+    list_t *pListBlocking = (list_t *)_mutex_list_blockingHeadGet(id);
+
+    EXIT_CRITICAL_SECTION();
+    return (linker_head_t *)(pListBlocking->pHead);
 }
 
 /**
@@ -159,18 +109,17 @@ static u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
             break;
         }
 
-        if (_mutex_object_isInit(id)) {
+        if (_mutex_id_isInit(id)) {
             continue;
         }
 
         os_memset((char_t *)pCurMutex, 0x0u, sizeof(mutex_context_t));
-        pCurMutex->head.id = id;
+        pCurMutex->head.cs = CS_INITED;
         pCurMutex->head.pName = pName;
 
-        pCurMutex->holdThreadId = OS_INVALID_ID_VAL;
+        pCurMutex->locked = false;
+        pCurMutex->pHoldThread = NULL;
         pCurMutex->originalPriority.level = OS_PRIOTITY_INVALID_LEVEL;
-
-        _mutex_list_transfer_toUnlock((linker_head_t *)&pCurMutex->head);
 
         EXIT_CRITICAL_SECTION();
         return id;
@@ -194,27 +143,25 @@ static i32p_t _mutex_lock_privilege_routine(arguments_t *pArgs)
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     mutex_context_t *pCurMutex = NULL;
     thread_context_t *pCurThread = NULL;
-    thread_context_t *pLockThread = NULL;
     i32p_t postcode = 0;
 
-    pCurMutex = _mutex_object_contextGet(id);
+    pCurMutex = _mutex_context_get(id);
     pCurThread = kernel_thread_runContextGet();
-    if (pCurMutex->head.linker.pList == _mutex_list_lockingHeadGet()) {
-        pLockThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(pCurMutex->holdThreadId);
-
+    if (pCurMutex->locked == true) {
+        thread_context_t *pLockThread = pCurMutex->pHoldThread;
         if (pCurThread->priority.level < pLockThread->priority.level) {
             pLockThread->priority = pCurThread->priority;
         }
-        postcode = kernel_thread_exit_trigger(pCurThread, id, _mutex_list_blockingHeadGet(id), 0u);
+        postcode = kernel_thread_exit_trigger(pCurThread, pCurMutex, _mutex_list_blockingHeadGet(id), 0u);
 
         EXIT_CRITICAL_SECTION();
         return postcode;
     }
 
     /* Highest priority inheritance */
-    pCurMutex->holdThreadId = pCurThread->head.id;
+    pCurMutex->pHoldThread = pCurThread;
     pCurMutex->originalPriority = pCurThread->priority;
-    _mutex_list_transfer_toLock((linker_head_t *)&pCurMutex->head);
+    pCurMutex->locked = true;
 
     EXIT_CRITICAL_SECTION();
     return postcode;
@@ -234,23 +181,21 @@ static i32p_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     mutex_context_t *pCurMutex = NULL;
     thread_context_t *pMutexHighestBlockingThread = NULL;
-    thread_context_t *pLockThread = NULL;
     i32p_t postcode = 0;
 
-    pCurMutex = _mutex_object_contextGet(id);
+    pCurMutex = _mutex_context_get(id);
     pMutexHighestBlockingThread = (thread_context_t *)_mutex_linker_head_fromBlocking(id);
-    pLockThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(pCurMutex->holdThreadId);
+    thread_context_t *pLockThread = pCurMutex->pHoldThread;
     /* priority recovery */
     pLockThread->priority = pCurMutex->originalPriority;
     if (!pMutexHighestBlockingThread) {
         // no blocking thread
         pCurMutex->originalPriority.level = OS_PRIOTITY_INVALID_LEVEL;
-        pCurMutex->holdThreadId = OS_INVALID_ID_VAL;
-
-        _mutex_list_transfer_toUnlock((linker_head_t *)&pCurMutex->head);
+        pCurMutex->pHoldThread = NULL;
+        pCurMutex->locked = false;
     } else {
         /* The next thread take the ticket */
-        pCurMutex->holdThreadId = pMutexHighestBlockingThread->head.id;
+        pCurMutex->pHoldThread = pMutexHighestBlockingThread;
         pCurMutex->originalPriority = pMutexHighestBlockingThread->priority;
         postcode = kernel_thread_entry_trigger(pMutexHighestBlockingThread, 0, NULL);
     }
@@ -301,15 +246,15 @@ os_id_t _impl_mutex_init(const char_t *pName)
 i32p_t _impl_mutex_lock(os_id_t id)
 {
     if (_mutex_id_isInvalid(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
-    if (!_mutex_object_isInit(id)) {
-        return _PCER;
+    if (!_mutex_id_isInit(id)) {
+        return PC_EOR;
     }
 
     if (!kernel_isInThreadMode()) {
-        return _PCER;
+        return PC_EOR;
     }
 
     arguments_t arguments[] = {
@@ -329,11 +274,11 @@ i32p_t _impl_mutex_lock(os_id_t id)
 i32p_t _impl_mutex_unlock(os_id_t id)
 {
     if (_mutex_id_isInvalid(id)) {
-        return _PCER;
+        return PC_EOR;
     }
 
-    if (!_mutex_object_isInit(id)) {
-        return _PCER;
+    if (!_mutex_id_isInit(id)) {
+        return PC_EOR;
     }
 
     arguments_t arguments[] = {
@@ -341,60 +286,6 @@ i32p_t _impl_mutex_unlock(os_id_t id)
     };
 
     return kernel_privilege_invoke((const void *)_mutex_unlock_privilege_routine, arguments);
-}
-
-/**
- * @brief Get mutex snapshot informations.
- *
- * @param instance The mutex instance number.
- * @param pMsgs The kernel snapshot information pointer.
- *
- * @return TRUE: Operation pass, FALSE: Operation failed.
- */
-b_t mutex_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
-{
-#if defined KTRACE
-    mutex_context_t *pCurMutex = NULL;
-    u32_t offset = 0u;
-    os_id_t id = OS_INVALID_ID_VAL;
-
-    ENTER_CRITICAL_SECTION();
-
-    offset = sizeof(mutex_context_t) * instance;
-    pCurMutex = (mutex_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_MUTEX) + offset);
-    id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurMutex);
-    os_memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
-
-    if (_mutex_id_isInvalid(id)) {
-        EXIT_CRITICAL_SECTION();
-        return FALSE;
-    }
-
-    if (pCurMutex->head.linker.pList == _mutex_list_lockingHeadGet()) {
-        pMsgs->pState = "lock";
-    } else if (pCurMutex->head.linker.pList == _mutex_list_unlockingHeadGet()) {
-        pMsgs->pState = "unlock";
-    } else if (pCurMutex->head.linker.pList) {
-        pMsgs->pState = "*";
-    } else {
-        pMsgs->pState = "unused";
-
-        EXIT_CRITICAL_SECTION();
-        return FALSE;
-    }
-
-    pMsgs->id = pCurMutex->head.id;
-    pMsgs->pName = pCurMutex->head.pName;
-
-    pMsgs->mutex.holdThreadId = pCurMutex->holdThreadId;
-    pMsgs->mutex.originalPriority = pCurMutex->originalPriority.level;
-    pMsgs->mutex.wait_list = pCurMutex->blockingThreadHead;
-
-    EXIT_CRITICAL_SECTION();
-    return TRUE;
-#else
-    return FALSE;
-#endif
 }
 
 #ifdef __cplusplus

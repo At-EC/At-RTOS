@@ -219,21 +219,34 @@ static inline i32p_t os_thread_delete(os_thread_id_t id)
  *        // The function will be called per 1 seconds.
  *    }
  *
- *    os_timer_id_t id = os_timer_init(demo_timer_function, OS_TIME_CTRL_CYCLE, 1000u, "demo");
+ *    os_timer_id_t id = os_timer_init(demo_timer_function, "demo");
  *     if (os_id_is_invalid(id)) {
  *         printf("Timer %s init failed\n", id.pName);
  *     }
  *     ...
  */
-static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, os_timer_ctrl_t control, os_timeout_t timeout_ms,
-                                          const char_t *pName)
+static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, const char_t *pName)
 {
     extern u32_t _impl_timer_os_id_to_number(u32_t id);
-    extern os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, u8_t control, u32_t timeout_ms, const char_t *pName);
+    extern os_id_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, const char_t *pName);
 
     os_timer_id_t id = {0u};
 
-    id.val = _impl_timer_init(pEntryFun, (u8_t)control, (u32_t)timeout_ms, pName);
+    id.val = _impl_timer_init(pEntryFun, pName);
+    id.number = _impl_timer_os_id_to_number(id.val);
+    id.pName = pName;
+
+    return id;
+}
+
+static inline os_timer_id_t os_timer_automatic(pTimer_callbackFunc_t pEntryFun, const char_t *pName)
+{
+    extern u32_t _impl_timer_os_id_to_number(u32_t id);
+    extern os_id_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, const char_t *pName);
+
+    os_timer_id_t id = {0u};
+
+    id.val = _impl_timer_automatic(pEntryFun, pName);
     id.number = _impl_timer_os_id_to_number(id.val);
     id.pName = pName;
 
@@ -1101,7 +1114,8 @@ typedef struct {
     i32p_t (*thread_yield)(void);
     i32p_t (*thread_delete)(os_thread_id_t);
 
-    os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, os_timer_ctrl_t, os_timeout_t, const char_t *);
+    os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, const char_t *);
+    os_timer_id_t (*timer_automatic)(pTimer_callbackFunc_t, const char_t *);
     i32p_t (*timer_start)(os_timer_id_t, os_timer_ctrl_t, os_timeout_t);
     i32p_t (*timer_stop)(os_timer_id_t);
     i32p_t (*timer_busy)(os_timer_id_t);

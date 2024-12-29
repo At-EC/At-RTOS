@@ -19,64 +19,27 @@ extern "C" {
 #define _PCER PC_IER(PC_OS_CMPT_PUBLISH_10)
 
 /**
+ * Data structure for location timer
+ */
+typedef struct {
+    list_t callback_list;
+} _sp_resource_t;
+
+/**
+ * Local timer resource
+ */
+_sp_resource_t g_sp_resource = {0u};
+
+/**
  * @brief Get the publish context based on provided unique id.
  *
  * @param id The publish unique id.
  *
  * @return The pointer of the current unique id publish context.
  */
-static publish_context_t *_publish_object_contextGet(os_id_t id)
+static publish_context_t *_publish_context_get(os_id_t id)
 {
     return (publish_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-}
-
-/**
- * @brief Get the publish init list head.
- *
- * @return The value of the init list head.
- */
-static list_t *_publish_list_initHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_PUBLISH, KERNEL_MEMBER_LIST_PUBLISH_INIT);
-}
-
-/**
- * @brief Get the pending publish list head.
- *
- * @return The value of the pending list head.
- */
-static list_t *_publish_list_pendingHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_PUBLISH, KERNEL_MEMBER_LIST_PUBLISH_PEND);
-}
-
-/**
- * @brief Pick up a highest priority thread that blocking by the event pending list.
- *
- * @param The event unique id.
- *
- * @return The highest blocking thread head.
- */
-static list_t *_publish_list_subscribeHeadGet(os_id_t id)
-{
-    publish_context_t *pCurPublish = _publish_object_contextGet(id);
-
-    return (list_t *)((pCurPublish) ? (&pCurPublish->subscribeListHead) : (NULL));
-}
-
-/**
- * @brief Push one publish context into init list.
- *
- * @param pCurHead The pointer of the publish linker head.
- */
-static void _publish_list_transfer_toInit(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToInitList = (list_t *)_publish_list_initHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToInitList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
 }
 
 /**
@@ -98,11 +61,11 @@ static b_t _publish_id_isInvalid(u32_t id)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _publish_object_isInit(u32_t id)
+static b_t _publish_id_isInit(u32_t id)
 {
-    publish_context_t *pCurPublish = _publish_object_contextGet(id);
+    publish_context_t *pCurPublish = _publish_context_get(id);
 
-    return ((pCurPublish) ? (((pCurPublish->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
+    return ((pCurPublish) ? (((pCurPublish->head.cs) ? (TRUE) : (FALSE))) : FALSE);
 }
 
 /**
@@ -112,50 +75,9 @@ static b_t _publish_object_isInit(u32_t id)
  *
  * @return The pointer of the current unique id subscribe context.
  */
-static subscribe_context_t *_subscribe_object_contextGet(os_id_t id)
+static subscribe_context_t *_subscribe_context_get(os_id_t id)
 {
     return (subscribe_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-}
-
-/**
- * @brief Get the subscribe init list head.
- *
- * @return The value of the init list head.
- */
-static list_t *_subscribe_list_initHeadGet(void)
-{
-    return (list_t *)kernel_member_list_get(KERNEL_MEMBER_SUBSCRIBE, KERNEL_MEMBER_LIST_SUBSCRIBE_INIT);
-}
-
-/**
- * @brief Push one subscribe context into init list.
- *
- * @param pCurHead The pointer of the subscribe linker head.
- */
-static void _subscribe_list_transfer_toInit(linker_head_t *pCurHead)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToInitList = (list_t *)_subscribe_list_initHeadGet();
-    linker_list_transaction_common(&pCurHead->linker, pToInitList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
-}
-
-/**
- * @brief Push one subscribe context into publish subscribe head list.
- *
- * @param pCurHead The pointer of the publish subscribe linker head.
- * @param pCurHead The pointer of the publish subscribe linker head.
- */
-static void _subscribe_list_transfer_toTargetHead(linker_head_t *pCurHead, os_id_t pub)
-{
-    ENTER_CRITICAL_SECTION();
-
-    list_t *pToPubList = (list_t *)_publish_list_subscribeHeadGet(pub);
-    linker_list_transaction_common(&pCurHead->linker, pToPubList, LIST_TAIL);
-
-    EXIT_CRITICAL_SECTION();
 }
 
 /**
@@ -177,11 +99,41 @@ static b_t _subscribe_id_isInvalid(u32_t id)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _subscribe_object_isInit(u32_t id)
+static b_t _subscribe_id_isInit(u32_t id)
 {
-    subscribe_context_t *pCurSubscribe = _subscribe_object_contextGet(id);
+    subscribe_context_t *pCurSubscribe = _subscribe_context_get(id);
 
-    return ((pCurSubscribe) ? (((pCurSubscribe->head.linker.pList) ? (TRUE) : (FALSE))) : FALSE);
+    return ((pCurSubscribe) ? (((pCurSubscribe->head.cs) ? (TRUE) : (FALSE))) : FALSE);
+}
+
+/**
+ * @brief Pick up a highest priority thread that blocking by the event pending list.
+ *
+ * @param The event unique id.
+ *
+ * @return The highest blocking thread head.
+ */
+static list_t *_publish_list_subscribeHeadGet(os_id_t id)
+{
+    publish_context_t *pCurPublish = _publish_context_get(id);
+
+    return (list_t *)((pCurPublish) ? (&pCurPublish->subscribeListHead) : (NULL));
+}
+
+/**
+ * @brief Push one subscribe context into publish subscribe head list.
+ *
+ * @param pCurHead The pointer of the publish subscribe linker head.
+ * @param pCurHead The pointer of the publish subscribe linker head.
+ */
+static void _subscribe_list_transfer_toTargetHead(linker_t *pLinker, os_id_t pub)
+{
+    ENTER_CRITICAL_SECTION();
+
+    list_t *pToPubList = (list_t *)_publish_list_subscribeHeadGet(pub);
+    linker_list_transaction_common(pLinker, pToPubList, LIST_TAIL);
+
+    EXIT_CRITICAL_SECTION();
 }
 
 /**
@@ -207,16 +159,13 @@ static u32_t _publish_init_privilege_routine(arguments_t *pArgs)
             break;
         }
 
-        if (_publish_object_isInit(id)) {
+        if (_publish_id_isInit(id)) {
             continue;
         }
 
         os_memset((char_t *)pCurPublish, 0x0u, sizeof(publish_context_t));
-        pCurPublish->head.id = id;
+        pCurPublish->head.cs = CS_INITED;
         pCurPublish->head.pName = pName;
-        pCurPublish->refresh_count = 0u;
-
-        _publish_list_transfer_toInit((linker_head_t *)&pCurPublish->head);
 
         EXIT_CRITICAL_SECTION();
         return id;
@@ -241,33 +190,38 @@ static u32_t _publish_data_submit_privilege_routine(arguments_t *pArgs)
     os_id_t id = (os_id_t)pArgs[0].u32_val;
     const void *pPublishData = (const void *)pArgs[1].ptr_val;
     u16_t publishSize = (u16_t)pArgs[2].u16_val;
-    b_t request = FALSE;
+    b_t need = FALSE;
     i32p_t postcode = 0;
-    publish_context_t *pCurPublish = _publish_object_contextGet(id);
-    pCurPublish->refresh_count++;
+    publish_context_t *pCurPublish = _publish_context_get(id);
 
+    struct notify_callback *pNotify = NULL;
     list_iterator_t it = {0u};
     list_iterator_init(&it, _publish_list_subscribeHeadGet(id));
-    subscribe_context_t *pCurSubscribe = NULL;
-    while (list_iterator_next_condition(&it, (void *)&pCurSubscribe)) {
-        os_memcpy((u8_t *)pCurSubscribe->callEntry.pDataAddress, (const u8_t *)pPublishData,
-                  MINI_AB(publishSize, pCurSubscribe->callEntry.dataSize));
-
-        if ((!pCurSubscribe->isMute) && (pCurSubscribe->callEntry.pNotificationHandler)) {
-            list_t *pListPending = (list_t *)_publish_list_pendingHeadGet();
-            if (!list_node_isExisted(pListPending, &pCurSubscribe->callEntry.node)) {
-                list_node_push(_publish_list_pendingHeadGet(), &pCurSubscribe->callEntry.node, LIST_HEAD);
-                request = TRUE;
-            }
+    while (list_iterator_next_condition(&it, (void *)&pNotify)) {
+        pNotify->updated++;
+        os_memcpy((u8_t *)pNotify->pData, (const u8_t *)pPublishData, MINI_AB(publishSize, pNotify->len));
+        if ((!pNotify->muted) && (pNotify->fn)) {
+            need = true;
+            pNotify->fn(pNotify);
         }
     }
 
-    if (request) {
+    if (need) {
         kernel_message_notification();
     }
 
     EXIT_CRITICAL_SECTION();
     return postcode;
+}
+
+static void _subscribe_notification(void *pLinker)
+{
+    subscribe_context_t *pCurSubscribe = (subscribe_context_t *)CONTAINEROF(pLinker, subscribe_context_t, notify);
+
+    list_t *pCallback_list = (list_t *)&g_sp_resource.callback_list;
+    if (!list_node_isExisted(pCallback_list, &pCurSubscribe->call.node)) {
+        list_node_push((list_t *)&g_sp_resource.callback_list, &pCurSubscribe->call.node, LIST_HEAD);
+    }
 }
 
 /**
@@ -295,21 +249,20 @@ static u32_t _subscribe_init_privilege_routine(arguments_t *pArgs)
             break;
         }
 
-        if (_subscribe_object_isInit(id)) {
+        if (_subscribe_id_isInit(id)) {
             continue;
         }
 
         os_memset((char_t *)pCurSubscribe, 0x0u, sizeof(subscribe_context_t));
-        pCurSubscribe->head.id = id;
+        pCurSubscribe->head.cs = CS_INITED;
         pCurSubscribe->head.pName = pName;
-        pCurSubscribe->hold = OS_INVALID_ID_VAL;
-        pCurSubscribe->last_count = 0u;
-        pCurSubscribe->isMute = FALSE;
-        pCurSubscribe->callEntry.pDataAddress = pData;
-        pCurSubscribe->callEntry.dataSize = size;
-        pCurSubscribe->callEntry.pNotificationHandler = NULL;
+        pCurSubscribe->pPublisher = NULL;
+        pCurSubscribe->accepted = 0u;
 
-        _subscribe_list_transfer_toInit((linker_head_t *)&pCurSubscribe->head);
+        pCurSubscribe->notify.pData = pData;
+        pCurSubscribe->notify.len = size;
+        pCurSubscribe->notify.muted = false;
+        pCurSubscribe->notify.fn = _subscribe_notification;
 
         EXIT_CRITICAL_SECTION();
         return id;
@@ -336,12 +289,13 @@ static u32_t _subscribe_register_privilege_routine(arguments_t *pArgs)
     b_t isMute = (b_t)pArgs[2].b_val;
     pSubscribe_callbackFunc_t pCallFun = (pSubscribe_callbackFunc_t)(pArgs[3].ptr_val);
 
-    subscribe_context_t *pCurSubscribe = _subscribe_object_contextGet(sub);
-    pCurSubscribe->hold = pub;
-    pCurSubscribe->isMute = isMute;
-    pCurSubscribe->callEntry.pNotificationHandler = pCallFun;
+    subscribe_context_t *pCurSubscribe = _subscribe_context_get(sub);
+    pCurSubscribe->pPublisher = _publish_context_get(pub);
 
-    _subscribe_list_transfer_toTargetHead((linker_head_t *)&pCurSubscribe->head, pub);
+    pCurSubscribe->notify.muted = isMute;
+    pCurSubscribe->call.pSubCallEntry = pCallFun;
+
+    _subscribe_list_transfer_toTargetHead(&pCurSubscribe->notify.linker, pub);
 
     EXIT_CRITICAL_SECTION();
     return 0;
@@ -360,11 +314,10 @@ static u32_t _subscribe_data_is_ready_privilege_routine(arguments_t *pArgs)
 
     u32_t id = (u32_t)pArgs[0].u32_val;
 
-    subscribe_context_t *pCurSubscribe = _subscribe_object_contextGet(id);
-    publish_context_t *pCurPublish = _publish_object_contextGet(pCurSubscribe->hold);
+    subscribe_context_t *pCurSubscribe = _subscribe_context_get(id);
 
     EXIT_CRITICAL_SECTION();
-    return (pCurSubscribe->last_count == pCurPublish->refresh_count) ? (TRUE) : (FALSE);
+    return (pCurSubscribe->accepted == pCurSubscribe->notify.updated) ? (true) : (false);
 }
 
 /**
@@ -382,13 +335,12 @@ static u32_t _subscribe_apply_data_privilege_routine(arguments_t *pArgs)
     u8_t *pDataBuffer = (u8_t *)pArgs[1].pv_val;
     u16_t *pDataLen = (u16_t *)pArgs[2].pv_val;
 
-    subscribe_context_t *pCurSubscribe = _subscribe_object_contextGet(id);
-    publish_context_t *pCurPublish = _publish_object_contextGet(pCurSubscribe->hold);
+    subscribe_context_t *pCurSubscribe = _subscribe_context_get(id);
 
-    if (pCurSubscribe->last_count < pCurPublish->refresh_count) {
-        *pDataLen = MINI_AB(*pDataLen, pCurSubscribe->callEntry.dataSize);
-        os_memcpy(pDataBuffer, pCurSubscribe->callEntry.pDataAddress, *pDataLen);
-        pCurSubscribe->last_count = pCurPublish->refresh_count;
+    if (pCurSubscribe->accepted < pCurSubscribe->notify.updated) {
+        *pDataLen = MINI_AB(*pDataLen, pCurSubscribe->notify.len);
+        os_memcpy(pDataBuffer, pCurSubscribe->notify.pData, *pDataLen);
+        pCurSubscribe->accepted = pCurSubscribe->notify.updated;
 
         EXIT_CRITICAL_SECTION();
         return 0;
@@ -490,7 +442,7 @@ i32p_t _impl_subscribe_register(os_id_t subscribe_id, os_id_t publish_id, b_t is
         return _PCER;
     }
 
-    if (!_subscribe_object_isInit(subscribe_id)) {
+    if (!_subscribe_id_isInit(subscribe_id)) {
         return _PCER;
     }
 
@@ -498,7 +450,7 @@ i32p_t _impl_subscribe_register(os_id_t subscribe_id, os_id_t publish_id, b_t is
         return _PCER;
     }
 
-    if (!_publish_object_isInit(publish_id)) {
+    if (!_publish_id_isInit(publish_id)) {
         return _PCER;
     }
 
@@ -527,7 +479,7 @@ i32p_t _impl_subscribe_data_apply(os_id_t subscribe_id, void *pDataBuffer, u16_t
         return _PCER;
     }
 
-    if (!_subscribe_object_isInit(subscribe_id)) {
+    if (!_subscribe_id_isInit(subscribe_id)) {
         return _PCER;
     }
 
@@ -561,7 +513,7 @@ b_t _impl_subscribe_data_is_ready(os_id_t subscribe_id)
         return _PCER;
     }
 
-    if (!_subscribe_object_isInit(subscribe_id)) {
+    if (!_subscribe_id_isInit(subscribe_id)) {
         return _PCER;
     }
 
@@ -587,7 +539,7 @@ i32p_t _impl_publish_data_submit(os_id_t id, const void *pPublishData, u16_t pub
         return _PCER;
     }
 
-    if (!_publish_object_isInit(id)) {
+    if (!_publish_id_isInit(id)) {
         return _PCER;
     }
 
@@ -605,71 +557,22 @@ i32p_t _impl_publish_data_submit(os_id_t id, const void *pPublishData, u16_t pub
  */
 void _impl_publish_pending_handler(void)
 {
-    list_t *pListPending = (list_t *)_publish_list_pendingHeadGet();
+    list_t *pListPending = (list_t *)&g_sp_resource.callback_list;
 
     ENTER_CRITICAL_SECTION();
-    struct callSubEntry *pCallFuncEntry = (struct callSubEntry *)list_node_pop(pListPending, LIST_TAIL);
+    struct subscribe_callback *pCallFuncEntry = (struct subscribe_callback *)list_node_pop(pListPending, LIST_TAIL);
     EXIT_CRITICAL_SECTION();
 
     while (pCallFuncEntry) {
-        if (pCallFuncEntry->pNotificationHandler) {
-            pCallFuncEntry->pNotificationHandler(pCallFuncEntry->pDataAddress, pCallFuncEntry->dataSize);
+        if (pCallFuncEntry->pSubCallEntry) {
+            subscribe_context_t *pCurSubscribe = (subscribe_context_t *)CONTAINEROF(pCallFuncEntry, subscribe_context_t, call);
+            pCallFuncEntry->pSubCallEntry(pCurSubscribe->notify.pData, pCurSubscribe->notify.len);
         }
 
         ENTER_CRITICAL_SECTION();
-        pCallFuncEntry = (struct callSubEntry *)list_node_pop(pListPending, LIST_TAIL);
+        pCallFuncEntry = (struct subscribe_callback *)list_node_pop(pListPending, LIST_TAIL);
         EXIT_CRITICAL_SECTION();
     }
-}
-
-/**
- * @brief Get publish snapshot informations.
- *
- * @param instance The event instance number.
- * @param pMsgs The kernel snapshot information pointer.
- *
- * @return TRUE: Operation pass, FALSE: Operation failed.
- */
-b_t publish_snapshot(u32_t instance, kernel_snapshot_t *pMsgs)
-{
-#if defined KTRACE
-    publish_context_t *pCurPublish = NULL;
-    u32_t offset = 0u;
-    os_id_t id = OS_INVALID_ID_VAL;
-
-    ENTER_CRITICAL_SECTION();
-
-    offset = sizeof(publish_context_t) * instance;
-    pCurPublish = (publish_context_t *)(kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_PUBLISH) + offset);
-    id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurPublish);
-    os_memset((u8_t *)pMsgs, 0x0u, sizeof(kernel_snapshot_t));
-
-    if (_publish_id_isInvalid(id)) {
-        EXIT_CRITICAL_SECTION();
-        return FALSE;
-    }
-
-    if (pCurPublish->head.linker.pList == _publish_list_initHeadGet()) {
-        pMsgs->pState = "init";
-    } else if (pCurPublish->head.linker.pList) {
-        pMsgs->pState = "*";
-    } else {
-        pMsgs->pState = "unused";
-
-        EXIT_CRITICAL_SECTION();
-        return FALSE;
-    }
-
-    pMsgs->id = pCurPublish->head.id;
-    pMsgs->pName = pCurPublish->head.pName;
-
-    pMsgs->publish.refresh_count = pCurPublish->refresh_count;
-
-    EXIT_CRITICAL_SECTION();
-    return TRUE;
-#else
-    return FALSE;
-#endif
 }
 
 #ifdef __cplusplus
