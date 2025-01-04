@@ -4,16 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #ifndef _PORT_H_
 #define _PORT_H_
 
-#include "typedef.h"
+#include "type_def.h"
 #include "arch.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define STACT_UNUSED_DATA       (0xDEu)
 #define STACT_UNUSED_FRAME_MARK (0xDEDEDEDEu)
@@ -143,15 +138,15 @@ static inline b_t port_isInInterruptContent(void)
 {
     register u32_t reg_ipsr __asm("ipsr");
     if (reg_ipsr) {
-        return TRUE;
+        return true;
     }
 
     register u32_t reg_primask __asm("primask");
     if (reg_primask == 0x01u) {
-        return TRUE;
+        return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 /**
@@ -161,10 +156,10 @@ static inline b_t port_isInThreadMode(void)
 {
     register u32_t reg_ipsr __asm("ipsr");
     if (reg_ipsr) {
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 #endif
 
@@ -200,17 +195,17 @@ static inline b_t port_isInInterruptContent(void)
 
     __asm__ volatile("mrs %0, IPSR\n\t" : "=r"(ipsr));
     if (ipsr) {
-        return TRUE;
+        return true;
     }
 
     u32_t primask;
 
     __ASM volatile("MRS %0, primask" : "=r"(primask));
     if (primask) {
-        return TRUE;
+        return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 /**
@@ -222,10 +217,10 @@ static inline b_t port_isInThreadMode(void)
 
     __asm__ volatile("mrs %0, IPSR\n\t" : "=r"(ipsr));
     if (reg_ipsr) {
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 #endif
 
@@ -250,15 +245,15 @@ static inline b_t port_isInInterruptContent(void)
 {
     register u32_t reg_ipsr = __arm_rsr("IPSR");
     if (reg_ipsr) {
-        return TRUE;
+        return true;
     }
 
     register u32_t reg_primask = __arm_rsr("PRIMASK");
     if (reg_primask == 0x01u) {
-        return TRUE;
+        return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 /**
@@ -268,10 +263,10 @@ static inline b_t port_isInThreadMode(void)
 {
     register u32_t reg_ipsr = __arm_rsr("IPSR");
     if (reg_ipsr) {
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 #endif
 
@@ -300,9 +295,5 @@ b_t port_isInThreadMode(void);
 void port_setPendSV(void);
 void port_interrupt_init(void);
 u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _PORT_H_ */

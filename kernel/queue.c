@@ -4,15 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #include "kernel.h"
 #include "timer.h"
 #include "postcode.h"
 #include "trace.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "init.h"
 
 /**
  * Local unique postcode.
@@ -22,27 +18,19 @@ extern "C" {
 #define _QUEUE_WAKEUP_RECEIVER (11u)
 
 /**
- * @brief Get the queue context based on provided unique id.
- *
- * @param id The timer unique id.
- *
- * @return The pointer of the current unique id timer context.
- */
-static queue_context_t *_queue_context_get(os_id_t id)
-{
-    return (queue_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-}
-
-/**
  * @brief Check if the queue unique id if is's invalid.
  *
  * @param id The provided unique id.
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _queue_id_isInvalid(u32_t id)
+static b_t _queue_context_isInvalid(queue_context_t *pCurQue)
 {
-    return kernel_member_unified_id_isInvalid(KERNEL_MEMBER_QUEUE, id);
+    u32_t start, end;
+    INIT_SECTION_FIRST(INIT_SECTION_OS_QUEUE_LIST, start);
+    INIT_SECTION_LAST(INIT_SECTION_OS_QUEUE_LIST, end);
+
+    return ((u32_t)pCurQue < start || (u32_t)pCurQue >= end) ? true : false;
 }
 
 /**
@@ -52,33 +40,9 @@ static b_t _queue_id_isInvalid(u32_t id)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _queue_id_isInit(i32_t id)
+static b_t _queue_context_isInit(queue_context_t *pCurQue)
 {
-    queue_context_t *pCurQueue = _queue_context_get(id);
-
-    return ((pCurQueue) ? (((pCurQueue->head.cs) ? (TRUE) : (FALSE))) : FALSE);
-}
-
-/**
- * @brief Get the queue blocking thread list head address.
- *
- * @return The blocking thread list head address.
- */
-static list_t *_queue_list_inBlockingHeadGet(os_id_t id)
-{
-    queue_context_t *pCurQueue = _queue_context_get(id);
-    return (list_t *)(&pCurQueue->inBlockingThreadListHead);
-}
-
-/**
- * @brief Get the queue blocking thread list head address.
- *
- * @return The blocking thread list head address.
- */
-static list_t *_queue_list_OutBlockingHeadGet(os_id_t id)
-{
-    queue_context_t *pCurQueue = _queue_context_get(id);
-    return (list_t *)(&pCurQueue->outBlockingThreadListHead);
+    return ((pCurQue) ? (((pCurQue->head.cs) ? (true) : (false))) : false);
 }
 
 /**
@@ -176,31 +140,32 @@ static void _message_receive_behind(queue_context_t *pCurQueue, const u8_t *pUse
  *
  * @param id The unique id of the entry thread.
  */
-static void _queue_schedule(os_id_t id)
+static void _queue_schedule(void *pTask)
 {
-    thread_context_t *pEntryThread = (thread_context_t *)(kernel_member_unified_id_toContainerAddress(id));
+    struct schedule_task *pCurTask = (struct schedule_task *)pTask;
+    struct call_entry *pEntry = &pCurTask->exec.entry;
 
-    timeout_remove(&pEntryThread->expire, true);
+    timeout_remove(&pCurTask->expire, true);
 
-    queue_context_t *pCurQueue = (queue_context_t*)pEntryThread->schedule.pPendCtx;
-    queue_sch_t *pQue_sche = (queue_sch_t *)pEntryThread->schedule.pPendData;
+    queue_context_t *pCurQueue = (queue_context_t *)pCurTask->pPendCtx;
+    queue_sch_t *pQue_sche = (queue_sch_t *)pCurTask->pPendData;
     if (!pQue_sche) {
         return;
     }
-    if (pEntryThread->schedule.entry.result == _QUEUE_WAKEUP_RECEIVER) {
+    if (pEntry->result == _QUEUE_WAKEUP_RECEIVER) {
         if (pQue_sche->reverse) {
             _message_receive_behind((queue_context_t *)pCurQueue, pQue_sche->pUsrBuf, pQue_sche->size);
         } else {
             _message_receive((queue_context_t *)pCurQueue, pQue_sche->pUsrBuf, pQue_sche->size);
         }
-        pEntryThread->schedule.entry.result = 0;
-    } else if (pEntryThread->schedule.entry.result == _QUEUE_WAKEUP_SENDER) {
+        pEntry->result = 0;
+    } else if (pEntry->result == _QUEUE_WAKEUP_SENDER) {
         if (pQue_sche->reverse) {
             _message_send_front((queue_context_t *)pCurQueue, pQue_sche->pUsrBuf, pQue_sche->size);
         } else {
             _message_send((queue_context_t *)pCurQueue, pQue_sche->pUsrBuf, pQue_sche->size);
         }
-        pEntryThread->schedule.entry.result = 0;
+        pEntry->result = 0;
     }
 }
 
@@ -219,18 +184,14 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
     u16_t elementLen = (u16_t)(pArgs[1].u16_val);
     u16_t elementNum = (u16_t)(pArgs[2].u16_val);
     const char_t *pName = (const char_t *)(pArgs[3].pch_val);
-    u32_t endAddr = 0u;
-    queue_context_t *pCurQueue = NULL;
 
-    pCurQueue = (queue_context_t *)kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_QUEUE);
-    endAddr = (u32_t)kernel_member_id_toContainerEndAddress(KERNEL_MEMBER_QUEUE);
-    do {
-        os_id_t id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurQueue);
-        if (_queue_id_isInvalid(id)) {
+    INIT_SECTION_FOREACH(INIT_SECTION_OS_QUEUE_LIST, queue_context_t, pCurQueue)
+    {
+        if (_queue_context_isInvalid(pCurQueue)) {
             break;
         }
 
-        if (_queue_id_isInit(id)) {
+        if (_queue_context_isInit(pCurQueue)) {
             continue;
         }
 
@@ -246,11 +207,11 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
         pCurQueue->cacheSize = 0u;
 
         EXIT_CRITICAL_SECTION();
-        return id;
-    } while ((u32_t)++pCurQueue < endAddr);
+        return (u32_t)pCurQueue;
+    };
 
     EXIT_CRITICAL_SECTION();
-    return OS_INVALID_ID_VAL;
+    return 0u;
 }
 
 /**
@@ -264,12 +225,11 @@ static i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    os_id_t id = (os_id_t)pArgs[0].u32_val;
+    queue_context_t *pCurQueue = (queue_context_t *)pArgs[0].u32_val;
     queue_sch_t *pQue_sch = (queue_sch_t *)pArgs[1].ptr_val;
     u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
     i32p_t postcode = 0;
 
-    queue_context_t *pCurQueue = _queue_context_get(id);
     thread_context_t *pCurThread = kernel_thread_runContextGet();
     if (pQue_sch->size > pCurQueue->elementLength) {
         EXIT_CRITICAL_SECTION();
@@ -281,9 +241,7 @@ static i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
             EXIT_CRITICAL_SECTION();
             return PC_EOR;
         }
-
-        pCurThread->schedule.pPendData = (void *)pQue_sch;
-        postcode = kernel_thread_exit_trigger(pCurThread, pCurQueue, _queue_list_inBlockingHeadGet(id), timeout_ms);
+        postcode = schedule_exit_trigger(&pCurThread->task, pCurQueue, pQue_sch, &pCurQueue->in_QList, timeout_ms, true);
         PC_IF(postcode, PC_PASS)
         {
             postcode = PC_OS_WAIT_UNAVAILABLE;
@@ -297,10 +255,11 @@ static i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
 
         /* Try to wakeup a blocking thread */
         list_iterator_t it = {0u};
-        list_iterator_init(&it, _queue_list_OutBlockingHeadGet(id));
-        pCurThread = (thread_context_t *)list_iterator_next(&it);
-        if (pCurThread) {
-            postcode = kernel_thread_entry_trigger(pCurThread, _QUEUE_WAKEUP_RECEIVER, _queue_schedule);
+        list_t *plist = (list_t *)&pCurQueue->out_QList;
+        list_iterator_init(&it, plist);
+        struct schedule_task *pCurTask = (struct schedule_task *)list_iterator_next(&it);
+        if (pCurTask) {
+            postcode = schedule_entry_trigger(pCurTask, _queue_schedule, _QUEUE_WAKEUP_RECEIVER);
         }
     }
 
@@ -319,12 +278,11 @@ static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    os_id_t id = (os_id_t)pArgs[0].u32_val;
+    queue_context_t *pCurQueue = (queue_context_t *)pArgs[0].u32_val;
     queue_sch_t *pQue_sch = (queue_sch_t *)pArgs[1].ptr_val;
     u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
     i32p_t postcode = 0;
 
-    queue_context_t *pCurQueue = _queue_context_get(id);
     thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
     if (pQue_sch->size > pCurQueue->elementLength) {
         EXIT_CRITICAL_SECTION();
@@ -336,8 +294,7 @@ static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
             EXIT_CRITICAL_SECTION();
             return PC_EOR;
         }
-        pCurThread->schedule.pPendData = (void *)pQue_sch;
-        postcode = kernel_thread_exit_trigger(pCurThread, pCurQueue, _queue_list_OutBlockingHeadGet(id), timeout_ms);
+        postcode = schedule_exit_trigger(&pCurThread->task, pCurQueue, pQue_sch, &pCurQueue->out_QList, timeout_ms, true);
         PC_IF(postcode, PC_PASS)
         {
             postcode = PC_OS_WAIT_UNAVAILABLE;
@@ -349,33 +306,18 @@ static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
             _message_receive(pCurQueue, (const u8_t *)pQue_sch->pUsrBuf, pQue_sch->size);
         }
 
-        /* Try to wakeup a blocking thread */
+        /* Try to wakeup a blocking task */
         list_iterator_t it = {0u};
-        list_iterator_init(&it, _queue_list_inBlockingHeadGet(id));
-        pCurThread = (thread_context_t *)list_iterator_next(&it);
-        if (pCurThread) {
-            postcode = kernel_thread_entry_trigger(pCurThread, _QUEUE_WAKEUP_SENDER, _queue_schedule);
+        list_t *plist = (list_t *)&pCurQueue->in_QList;
+        list_iterator_init(&it, plist);
+        struct schedule_task *pCurTask = (struct schedule_task *)list_iterator_next(&it);
+        if (pCurTask) {
+            postcode = schedule_entry_trigger(pCurTask, _queue_schedule, _QUEUE_WAKEUP_SENDER);
         }
     }
 
     EXIT_CRITICAL_SECTION();
     return postcode;
-}
-
-/**
- * @brief Convert the internal os id to kernel member number.
- *
- * @param id The provided unique id.
- *
- * @return The value of member number.
- */
-u32_t _impl_queue_os_id_to_number(os_id_t id)
-{
-    if (_queue_id_isInvalid(id)) {
-        return 0u;
-    }
-
-    return (u32_t)((id - kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_QUEUE)) / sizeof(queue_context_t));
 }
 
 /**
@@ -388,7 +330,7 @@ u32_t _impl_queue_os_id_to_number(os_id_t id)
  *
  * @return The queue unique id.
  */
-os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
+u32_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
 {
     if (!pQueueBufferAddr) {
         return OS_INVALID_ID_VAL;
@@ -415,7 +357,7 @@ os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t e
 /**
  * @brief Send a queue message.
  *
- * @param id The queue unique id.
+ * @param ctx The queue unique id.
  * @param pUserBuffer The pointer of the message buffer address.
  * @param bufferSize The queue buffer size.
  * @param isToFront The direction of the message operation.
@@ -423,13 +365,14 @@ os_id_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t e
  *
  * @return The result of the operation.
  */
-i32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms)
+i32p_t _impl_queue_send(u32_t ctx, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms)
 {
-    if (_queue_id_isInvalid(id)) {
+    queue_context_t *pCtx = (queue_context_t *)ctx;
+    if (_queue_context_isInvalid(pCtx)) {
         return PC_EOR;
     }
 
-    if (!_queue_id_isInit(id)) {
+    if (!_queue_context_isInit(pCtx)) {
         return PC_EOR;
     }
 
@@ -441,7 +384,7 @@ i32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b
 
     queue_sch_t que_sch = {.pUsrBuf = pUserBuffer, .size = bufferSize, .reverse = isToFront};
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},
+        [0] = {.u32_val = (u32_t)ctx},
         [1] = {.ptr_val = (void *)&que_sch},
         [2] = {.u32_val = (u32_t)timeout_ms},
     };
@@ -474,13 +417,14 @@ i32p_t _impl_queue_send(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b
  *
  * @return The result of the operation.
  */
-i32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms)
+i32p_t _impl_queue_receive(u32_t ctx, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms)
 {
-    if (_queue_id_isInvalid(id)) {
+    queue_context_t *pCtx = (queue_context_t *)ctx;
+    if (_queue_context_isInvalid(pCtx)) {
         return PC_EOR;
     }
 
-    if (!_queue_id_isInit(id)) {
+    if (!_queue_context_isInit(pCtx)) {
         return PC_EOR;
     }
 
@@ -492,7 +436,7 @@ i32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
 
     queue_sch_t que_sch = {.pUsrBuf = pUserBuffer, .size = bufferSize, .reverse = isFromBack};
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},
+        [0] = {.u32_val = (u32_t)ctx},
         [1] = {.ptr_val = (void *)&que_sch},
         [2] = {.u32_val = (u32_t)timeout_ms},
     };
@@ -501,10 +445,7 @@ i32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
     ENTER_CRITICAL_SECTION();
 
     if (postcode == PC_OS_WAIT_UNAVAILABLE) {
-        thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
-
-        postcode = (i32p_t)pCurThread->schedule.entry.result;
-        pCurThread->schedule.entry.result = 0u;
+        postcode = kernel_schedule_result_take();
     }
 
     PC_IF(postcode, PC_PASS_INFO)
@@ -517,7 +458,3 @@ i32p_t _impl_queue_receive(os_id_t id, const u8_t *pUserBuffer, u16_t bufferSize
     EXIT_CRITICAL_SECTION();
     return postcode;
 }
-
-#ifdef __cplusplus
-}
-#endif

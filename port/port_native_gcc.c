@@ -4,13 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
-#include "typedef.h"
+#include "type_def.h"
 #include "arch.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * @brief ARM core trigger the svc call interrupt.
@@ -108,7 +103,3 @@ u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t
 {
     /* TODO */
 }
-
-#ifdef __cplusplus
-}
-#endif

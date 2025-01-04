@@ -4,13 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #ifndef _ATOS_CONFIGURATION_H_
 #define _ATOS_CONFIGURATION_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * If you are use ARM Cortex M seiral architecture, the Cortex-M Core must be specificed as the following list.
@@ -72,49 +67,49 @@ extern "C" {
  * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual thread instance number that you created.
  **/
-#define THREAD_INSTANCE_SUPPORTED_NUMBER (20u)
+#define THREAD_RUNTIME_NUMBER_SUPPORTED (20u)
 
 /**
  * This symbol defined the semaphore instance number that your application is using.
  * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual semaphore instance number that you created.
  **/
-#define SEMAPHORE_INSTANCE_SUPPORTED_NUMBER (10u)
+#define SEMAPHORE_RUNTIME_NUMBER_SUPPORTED (10u)
 
 /**
  * This symbol defined the event instance number that your application is using.
  * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual event instance number that you created.
  **/
-#define EVENT_INSTANCE_SUPPORTED_NUMBER (10u)
+#define EVENT_RUNTIME_NUMBER_SUPPORTED (10u)
 
 /**
  * This symbol defined the mutex instance number that your application is using.
  * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual mutex instance number that you created.
  **/
-#define MUTEX_INSTANCE_SUPPORTED_NUMBER (10u)
+#define MUTEX_RUNTIME_NUMBER_SUPPORTED (10u)
 
 /**
  * This symbol defined the queue instance number that your application is using.
  * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual queue instance number that you created.
  **/
-#define QUEUE_INSTANCE_SUPPORTED_NUMBER (10u)
+#define QUEUE_RUNTIME_NUMBER_SUPPORTED (10u)
 
 /**
  * This symbol defined the timer instance number that your application is using.
  * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual timer instance number that you created.
  **/
-#define TIMER_INSTANCE_SUPPORTED_NUMBER (10u)
+#define TIMER_RUNTIME_NUMBER_SUPPORTED (10u)
 
 /**
  * This symbol defined the timer instance number that your application is using.
  * The defaule value is set to 1. Your application will certainly need a different value so set this correctly.
  * This is very often, but not always, according to the actual timer instance number that you created.
  **/
-#define POOL_INSTANCE_SUPPORTED_NUMBER (10u)
+#define POOL_RUNTIME_NUMBER_SUPPORTED (10u)
 
 /**
  * This symbol defined the timer instance number that your application is using.
@@ -122,7 +117,7 @@ extern "C" {
  * different value so set this correctly. This is very often, but not always,
  * according to the actual timer instance number that you created.
  **/
-#define PUBLISH_INSTANCE_SUPPORTED_NUMBER (10u)
+#define PUBLISH_RUNTIME_NUMBER_SUPPORTED (10u)
 
 /**
  * This symbol defined the timer instance number that your application is using.
@@ -130,7 +125,7 @@ extern "C" {
  * different value so set this correctly. This is very often, but not always,
  * according to the actual timer instance number that you created.
  **/
-#define SUBSCRIBE_INSTANCE_SUPPORTED_NUMBER (10u)
+#define SUBSCRIBE_RUNTIME_NUMBER_SUPPORTED (10u)
 
 /**
  * This symbol defined your thread running mode, if the thread runs at the privileged mode.
@@ -138,21 +133,5 @@ extern "C" {
  * This is very often, but not always, according to the security level that you want.
  **/
 #define THREAD_PSP_WITH_PRIVILEGED (10u)
-
-/**
- * This symbol defined your kernel trace print function, if your system implemented
- * standard printf function, you can define this macro to use printf as the At-RTOS kernel trace use.
- * The defaule standard printf macro is commented out. Or you can defined your customization-printf to replace
- * the standard printf by use macro KTRACE, If you don't need the kernel trace feature, you can comment out both of them.
- * Your application will certainly need a different value so set this correctly.
- * This is very often, but not always, according to the security level that you want.
- **/
-// Both of them commented out disabled the kernel trace feature
-// #define AT_RTOS_TRACE_USE_STANDARD_PRINTF_ENABLED  /* Comment out: default doesn't use the standard printf */
-// #define KTRACE                                     /* Comment out: default doesn't use the customization-printf */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _ATOS_CONFIGURATION_H_ */

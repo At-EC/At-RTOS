@@ -6,7 +6,7 @@ include_directories(${KERNEL_PATH}/include/kernel)
 target_sources(kernel_include
 	PUBLIC
 	${KERNEL_PATH}/include/arch.h
-	
+
     ${KERNEL_PATH}/include/kernel/at_rtos.h
     ${KERNEL_PATH}/include/kernel/compiler.h
     ${KERNEL_PATH}/include/kernel/configuration.h
@@ -16,6 +16,7 @@ target_sources(kernel_include
     ${KERNEL_PATH}/include/kernel/postcode.h
     ${KERNEL_PATH}/include/kernel/timer.h
     ${KERNEL_PATH}/include/kernel/trace.h
-    ${KERNEL_PATH}/include/kernel/typedef.h
+    ${KERNEL_PATH}/include/kernel/type_def.h
     ${KERNEL_PATH}/include/kernel/ktype.h
+	${KERNEL_PATH}/include/kernel/init.h
 )

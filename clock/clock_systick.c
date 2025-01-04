@@ -4,15 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #include "clock_tick.h"
 #include "configuration.h"
 #include "arch.h"
 #include "ktype.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* Convert the microsecond to clock count */
 #define _CONVERT_MICROSENCOND_TO_COUNT(us) ((u32_t)(us) * (PORTAL_SYSTEM_CORE_CLOCK_MHZ)-1u)
@@ -258,7 +253,3 @@ void clock_time_init(time_report_handler_t pTime_function)
     SysTick->VAL = 0x0u;
     SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
 }
-
-#ifdef __cplusplus
-}
-#endif

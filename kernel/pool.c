@@ -4,32 +4,16 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #include "kernel.h"
 #include "timer.h"
 #include "postcode.h"
 #include "trace.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "init.h"
 
 /**
  * Local unique postcode.
  */
 #define PC_EOR PC_IER(PC_OS_CMPT_POOL_9)
-
-/**
- * @brief Get the pool context based on provided unique id.
- *
- * @param id The timer unique id.
- *
- * @return The pointer of the current unique id timer context.
- */
-static pool_context_t *_pool_context_get(os_id_t id)
-{
-    return (pool_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-}
 
 /**
  * @brief Check if the pool unique id if is's invalid.
@@ -38,9 +22,13 @@ static pool_context_t *_pool_context_get(os_id_t id)
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _pool_id_isInvalid(u32_t id)
+static b_t _pool_context_isInvalid(pool_context_t *pCurPool)
 {
-    return kernel_member_unified_id_isInvalid(KERNEL_MEMBER_POOL, id);
+    u32_t start, end;
+    INIT_SECTION_FIRST(INIT_SECTION_OS_POOL_LIST, start);
+    INIT_SECTION_LAST(INIT_SECTION_OS_POOL_LIST, end);
+
+    return ((u32_t)pCurPool < start || (u32_t)pCurPool >= end) ? true : false;
 }
 
 /**
@@ -50,25 +38,9 @@ static b_t _pool_id_isInvalid(u32_t id)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _pool_id_isInit(i32_t id)
+static b_t _pool_context_isInit(pool_context_t *pCurPool)
 {
-    pool_context_t *pCurPool = _pool_context_get(id);
-
-    return ((pCurPool) ? (((pCurPool->head.cs) ? (TRUE) : (FALSE))) : FALSE);
-}
-
-/**
- * @brief Pick up a highest priority thread that blocking by the pool pending list.
- *
- * @param The pool unique id.
- *
- * @return The highest blocking thread head.
- */
-static list_t *_pool_list_blockingHeadGet(os_id_t id)
-{
-    pool_context_t *pCurPool = _pool_context_get(id);
-
-    return (list_t *)((pCurPool) ? (&pCurPool->blockingThreadHead) : (NULL));
+    return ((pCurPool) ? (((pCurPool->head.cs) ? (true) : (false))) : false);
 }
 
 /**
@@ -86,13 +58,13 @@ static void *_mem_take(pool_context_t *pCurPool)
     u8_t i = 0u;
 
     do {
-        if (!(free & SET_BIT(i))) {
+        if (!(free & B(i))) {
             continue;
         }
 
         pMemTake = (void *)((u32_t)((i * pCurPool->elementLength) + (u32_t)pCurPool->pMemAddress));
         os_memset((char_t *)pMemTake, 0x0u, pCurPool->elementLength);
-        pCurPool->elementFreeBits &= ~SET_BIT(i);
+        pCurPool->elementFreeBits &= ~B(i);
         break;
 
     } while (i++ < num);
@@ -115,19 +87,19 @@ static bool _mem_release(pool_context_t *pCurPool, void *pUserMem)
     u8_t i = 0u;
 
     do {
-        if (free & SET_BIT(i)) {
+        if (free & B(i)) {
             continue;
         }
 
         pMemTake = (void *)((u32_t)((i * pCurPool->elementLength) + (u32_t)pCurPool->pMemAddress));
         if (pMemTake == pUserMem) {
             os_memset((char_t *)pMemTake, 0x0u, pCurPool->elementLength);
-            pCurPool->elementFreeBits |= SET_BIT(i);
+            pCurPool->elementFreeBits |= B(i);
             break;
         }
     } while (i++ < num);
 
-    return (pMemTake == pUserMem) ? (TRUE) : (FALSE);
+    return (pMemTake == pUserMem) ? (true) : (false);
 }
 
 /**
@@ -135,20 +107,20 @@ static bool _mem_release(pool_context_t *pCurPool, void *pUserMem)
  *
  * @param id The unique id of the entry thread.
  */
-static void _pool_schedule(os_id_t id)
+static void _pool_schedule(void *pTask)
 {
-    thread_context_t *pEntryThread = (thread_context_t *)(kernel_member_unified_id_toContainerAddress(id));
-    timeout_remove(&pEntryThread->expire, true);
-    pool_context_t *pCurPool = (pool_context_t*)pEntryThread->schedule.pPendCtx;
-    void **ppUserMemAddress = (void **)pEntryThread->schedule.pPendData;
+    struct schedule_task *pCurTask = (struct schedule_task *)pTask;
+    timeout_remove(&pCurTask->expire, true);
+    pool_context_t *pCurPool = (pool_context_t *)pCurTask->pPendCtx;
+    void **ppUserMemAddress = (void **)pCurTask->pPendData;
     if (!*ppUserMemAddress) {
         return;
     }
     *ppUserMemAddress = _mem_take(pCurPool);
     if (!*ppUserMemAddress) {
-        pEntryThread->schedule.entry.result = PC_EOR;
+        pCurTask->exec.entry.result = PC_EOR;
     } else {
-        pEntryThread->schedule.entry.result = 0;
+        pCurTask->exec.entry.result = 0;
     }
 }
 
@@ -167,18 +139,14 @@ static u32_t _pool_init_privilege_routine(arguments_t *pArgs)
     u16_t elementLen = (u16_t)(pArgs[1].u16_val);
     u16_t elementNum = (u16_t)(pArgs[2].u16_val);
     const char_t *pName = (const char_t *)(pArgs[3].pch_val);
-    u32_t endAddr = 0u;
-    pool_context_t *pCurPool = NULL;
 
-    pCurPool = (pool_context_t *)kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_POOL);
-    endAddr = (u32_t)kernel_member_id_toContainerEndAddress(KERNEL_MEMBER_POOL);
-    do {
-        os_id_t id = kernel_member_containerAddress_toUnifiedid((u32_t)pCurPool);
-        if (_pool_id_isInvalid(id)) {
+    INIT_SECTION_FOREACH(INIT_SECTION_OS_POOL_LIST, pool_context_t, pCurPool)
+    {
+        if (_pool_context_isInvalid(pCurPool)) {
             break;
         }
 
-        if (_pool_id_isInit(id)) {
+        if (_pool_context_isInit(pCurPool)) {
             continue;
         }
         os_memset((char_t *)pCurPool, 0x0u, sizeof(pool_context_t));
@@ -188,14 +156,14 @@ static u32_t _pool_init_privilege_routine(arguments_t *pArgs)
         pCurPool->pMemAddress = pMemAddr;
         pCurPool->elementLength = elementLen;
         pCurPool->elementNumber = elementNum;
-        pCurPool->elementFreeBits = SET_BITS(0u, (elementNum - 1u));
+        pCurPool->elementFreeBits = Bs(0u, (elementNum - 1u));
 
         EXIT_CRITICAL_SECTION();
-        return id;
-    } while ((u32_t)++pCurPool < endAddr);
+        return (u32_t)pCurPool;
+    };
 
     EXIT_CRITICAL_SECTION();
-    return OS_INVALID_ID_VAL;
+    return 0u;
 }
 
 /**
@@ -209,17 +177,14 @@ static i32p_t _pool_take_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    os_id_t id = (os_id_t)pArgs[0].u32_val;
+    pool_context_t *pCurPool = (pool_context_t *)pArgs[0].u32_val;
     void **ppUserBuffer = (void **)pArgs[1].pv_val;
     u16_t bufferSize = (u16_t)pArgs[2].u16_val;
     u32_t timeout_ms = (u32_t)pArgs[3].u32_val;
-    pool_context_t *pCurPool = NULL;
     thread_context_t *pCurThread = NULL;
     i32p_t postcode = 0;
 
-    pCurPool = _pool_context_get(id);
     pCurThread = kernel_thread_runContextGet();
-
     if (bufferSize > pCurPool->elementLength) {
         EXIT_CRITICAL_SECTION();
         return PC_EOR;
@@ -230,8 +195,7 @@ static i32p_t _pool_take_privilege_routine(arguments_t *pArgs)
             EXIT_CRITICAL_SECTION();
             return PC_EOR;
         }
-        pCurThread->schedule.pPendData = (void *)ppUserBuffer;
-        postcode = kernel_thread_exit_trigger(pCurThread, pCurPool, _pool_list_blockingHeadGet(id), timeout_ms);
+        postcode = schedule_exit_trigger(&pCurThread->task, pCurPool, ppUserBuffer, &pCurPool->q_list, timeout_ms, true);
         PC_IF(postcode, PC_PASS)
         {
             postcode = PC_OS_WAIT_UNAVAILABLE;
@@ -259,14 +223,9 @@ static i32p_t _pool_release_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    os_id_t id = (os_id_t)pArgs[0].u32_val;
+    pool_context_t *pCurPool = (pool_context_t *)pArgs[0].u32_val;
     void **ppUserBuffer = (void **)pArgs[1].ptr_val;
-    pool_context_t *pCurPool = NULL;
-    thread_context_t *pCurThread = NULL;
     i32p_t postcode = 0;
-
-    pCurPool = _pool_context_get(id);
-    pCurThread = (thread_context_t *)kernel_thread_runContextGet();
 
     if (!_mem_release(pCurPool, *ppUserBuffer)) {
         EXIT_CRITICAL_SECTION();
@@ -276,30 +235,15 @@ static i32p_t _pool_release_privilege_routine(arguments_t *pArgs)
 
     /* Try to wakeup a blocking thread */
     list_iterator_t it = {0u};
-    list_iterator_init(&it, _pool_list_blockingHeadGet(id));
-    pCurThread = (thread_context_t *)list_iterator_next(&it);
-    if (pCurThread) {
-        postcode = kernel_thread_entry_trigger(pCurThread, 0, _pool_schedule);
+    list_t *pList = (list_t *)&pCurPool->q_list;
+    list_iterator_init(&it, pList);
+    struct schedule_task *pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    if (pCurTask) {
+        postcode = schedule_entry_trigger(pCurTask, _pool_schedule, 0u);
     }
 
     EXIT_CRITICAL_SECTION();
     return postcode;
-}
-
-/**
- * @brief Convert the internal os id to kernel member number.
- *
- * @param id The provided unique id.
- *
- * @return The value of member number.
- */
-u32_t _impl_pool_os_id_to_number(os_id_t id)
-{
-    if (_pool_id_isInvalid(id)) {
-        return 0u;
-    }
-
-    return (u32_t)((id - kernel_member_id_toUnifiedIdStart(KERNEL_MEMBER_POOL)) / sizeof(pool_context_t));
 }
 
 /**
@@ -312,7 +256,7 @@ u32_t _impl_pool_os_id_to_number(os_id_t id)
  *
  * @return The pool unique id.
  */
-os_id_t _impl_pool_init(const void *pMemAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
+u32_t _impl_pool_init(const void *pMemAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
 {
     if (!pMemAddr) {
         return OS_INVALID_ID_VAL;
@@ -350,13 +294,14 @@ os_id_t _impl_pool_init(const void *pMemAddr, u16_t elementLen, u16_t elementNum
  *
  * @return The result of the operation.
  */
-i32p_t _impl_pool_take(os_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms)
+i32p_t _impl_pool_take(u32_t ctx, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms)
 {
-    if (_pool_id_isInvalid(id)) {
+    pool_context_t *pCtx = (pool_context_t *)ctx;
+    if (_pool_context_isInvalid(pCtx)) {
         return PC_EOR;
     }
 
-    if (!_pool_id_isInit(id)) {
+    if (!_pool_context_isInit(pCtx)) {
         return PC_EOR;
     }
 
@@ -367,7 +312,7 @@ i32p_t _impl_pool_take(os_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t 
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},
+        [0] = {.u32_val = (u32_t)ctx},
         [1] = {.pv_val = (void **)ppUserBuffer},
         [2] = {.u16_val = (u16_t)bufferSize},
         [3] = {.u32_val = (u32_t)timeout_ms},
@@ -399,13 +344,14 @@ i32p_t _impl_pool_take(os_id_t id, void **ppUserBuffer, u16_t bufferSize, u32_t 
  *
  * @return The result of the operation.
  */
-i32p_t _impl_pool_release(os_id_t id, void **ppUserBuffer)
+i32p_t _impl_pool_release(u32_t ctx, void **ppUserBuffer)
 {
-    if (_pool_id_isInvalid(id)) {
+    pool_context_t *pCtx = (pool_context_t *)ctx;
+    if (_pool_context_isInvalid(pCtx)) {
         return PC_EOR;
     }
 
-    if (!_pool_id_isInit(id)) {
+    if (!_pool_context_isInit(pCtx)) {
         return PC_EOR;
     }
 
@@ -414,13 +360,9 @@ i32p_t _impl_pool_release(os_id_t id, void **ppUserBuffer)
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)id},
+        [0] = {.u32_val = (u32_t)ctx},
         [1] = {.pv_val = (void **)ppUserBuffer},
     };
 
     return kernel_privilege_invoke((const void *)_pool_release_privilege_routine, arguments);
 }
-
-#ifdef __cplusplus
-}
-#endif

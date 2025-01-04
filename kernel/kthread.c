@@ -4,27 +4,32 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #include "at_rtos.h"
 #include "ktype.h"
 #include "kernel.h"
 #include "timer.h"
-#include "postcode.h"
+#include "init.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+INIT_OS_THREAD_RUNTIME_NUM_DEFINE(THREAD_RUNTIME_NUMBER_SUPPORTED);
+INIT_OS_TIMER_RUNTIME_NUM_DEFINE(TIMER_RUNTIME_NUMBER_SUPPORTED);
+INIT_OS_SEM_RUNTIME_NUM_DEFINE(SEMAPHORE_RUNTIME_NUMBER_SUPPORTED);
+INIT_OS_MUTEX_RUNTIME_NUM_DEFINE(MUTEX_RUNTIME_NUMBER_SUPPORTED);
+INIT_OS_EVT_RUNTIME_NUM_DEFINE(EVENT_RUNTIME_NUMBER_SUPPORTED);
+INIT_OS_MSGQ_RUNTIME_NUM_DEFINE(QUEUE_RUNTIME_NUMBER_SUPPORTED);
+INIT_OS_POOL_RUNTIME_NUM_DEFINE(POOL_RUNTIME_NUMBER_SUPPORTED);
+INIT_OS_PUBLISH_RUNTIME_NUM_DEFINE(PUBLISH_RUNTIME_NUMBER_SUPPORTED);
+INIT_OS_SUBSCRIBE_RUNTIME_NUM_DEFINE(SUBSCRIBE_RUNTIME_NUMBER_SUPPORTED);
 
-#define _PCER PC_IER(PC_OS_CMPT_KERNEL_2)
+INIT_OS_THREAD_DEFINE(kernel_th, OS_PRIORITY_KERNEL_SCHEDULE_LEVEL, KERNEL_SCHEDULE_THREAD_STACK_SIZE, kernel_schedule_thread);
+INIT_OS_THREAD_DEFINE(idle_th, OS_PRIORITY_KERNEL_IDLE_LEVEL, KERNEL_IDLE_THREAD_STACK_SIZE, kernel_idle_thread);
+INIT_OS_SEMAPHORE_DEFINE(kernel_sem, 0u, OS_SEM_BINARY);
 
-/* Local defined the kernel thread stack */
-static u32_t _kernel_schedule[((u32_t)(KERNEL_SCHEDULE_THREAD_STACK_SIZE) / sizeof(u32_t))] = {0u};
-static u32_t _kernel_idle[((u32_t)(KERNEL_IDLE_THREAD_STACK_SIZE) / sizeof(u32_t))] = {0u};
+static pThread_entryFunc_t g_idle_thread_user_entry_fn = NULL;
 
 /**
  * Global At_RTOS application interface init.
  */
-#if (OS_INTERFACE_EXTERN_USE_ENABLE)
+#if (OS_API_ENABLE)
 const at_rtos_api_t os = {
     .thread_init = os_thread_init,
     .thread_sleep = os_thread_sleep,
@@ -32,6 +37,7 @@ const at_rtos_api_t os = {
     .thread_suspend = os_thread_suspend,
     .thread_yield = os_thread_yield,
     .thread_delete = os_thread_delete,
+    .thread_idle_fn_register = os_thread_idle_callback_register,
 
     .timer_init = os_timer_init,
     .timer_automatic = os_timer_automatic,
@@ -71,57 +77,22 @@ const at_rtos_api_t os = {
     .id_isInvalid = os_id_is_invalid,
     .schedule_run = os_kernel_run,
     .schedule_is_running = os_kernel_is_running,
-    .id_current_thread = os_id_current_thread,
+    .current_thread = os_current_thread_probe,
 
-    .trace_firmware = os_trace_firmware_print,
-    .trace_postcode = os_trace_postcode_print,
-    .trace_kernel = os_trace_kernel_print,
+    .trace_versison = os_trace_firmware_version,
+    .trace_postcode_fn_register = os_trace_postcode_callback_register,
+    .trace_postcode = os_trace_failed_postcode,
+    .trace_thread = os_trace_foreach_thread,
+    .trace_time = os_trace_analyze,
 };
 #endif
-
-/**
- * Data structure for location kernel thread.
- */
-typedef struct {
-    /* kernel schedule thread id */
-    os_thread_id_t schedule_id;
-
-    /* kernel idle thread id */
-    os_thread_id_t idle_id;
-
-    /* kernel schedule semaphore id */
-    os_sem_id_t sem_id;
-} _kthread_resource_t;
-
-/**
- * Local timer resource
- */
-static _kthread_resource_t g_kernel_thread_resource = {
-    .schedule_id =
-        {
-            .pName = "kernel",
-            .val = 0u,
-            .number = KERNEL_SCHEDULE_THREAD_INSTANCE,
-        },
-    .idle_id =
-        {
-            .pName = "idle",
-            .val = sizeof(thread_context_t),
-            .number = KERNEL_IDLE_THREAD_INSTANCE,
-        },
-    .sem_id =
-        {
-            .pName = "kernel",
-            .number = KERNEL_SCHEDULE_SEMAPHORE_INSTANCE,
-        },
-};
 
 /**
  * @brief To issue a kernel message notification.
  */
 void kthread_message_notification(void)
 {
-    PC_IF(os_sem_give(g_kernel_thread_resource.sem_id), PC_PASS)
+    PC_IF(os_sem_give(kernel_sem), PC_PASS)
     {
         /* TODO */
     }
@@ -132,90 +103,23 @@ void kthread_message_notification(void)
  */
 i32p_t kthread_message_arrived(void)
 {
-    return os_sem_take(g_kernel_thread_resource.sem_id, OS_TIME_FOREVER_VAL);
-}
-
-static void _thread_callback_fromTimeOut(void *pLinker)
-{
-    thread_context_t* pCurThread = (thread_context_t*)CONTAINEROF(pLinker, thread_context_t, expire);
-    kernel_thread_entry_trigger(pCurThread, PC_OS_WAIT_TIMEOUT, NULL);
+    return os_sem_take(kernel_sem, OS_TIME_FOREVER_VAL);
 }
 
 /**
- * @brief The AtOS kernel internal use thread and semaphore init.
+ * @brief User register idle function callback.
  */
-void kthread_init(void)
+void kthread_message_idle_loop_fn(void)
 {
-    ENTER_CRITICAL_SECTION();
-
-    thread_context_t kernel_thread[KERNEL_APPLICATION_THREAD_INSTANCE] = {
-        [KERNEL_SCHEDULE_THREAD_INSTANCE] =
-            {
-                .head =
-                    {
-                        .id = g_kernel_thread_resource.schedule_id.val,
-                        .pName = g_kernel_thread_resource.schedule_id.pName,
-                        .linker = LINKER_NULL,
-                    },
-                .priority =
-                    {
-                        .level = OS_PRIOTITY_HIGHEST_LEVEL,
-                    },
-                .pEntryFunc = kernel_schedule_thread,
-                .pStackAddr = (u32_t *)&_kernel_schedule[0],
-                .stackSize = KERNEL_SCHEDULE_THREAD_STACK_SIZE,
-                .psp = (u32_t)kernel_stack_frame_init(kernel_schedule_thread, (u32_t *)&_kernel_schedule[0],
-                                                      KERNEL_SCHEDULE_THREAD_STACK_SIZE),
-            },
-
-        [KERNEL_IDLE_THREAD_INSTANCE] =
-            {
-                .head =
-                    {
-                        .id = g_kernel_thread_resource.idle_id.val,
-                        .pName = g_kernel_thread_resource.idle_id.pName,
-                        .linker = LINKER_NULL,
-                    },
-                .priority =
-                    {
-                        .level = OS_PRIOTITY_LOWEST_LEVEL,
-                    },
-                .pEntryFunc = kernel_idle_thread,
-                .pStackAddr = (u32_t *)&_kernel_idle[0],
-                .stackSize = KERNEL_IDLE_THREAD_STACK_SIZE,
-                .psp = (u32_t)kernel_stack_frame_init(kernel_idle_thread, (u32_t *)&_kernel_idle[0], KERNEL_IDLE_THREAD_STACK_SIZE),
-            },
-    };
-
-    thread_context_t *pCurThread = (thread_context_t *)kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_THREAD);
-    os_memcpy((u8_t *)pCurThread, (u8_t *)kernel_thread, (sizeof(thread_context_t) * KERNEL_APPLICATION_THREAD_INSTANCE));
-
-    pCurThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(kernel_thread[KERNEL_SCHEDULE_THREAD_INSTANCE].head.id);
-    timeout_init(&pCurThread->expire, _thread_callback_fromTimeOut);
-    kernel_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
-
-    pCurThread = (thread_context_t *)kernel_member_unified_id_toContainerAddress(kernel_thread[KERNEL_IDLE_THREAD_INSTANCE].head.id);
-    timeout_init(&pCurThread->expire, _thread_callback_fromTimeOut);
-    kernel_thread_list_transfer_toPend((linker_head_t *)&pCurThread->head);
-
-    semaphore_context_t kernel_semaphore[KERNEL_APPLICATION_SEMAPHORE_INSTANCE] = {
-        [KERNEL_SCHEDULE_SEMAPHORE_INSTANCE] =
-            {
-                .head =
-                    {
-                        .pName = g_kernel_thread_resource.schedule_id.pName,
-                        .cs = CS_INITED,
-                    },
-                .remains = 0u,
-                .limits = OS_SEM_BINARY,
-            },
-    };
-
-    semaphore_context_t *pCurSemaphore = (semaphore_context_t *)kernel_member_id_toContainerStartAddress(KERNEL_MEMBER_SEMAPHORE);
-    g_kernel_thread_resource.sem_id.val = kernel_member_containerAddress_toUnifiedid((u32_t)pCurSemaphore);
-    os_memcpy((u8_t *)pCurSemaphore, (u8_t *)kernel_semaphore, (sizeof(semaphore_context_t) * KERNEL_APPLICATION_SEMAPHORE_INSTANCE));
+    if (g_idle_thread_user_entry_fn) {
+        g_idle_thread_user_entry_fn();
+    }
 }
 
-#ifdef __cplusplus
+/**
+ * @brief Register idle thread user fucntion.
+ */
+void _impl_kthread_idle_user_callback_register(const pThread_entryFunc_t fn)
+{
+    g_idle_thread_user_entry_fn = fn;
 }
-#endif

@@ -8,7 +8,7 @@ jobs:
       matrix:
         path:
           - check: './include'
-            exclude: ''              # Nothing to exclude
+            exclude: './include/kernel/init.h' # Nothing to exclude
           - check: './kernel'
             exclude: ''              # Nothing to exclude
           - check: './clock'

@@ -4,12 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #include "linker.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * @brief Copy the character from src to dst.
@@ -91,22 +86,22 @@ u32_t os_strlen(const uchar_t *str)
 b_t list_node_isExisted(list_t *pList, list_node_t *pNode)
 {
     if (!pList) {
-        return FALSE;
+        return false;
     }
 
     if (!pNode) {
-        return FALSE;
+        return false;
     }
 
     list_node_t *pCurNode_temp = pList->pHead;
 
     while (pCurNode_temp) {
         if (pCurNode_temp == pNode) {
-            return TRUE;
+            return true;
         }
         pCurNode_temp = pCurNode_temp->pNext;
     }
-    return FALSE;
+    return false;
 }
 
 /**
@@ -135,6 +130,22 @@ u32_t list_size(list_t *pList)
 }
 
 /**
+ * @brief Get the list head.
+ *
+ * @param pList The pointer of the list.
+ *
+ * @return Value The pointer of the list head
+ */
+void *list_head(list_t *pList)
+{
+    if (!pList) {
+        return NULL;
+    }
+
+    return (void *)(pList->pHead);
+}
+
+/**
  * @brief To delete a node form the provided list.
  *
  * To delete a node form the provided list, and return the value to indicate
@@ -148,11 +159,11 @@ u32_t list_size(list_t *pList)
 b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
 {
     if (!pList) {
-        return FALSE;
+        return false;
     }
 
     if (!pTargetNode) {
-        return FALSE;
+        return false;
     }
 
     list_node_t *pCurNode_tmp = pList->pHead;
@@ -164,7 +175,7 @@ b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
 
     if (!pCurNode_tmp) {
         /* The target pNode is not in the list */
-        return FALSE;
+        return false;
     }
 
     if (!pPrevNode_tmp) {
@@ -174,7 +185,7 @@ b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
     }
     pCurNode_tmp->pNext = NULL;
 
-    return TRUE;
+    return true;
 }
 
 /**
@@ -191,15 +202,15 @@ b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
 b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTargetNode)
 {
     if (!pList) {
-        return FALSE;
+        return false;
     }
 
     if (!pBefore) {
-        return FALSE;
+        return false;
     }
 
     if (!pTargetNode) {
-        return FALSE;
+        return false;
     }
 
     list_node_t *pCurNode_tmp = pList->pHead;
@@ -211,7 +222,7 @@ b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTa
 
     if (!pCurNode_tmp) {
         /* The pBefore is not in the list */
-        return FALSE;
+        return false;
     }
 
     if (!pPrevNode_tmp) {
@@ -221,7 +232,7 @@ b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTa
     }
     pTargetNode->pNext = pBefore;
 
-    return TRUE;
+    return true;
 }
 
 /**
@@ -238,15 +249,15 @@ b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTa
 b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t direction)
 {
     if (!pList) {
-        return FALSE;
+        return false;
     }
 
     if (!pInNode) {
-        return FALSE;
+        return false;
     }
 
     if ((direction != LIST_HEAD) && (direction != LIST_TAIL)) {
-        return FALSE;
+        return false;
     }
 
     if (direction == LIST_TAIL) {
@@ -265,7 +276,7 @@ b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t directi
         pList->pHead = pInNode;
     }
 
-    return TRUE;
+    return true;
 }
 
 /**
@@ -336,22 +347,22 @@ list_node_t *list_node_pop(list_t *pList, list_direction_t direction)
 b_t list_iterator_init(list_iterator_t *pIterator, list_t *pList)
 {
     if (!pIterator) {
-        return FALSE;
+        return false;
     }
 
     if (!pList) {
-        return FALSE;
+        return false;
     }
 
     os_memset((char_t *)pIterator, 0x0u, sizeof(list_iterator_t));
     if (!pList->pHead) {
-        return FALSE;
+        return false;
     }
 
     pIterator->pCurNode = pList->pHead;
     pIterator->pList = pList;
 
-    return TRUE;
+    return true;
 }
 
 /**
@@ -391,7 +402,7 @@ b_t list_iterator_next_condition(list_iterator_t *pIterator, list_node_t **ppOut
 {
     *ppOutNode = list_iterator_next(pIterator);
 
-    return (b_t)((*ppOutNode) ? TRUE : FALSE);
+    return (b_t)((*ppOutNode) ? true : false);
 }
 
 /**
@@ -466,7 +477,3 @@ void linker_list_transaction_specific(linker_t *pLinker, list_t *pToList, pLinke
         list_node_push(pToList, &pLinker->node, LIST_TAIL);
     }
 }
-
-#ifdef __cplusplus
-}
-#endif

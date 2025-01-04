@@ -4,15 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #ifndef _CLOCK_TICK_H_
 #define _CLOCK_TICK_H_
 
-#include "typedef.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "type_def.h"
 
 /**
  * Function pointer structure for the clock tells how much time has passed.
@@ -29,9 +24,5 @@ u32_t clock_time_get(void);
 void clock_time_enable(void);
 void clock_time_disable(void);
 void clock_time_init(time_report_handler_t pTime_function);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _CLOCK_TICK_H_ */

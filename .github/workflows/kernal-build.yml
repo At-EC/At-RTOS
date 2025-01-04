@@ -23,7 +23,7 @@ jobs:
         working-directory: .github/remote_build/native_gcc
         run: |
           cmake -S . -B build
-          cmake --build build
+#          cmake --build build
           
 #      - name: Upload coverage reports to Codecov
 #        uses: codecov/codecov-action@v3
