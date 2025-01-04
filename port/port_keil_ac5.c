@@ -4,12 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #include "port.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #if defined ( __FPU_PRESENT )
 #define FPU_ENABLED  __FPU_PRESENT
@@ -141,7 +136,3 @@ __asm void port_run_theFirstThread(u32_t sp)
 
     ALIGN 4
 }
-
-#ifdef __cplusplus
-}
-#endif

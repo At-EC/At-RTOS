@@ -4,54 +4,49 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #ifndef _CONFIGURATION_H_
 #define _CONFIGURATION_H_
 
 #include "atos_configuration.h"
 #include "build_version.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define ENABLED  (1u)
 #define DISABLED (0u)
 
-#ifndef THREAD_INSTANCE_SUPPORTED_NUMBER
-#define THREAD_INSTANCE_SUPPORTED_NUMBER (1u)
+#ifndef THREAD_RUNTIME_NUMBER_SUPPORTED
+#define THREAD_RUNTIME_NUMBER_SUPPORTED (1u)
 #endif
 
-#ifndef SEMAPHORE_INSTANCE_SUPPORTED_NUMBER
-#define SEMAPHORE_INSTANCE_SUPPORTED_NUMBER (1u)
+#ifndef SEMAPHORE_RUNTIME_NUMBER_SUPPORTED
+#define SEMAPHORE_RUNTIME_NUMBER_SUPPORTED (1u)
 #endif
 
-#ifndef EVENT_INSTANCE_SUPPORTED_NUMBER
-#define EVENT_INSTANCE_SUPPORTED_NUMBER (1u)
+#ifndef EVENT_RUNTIME_NUMBER_SUPPORTED
+#define EVENT_RUNTIME_NUMBER_SUPPORTED (1u)
 #endif
 
-#ifndef MUTEX_INSTANCE_SUPPORTED_NUMBER
-#define MUTEX_INSTANCE_SUPPORTED_NUMBER (1u)
+#ifndef MUTEX_RUNTIME_NUMBER_SUPPORTED
+#define MUTEX_RUNTIME_NUMBER_SUPPORTED (1u)
 #endif
 
-#ifndef QUEUE_INSTANCE_SUPPORTED_NUMBER
-#define QUEUE_INSTANCE_SUPPORTED_NUMBER (1u)
+#ifndef QUEUE_RUNTIME_NUMBER_SUPPORTED
+#define QUEUE_RUNTIME_NUMBER_SUPPORTED (1u)
 #endif
 
-#ifndef TIMER_INSTANCE_SUPPORTED_NUMBER
-#define TIMER_INSTANCE_SUPPORTED_NUMBER (1u)
+#ifndef TIMER_RUNTIME_NUMBER_SUPPORTED
+#define TIMER_RUNTIME_NUMBER_SUPPORTED (1u)
 #endif
 
-#ifndef POOL_INSTANCE_SUPPORTED_NUMBER
-#define POOL_INSTANCE_SUPPORTED_NUMBER (1u)
+#ifndef POOL_RUNTIME_NUMBER_SUPPORTED
+#define POOL_RUNTIME_NUMBER_SUPPORTED (1u)
 #endif
 
-#ifndef PUBLISH_INSTANCE_SUPPORTED_NUMBER
-#define PUBLISH_INSTANCE_SUPPORTED_NUMBER (1u)
+#ifndef PUBLISH_RUNTIME_NUMBER_SUPPORTED
+#define PUBLISH_RUNTIME_NUMBER_SUPPORTED (1u)
 #endif
 
-#ifndef SUBSCRIBE_INSTANCE_SUPPORTED_NUMBER
-#define SUBSCRIBE_INSTANCE_SUPPORTED_NUMBER (1u)
+#ifndef SUBSCRIBE_RUNTIME_NUMBER_SUPPORTED
+#define SUBSCRIBE_RUNTIME_NUMBER_SUPPORTED (1u)
 #endif
 
 #ifndef PORTAL_SYSTEM_CORE_CLOCK_MHZ
@@ -90,12 +85,9 @@ extern "C" {
 #define KERNEL_THREAD_STACK_SIZE (1024u)
 #endif
 
-#ifdef AT_RTOS_TRACE_USE_STANDARD_PRINTF_ENABLED
-#define KTRACE(frmt, ...) printf(frmt, ##__VA_ARGS__)
-#else
-#ifndef KTRACE
-// #define KTRACE(frmt, ...) UNUSED_MSG(UNUSED_ARG)
-#endif
+/* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
+#ifndef OS_API_ENABLE
+#define OS_API_ENABLE (ENABLED)
 #endif
 
 /* Configuration of the Cortex-M Processor and Core Peripherals.
@@ -127,15 +119,6 @@ extern "C" {
     !defined __TMS470__ && !defined __TASKING__ && !defined ARCH_NATIVE_GCC
 
 #warning Not supported compiler type
-#endif
-
-/* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
-#ifndef OS_INTERFACE_EXTERN_USE_ENABLE
-#define OS_INTERFACE_EXTERN_USE_ENABLE (ENABLED)
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif /* _CONFIGURATION_H_ */

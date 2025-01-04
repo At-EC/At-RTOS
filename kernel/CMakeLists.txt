@@ -12,6 +12,7 @@ target_sources(atos_kernel
     ${CMAKE_CURRENT_LIST_DIR}/kthread.c
     ${CMAKE_CURRENT_LIST_DIR}/pool.c
     ${CMAKE_CURRENT_LIST_DIR}/subscribe.c
+    ${CMAKE_CURRENT_LIST_DIR}/init.c
 )
 
 target_include_directories(atos_kernel

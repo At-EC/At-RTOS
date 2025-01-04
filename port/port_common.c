@@ -4,14 +4,9 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #include "linker.h"
 #include "clock_tick.h"
 #include "port.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * @brief ARM core systick interrupt handle function.
@@ -35,14 +30,14 @@ void HardFault_Handler(void)
 b_t port_isInInterruptContent(void)
 {
     if (__get_IPSR()) {
-        return TRUE;
+        return true;
     }
 
-    if (__get_PRIMASK() == SET_BIT(0)) {
-        return TRUE;
+    if (__get_PRIMASK() == B(0)) {
+        return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 /**
@@ -51,9 +46,9 @@ b_t port_isInInterruptContent(void)
 b_t port_isInThreadMode(void)
 {
     if (__get_IPSR()) {
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
 }
 
 /**
@@ -91,7 +86,7 @@ u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t
 
     psp_frame = STACK_ADDRESS_DOWN(psp_frame);
 
-    ((stack_snapshot_t *)psp_frame)->xPSR = SET_BIT(24);                /* xPSR */
+    ((stack_snapshot_t *)psp_frame)->xPSR = B(24);                /* xPSR */
     ((stack_snapshot_t *)psp_frame)->R15_PC = (u32_t)pEntryFunction; /* PC   */
     ((stack_snapshot_t *)psp_frame)->R14_LR = 0xFFFFFFFDu;           /* LR   */
 
@@ -134,6 +129,3 @@ u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t
     return (u32_t)psp_frame;
 }
 
-#ifdef __cplusplus
-}
-#endif

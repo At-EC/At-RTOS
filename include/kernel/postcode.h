@@ -4,15 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #ifndef _POSTCODE_H_
 #define _POSTCODE_H_
 
-#include "typedef.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "type_def.h"
 
 /* The following table defined the At-RTOS component number */
 enum {
@@ -38,17 +33,18 @@ enum {
  */
 static inline i32p_t _impl_postcode_cmpt_failed(i32p_t postcode)
 {
-    extern u32_t g_postcode_os_cmpt_failed_container[PC_OS_COMPONENT_NUMBER];
+    extern void _impl_trace_postcode_set(u32_t cmpt, u32_t code);
 
-    if (postcode < 0) {
-        u32_t code = PC_NEGATIVE(postcode);
-        u32_t component = (((u32_t)code >> PC_COMPONENT_NUMBER_POS) & PC_COMPONENT_NUMBER_MSK);
-        if (component < PC_OS_COMPONENT_NUMBER) {
-            g_postcode_os_cmpt_failed_container[component] = code;
-        }
-
-        while (1) {};
+    if (postcode >= 0) {
+        return postcode;
     }
+
+    u32_t code = PC_NEGATIVE(postcode);
+    u32_t component = (((u32_t)code >> PC_COMPONENT_NUMBER_POS) & PC_COMPONENT_NUMBER_MSK);
+    if (component < PC_OS_COMPONENT_NUMBER) {
+        _impl_trace_postcode_set(component, code);
+    }
+
     return postcode;
 }
 
@@ -74,9 +70,5 @@ static inline i32p_t _impl_postcode_cmpt_failed(i32p_t postcode)
 #define PC_ASSERT_INDEX(index, high)    _CHECK_INDEX(index, high)
 #define PC_ASSERT_RANGE(val, low, high) _CHECK_RANGE(val, low, high)
 #define PC_ASSERT_BOUND(val, high)      _CHECK_BOUND(val, high)
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _POSTCODE_H_ */

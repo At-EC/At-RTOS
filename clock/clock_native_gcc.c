@@ -4,13 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-
 #include "clock_tick.h"
 #include "configuration.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * Data structure for location time clock
@@ -136,7 +131,3 @@ void clock_time_init(time_report_handler_t pTime_function)
 
     /* Nothing need to do for kernel cmake sample build. */
 }
-
-#ifdef __cplusplus
-}
-#endif

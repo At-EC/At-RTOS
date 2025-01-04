@@ -12,14 +12,4 @@
 #include "../arch/arch32/arm/cmsis/include/cmsis_compiler.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* TODO */
-
-#ifdef __cplusplus
-}
-#endif
-
 #endif /* _COMPILER_H_ */

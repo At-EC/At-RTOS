@@ -151,7 +151,7 @@ At-RTOS ported a template At-RTOS configuration header file [atos_configuration.
 ```
 
 Your application will certainly need a different value, so set the kernel component instance number correctly. This is very often, but not always. It's according to your system design.
-The symbols in the configuration header file look like `<kernel component>_INSTANCE_SUPPORTED_NUMBER`, and the kernel component is shown as the following table:
+The symbols in the configuration header file look like `<kernel component>_RUNTIME_NUMBER_SUPPORTED`, and the kernel component is shown as the following table:
 - THREAD
 - SEMAPHORE
 - EVENT
@@ -172,11 +172,12 @@ The following sample codes illustrate how to create your first thread:
 /* Include the At-RTOS interface's header file. */
 #include "at_rtos.h"
 
-/* Define a thread hook to specific the stack size and prioriy of the thread */
-OS_THREAD_DEFINE(defined_thread, 1024, 7); // Set the thread stack size to 1024 bytes and the schedule prioriy level to 7.
+/* Define a thread stack */
+#define STACK_SIZE 1024
+OS_STACK_INIT(stack, STACK_SIZE);
 
-/* User thread's entry function. */
-static void the_thread_entry_function(void)
+/* Thread entry function. */
+static void entry_function(void)
 {
     while(1) {
         os.thread_sleep(1000u);
@@ -186,10 +187,10 @@ static void the_thread_entry_function(void)
 /* The main routine */
 int main(void)
 {
-    /* Initialize the your your thread. */
-    os_thread_id_t id = os.thread_init(defined_thread, the_thread_entry_function);
-    if (os.id_isInvalid(id)) {
-        printf("Thread %s init failed\n", id.pName);
+    /* Initialize a runtime preempt thread. */
+    os_thread_id_t runtime_id = os.thread_init(stack, STACK_SIZE, OS_PRIORITY_PREEMPT_SET(1), entry_function, "runtime_thread");
+    if (os.id_isInvalid(runtime_id)) {
+        printf("Thread %s init failed\n", runtime_id.pName);
     }
 	
     /* The At-RTOS kernel schedule starts to run. */
@@ -197,6 +198,9 @@ int main(void)
 	
 	RUN_UNREACHABLE();
 }
+
+/* Initialize a static cooperation thread. */
+OS_THREAD_INIT(static_id, OS_PRIORITY_COOPERATION_SET(2), STACK_SIZE, entry_function);
 ```
 
 The following kernel H file path must be included in your project workshop.
