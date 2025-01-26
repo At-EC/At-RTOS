@@ -269,6 +269,10 @@ b_t _schedule_can_preempt(struct schedule_task *pCurrent)
         if (pTmpTask == pCurrent) {
             return false;
         }
+
+        if (pTmpTask->prior == OS_PRIOTITY_HIGHEST_LEVEL) {
+            break;
+        }
     }
 
     return true;
