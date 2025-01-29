@@ -51,6 +51,18 @@ b_t port_isInThreadMode(void)
     return true;
 }
 
+u32_t port_irq_disable(void)
+{
+    u32_t value = __get_PRIMASK();
+    __disable_irq();
+    return value;
+}
+
+void port_irq_enable(u32_t value)
+{
+    __set_PRIMASK(value);
+}
+
 /**
  * @brief ARM core trigger the pendsv interrupt.
  */
@@ -65,7 +77,7 @@ void port_setPendSV(void)
 void port_interrupt_init(void)
 {
     NVIC_SetPriority(PendSV_IRQn, 0xFFu); // Set PendSV to lowest possible priority
-    NVIC_SetPriority(SVCall_IRQn, 0u); // Set SV to lowest possible priority
+    NVIC_SetPriority(SVCall_IRQn, 0u);    // Set SV to lowest possible priority
     NVIC_SetPriority(SysTick_IRQn, 0u);
 }
 
@@ -86,7 +98,7 @@ u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t
 
     psp_frame = STACK_ADDRESS_DOWN(psp_frame);
 
-    ((stack_snapshot_t *)psp_frame)->xPSR = B(24);                /* xPSR */
+    ((stack_snapshot_t *)psp_frame)->xPSR = B(24);                   /* xPSR */
     ((stack_snapshot_t *)psp_frame)->R15_PC = (u32_t)pEntryFunction; /* PC   */
     ((stack_snapshot_t *)psp_frame)->R14_LR = 0xFFFFFFFDu;           /* LR   */
 
@@ -128,4 +140,3 @@ u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t
 
     return (u32_t)psp_frame;
 }
-

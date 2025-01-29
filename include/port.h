@@ -16,6 +16,9 @@
 #define STACK_ADDRESS_UP(address)   (u32_t)(ROUND_UP((address), STACK_ALIGN))
 #define STACK_ADDRESS_DOWN(address) (u32_t)(ROUND_DOWN((address), STACK_ALIGN))
 
+#define PORT_ENTER_CRITICAL_SECTION() u32_t __val = port_irq_disable()
+#define PORT_EXIT_CRITICAL_SECTION()  port_irq_enable(__val)
+
 /**
  * Define the SVC number 2 for RTOS kernel use.
  */
@@ -268,6 +271,19 @@ static inline b_t port_isInThreadMode(void)
 
     return true;
 }
+
+static inline u32_t port_irq_disable(void)
+{
+    register u32_t reg_primask = __arm_rsr("PRIMASK");
+    __disable_irq();
+    return reg_primask;
+}
+
+static inline void port_irq_enable(u32_t value)
+{
+    __arm_wsr("PRIMASK", (value));
+}
+
 #endif
 
 #elif defined(__GUNC__)
@@ -292,6 +308,8 @@ void port_run_theFirstThread(u32_t sp);
  */
 b_t port_isInInterruptContent(void);
 b_t port_isInThreadMode(void);
+u32_t port_irq_disable(void);
+void port_irq_enable(u32_t value);
 void port_setPendSV(void);
 void port_interrupt_init(void);
 u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size);

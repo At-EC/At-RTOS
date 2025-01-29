@@ -7,6 +7,7 @@
 #include "clock_tick.h"
 #include "configuration.h"
 #include "arch.h"
+#include "port.h"
 #include "ktype.h"
 
 /* Convert the microsecond to clock count */
@@ -134,7 +135,7 @@ void clock_time_interval_set(u32_t interval_us)
         SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
     }
 
-    ARCH_ENTER_CRITICAL_SECTION();
+    PORT_ENTER_CRITICAL_SECTION();
 
     if (interval_us > _CLOCK_INTERVAL_MAX_US) {
         interval_us = _CLOCK_INTERVAL_MAX_US;
@@ -183,7 +184,7 @@ void clock_time_interval_set(u32_t interval_us)
         g_clock_resource.total += (before - after);
     }
 
-    ARCH_EXIT_CRITICAL_SECTION();
+    PORT_EXIT_CRITICAL_SECTION();
 }
 
 /**
@@ -193,11 +194,11 @@ void clock_time_interval_set(u32_t interval_us)
  */
 u32_t clock_time_elapsed_get(void)
 {
-    ARCH_ENTER_CRITICAL_SECTION();
+    PORT_ENTER_CRITICAL_SECTION();
 
     u32_t us = _CONVERT_COUNT_TO_MICROSENCOND(_clock_elapsed() + g_clock_resource.total - g_clock_resource.reported);
 
-    ARCH_EXIT_CRITICAL_SECTION();
+    PORT_EXIT_CRITICAL_SECTION();
 
     return us;
 }
@@ -209,11 +210,11 @@ u32_t clock_time_elapsed_get(void)
  */
 u32_t clock_time_get(void)
 {
-    ARCH_ENTER_CRITICAL_SECTION();
+    PORT_ENTER_CRITICAL_SECTION();
 
     u32_t us = _CONVERT_COUNT_TO_MICROSENCOND(g_clock_resource.total + _clock_elapsed());
 
-    ARCH_EXIT_CRITICAL_SECTION();
+    PORT_EXIT_CRITICAL_SECTION();
 
     return us;
 }

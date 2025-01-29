@@ -63,6 +63,10 @@ typedef struct evt_val os_evt_val_t;
 #define OS_SUBSCRIBE_INIT(id_name, pDataAddr, size)             INIT_OS_SUBSCRIBE_DEFINE(id_name, pDataAddr, size)
 #define OS_PUBLISH_INIT(id_name, pDataAddr, size)               INIT_OS_PUBLISH_DEFINE(id_name, pDataAddr, size)
 
+#define OS_ENTER_CRITICAL_SECTION() ENTER_CRITICAL_SECTION()
+#define OS_EXIT_CRITICAL_SECTION()  EXIT_CRITICAL_SECTION()
+#define OS_CRITICAL_SECTION()       CRITICAL_SECTION()
+
 /**
  * @brief Initialize a thread, and put it to pending list that are ready to run.
  *

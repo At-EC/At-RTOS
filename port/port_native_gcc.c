@@ -90,6 +90,16 @@ void port_run_theFirstThread(u32_t sp)
     /* TODO */
 }
 
+u32_t port_irq_disable(void)
+{
+    /* TODO */
+}
+
+void port_irq_enable(u32_t value)
+{
+    /* TODO */
+}
+
 /**
  * @brief Initialize a thread stack frame.
  *

@@ -136,3 +136,4 @@ __asm void port_run_theFirstThread(u32_t sp)
 
     ALIGN 4
 }
+
