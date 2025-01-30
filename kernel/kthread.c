@@ -38,6 +38,8 @@ const at_rtos_api_t os = {
     .thread_yield = os_thread_yield,
     .thread_delete = os_thread_delete,
     .thread_idle_fn_register = os_thread_idle_callback_register,
+    .thread_user_data_set = os_thread_user_data_set,
+    .thread_user_data_get = os_thread_user_data_get,
 
     .timer_init = os_timer_init,
     .timer_automatic = os_timer_automatic,

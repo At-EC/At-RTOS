@@ -260,6 +260,8 @@ struct thread_context {
 
     u32_t stackSize;
 
+    void *pUserData;
+
     struct schedule_task task;
 };
 typedef struct thread_context thread_context_t;

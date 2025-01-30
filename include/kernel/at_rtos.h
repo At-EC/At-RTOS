@@ -91,6 +91,34 @@ static inline os_thread_id_t os_thread_init(u32_t *pStackAddr, u32_t size, i16_t
 }
 
 /**
+ * @brief Add a user thread data.
+ *
+ * @param id The thread unique id.
+ *
+ * @return The result of thread data operation.
+ */
+static inline i32p_t os_thread_user_data_set(os_thread_id_t id, void *pUserData)
+{
+    extern i32p_t _impl_thread_user_data_register(u32_t ctx, void *pUserData);
+
+    return (i32p_t)_impl_thread_user_data_register(id.u32_val, pUserData);
+}
+
+/**
+ * @brief Get a user thread data.
+ *
+ * @param id The thread unique id.
+ *
+ * @return The result of thread data operation.
+ */
+static inline void *os_thread_user_data_get(os_thread_id_t id)
+{
+    extern void *_impl_thread_user_data_get(u32_t ctx);
+
+    return (void *)_impl_thread_user_data_get(id.u32_val);
+}
+
+/**
  * @brief Put the current running thread into sleep mode with timeout condition.
  *
  * @param timeout_ms The time user defined.
@@ -678,7 +706,7 @@ static inline b_t os_id_is_invalid(struct os_id id)
  *
  * @return The running thread context.
  */
-static inline const thread_context_t *os_current_thread_probe(void)
+static inline thread_context_t *os_current_thread_probe(void)
 {
     extern thread_context_t *kernel_thread_runContextGet(void);
     return kernel_thread_runContextGet();
@@ -767,6 +795,8 @@ typedef struct {
     i32p_t (*thread_suspend)(os_thread_id_t);
     i32p_t (*thread_yield)(void);
     i32p_t (*thread_delete)(os_thread_id_t);
+    i32p_t (*thread_user_data_set)(os_thread_id_t, void *);
+    void *(*thread_user_data_get)(os_thread_id_t);
     void (*thread_idle_fn_register)(const pThread_entryFunc_t);
 
     os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, const char_t *);
@@ -805,7 +835,7 @@ typedef struct {
     b_t (*subscribe_data_is_ready)(os_subscribe_id_t);
 
     b_t (*id_isInvalid)(struct os_id);
-    const thread_context_t *(*current_thread)(void);
+    thread_context_t *(*current_thread)(void);
     i32p_t (*schedule_run)(void);
     b_t (*schedule_is_running)(void);
 

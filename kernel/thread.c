@@ -90,6 +90,40 @@ static u32_t _thread_init_privilege_routine(arguments_t *pArgs)
     EXIT_CRITICAL_SECTION();
     return 0u;
 }
+
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static i32p_t _thread_user_data_register_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+    thread_context_t *pCurThread = (thread_context_t *)pArgs[0].u32_val;
+    void *pData = (void *)pArgs[1].pv_val;
+
+    pCurThread->pUserData = pData;
+
+    EXIT_CRITICAL_SECTION();
+    return 0;
+}
+
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static void *_thread_user_data_get_privilege_routine(arguments_t *pArgs)
+{
+    thread_context_t *pCurThread = (thread_context_t *)pArgs[0].u32_val;
+
+    return pCurThread->pUserData;
+}
+
 /**
  * @brief It's sub-routine running at privilege mode.
  *
@@ -280,6 +314,57 @@ u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t si
     };
 
     return kernel_privilege_invoke((const void *)_thread_init_privilege_routine, arguments);
+}
+
+/**
+ * @brief Add a user thread data.
+ *
+ * @param id The thread unique id.
+ *
+ * @return The result of thread user data operation.
+ */
+i32p_t _impl_thread_user_data_register(u32_t ctx, void *pUserData)
+{
+    thread_context_t *pCtx = (thread_context_t *)ctx;
+    if (_thread_context_isInvalid(pCtx)) {
+        return PC_EOR;
+    }
+
+    if (!_thread_context_isInit(pCtx)) {
+        return PC_EOR;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (u32_t)ctx},
+        [1] = {.pv_val = (void *)pUserData},
+    };
+
+    return kernel_privilege_invoke((const void *)_thread_user_data_register_privilege_routine, arguments);
+}
+
+/**
+ * @brief Get a user thread data.
+ *
+ * @param id The thread unique id.
+ *
+ * @return The result of thread user data operation.
+ */
+void *_impl_thread_user_data_get(u32_t ctx)
+{
+    thread_context_t *pCtx = (thread_context_t *)ctx;
+    if (_thread_context_isInvalid(pCtx)) {
+        return NULL;
+    }
+
+    if (!_thread_context_isInit(pCtx)) {
+        return NULL;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (u32_t)ctx},
+    };
+
+    return kernel_privilege_invoke((const void *)_thread_user_data_get_privilege_routine, arguments);
 }
 
 /**
