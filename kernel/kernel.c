@@ -530,3 +530,15 @@ i32p_t _impl_kernel_at_rtos_run(void)
 
     return kernel_privilege_invoke((const void *)_kernel_start_privilege_routine, NULL);
 }
+
+/**
+ * @brief Force kernel object free.
+ *
+ * @param id The kernel object unique id.
+ */
+void _impl_kernel_object_free(u32_t ctx)
+{
+    struct base_head *pHead = (struct base_head *)ctx;
+    pHead->cs = 0u;
+}
+

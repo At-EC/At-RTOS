@@ -89,6 +89,8 @@ const at_rtos_api_t os = {
     .trace_postcode = os_trace_failed_postcode,
     .trace_thread = os_trace_foreach_thread,
     .trace_time = os_trace_analyze,
+
+    .object_free = os_object_free_force,
 };
 #endif
 

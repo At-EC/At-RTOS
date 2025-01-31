@@ -22,7 +22,7 @@
 
 #define OS_ID_INVALID (OS_INVALID_ID_VAL)
 
-#define OS_SEM_BINARY (1u)
+#define OS_SEM_LIMIT_BINARY (1u)
 
 #define OS_TIME_NOWAIT       (OS_TIME_NOWAIT_VAL)
 #define OS_TIME_WAIT_FOREVER (OS_TIME_FOREVER_VAL)
@@ -828,6 +828,18 @@ static inline void os_trace_analyze(const pTrace_analyzeFunc_t fn)
     _impl_trace_analyze(fn);
 }
 
+/**
+ * @brief Force kernel object free, must to confirm no thread blocking in this object
+ *
+ * @param id The kernel object unique id.
+ */
+static inline void os_object_free_force(struct os_id id)
+{
+    extern void _impl_kernel_object_free(u32_t ctx);
+
+    return (u32_t)_impl_kernel_object_free(id.u32_val);
+}
+
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
 #if (OS_API_ENABLE)
 typedef struct {
@@ -889,6 +901,8 @@ typedef struct {
     b_t (*trace_postcode)(const pTrace_postcodeFunc_t);
     void (*trace_thread)(const pTrace_threadFunc_t);
     void (*trace_time)(const pTrace_analyzeFunc_t);
+
+    void (*object_free)(struct os_id);
 } at_rtos_api_t;
 #endif
 
