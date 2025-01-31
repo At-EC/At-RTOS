@@ -64,6 +64,7 @@ const at_rtos_api_t os = {
     .msgq_init = os_msgq_init,
     .msgq_put = os_msgq_put,
     .msgq_get = os_msgq_get,
+    .msgq_num_probe = os_msgq_num_probe,
 
     .pool_init = os_pool_init,
     .pool_take = os_pool_take,
@@ -79,7 +80,7 @@ const at_rtos_api_t os = {
     .id_isInvalid = os_id_is_invalid,
     .schedule_run = os_kernel_run,
     .schedule_is_running = os_kernel_is_running,
-    .current_thread = os_current_thread_probe,
+    .current_thread = os_thread_self_probe,
 
     .trace_versison = os_trace_firmware_version,
     .trace_postcode_fn_register = os_trace_postcode_callback_register,

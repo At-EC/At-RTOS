@@ -42,6 +42,7 @@ enum {
     PC_OS_WAIT_TIMEOUT,
     PC_OS_WAIT_AVAILABLE,
     PC_OS_WAIT_UNAVAILABLE,
+    PC_OS_WAIT_NODATA,
 };
 
 #if defined(__CC_ARM)

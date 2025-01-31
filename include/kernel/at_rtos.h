@@ -18,6 +18,7 @@
 #define OS_PC_TIMEOUT     (PC_OS_WAIT_TIMEOUT)
 #define OS_PC_AVAILABLE   (PC_OS_WAIT_AVAILABLE)
 #define OS_PC_UNAVAILABLE (PC_OS_WAIT_UNAVAILABLE)
+#define OS_PC_NODATA      (PC_OS_WAIT_NODATA)
 
 #define OS_ID_INVALID (OS_INVALID_ID_VAL)
 
@@ -535,6 +536,20 @@ static inline i32p_t os_msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t
 }
 
 /**
+ * @brief Get the received message number.
+ *
+ * @param ctx The queue unique id.
+ *
+ * @return The result of the operation.
+ */
+static inline u32_t os_msgq_num_probe(os_msgq_id_t id)
+{
+    extern u32_t _impl_queue_num_probe(u32_t ctx);
+
+    return (u32_t)_impl_queue_num_probe(id.u32_val);
+}
+
+/**
  * @brief Initialize a new pool.
  *
  * @param pName The pool name.
@@ -706,7 +721,7 @@ static inline b_t os_id_is_invalid(struct os_id id)
  *
  * @return The running thread context.
  */
-static inline thread_context_t *os_current_thread_probe(void)
+static inline thread_context_t *os_thread_self_probe(void)
 {
     extern thread_context_t *kernel_thread_runContextGet(void);
     return kernel_thread_runContextGet();
@@ -822,6 +837,7 @@ typedef struct {
     os_msgq_id_t (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
     i32p_t (*msgq_put)(os_msgq_id_t, const u8_t *, u16_t, b_t, os_timeout_t);
     i32p_t (*msgq_get)(os_msgq_id_t, const u8_t *, u16_t, b_t, os_timeout_t);
+    u32_t (*msgq_num_probe)(os_msgq_id_t);
 
     os_pool_id_t (*pool_init)(const void *, u16_t, u16_t, const char_t *);
     i32p_t (*pool_take)(os_pool_id_t, void **, u16_t, os_timeout_t);

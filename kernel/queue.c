@@ -221,6 +221,20 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
+static u32_t _queue_msg_num_get_privilege_routine(arguments_t *pArgs)
+{
+    queue_context_t *pCurQueue = (queue_context_t *)pArgs[0].u32_val;
+
+    return pCurQueue->cacheSize;
+}
+
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
 static i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
@@ -292,7 +306,7 @@ static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
     if (!pCurQueue->cacheSize) {
         if (timeout_ms == OS_TIME_NOWAIT_VAL) {
             EXIT_CRITICAL_SECTION();
-            return PC_EOR;
+            return PC_OS_WAIT_NODATA;
         }
         postcode = schedule_exit_trigger(&pCurThread->task, pCurQueue, pQue_sch, &pCurQueue->out_QList, timeout_ms, true);
         PC_IF(postcode, PC_PASS)
@@ -352,6 +366,30 @@ u32_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t ele
     };
 
     return kernel_privilege_invoke((const void *)_queue_init_privilege_routine, arguments);
+}
+
+/**
+ * @brief Get the received msg number.
+ *
+ * @param ctx The queue unique id.
+ *
+ * @return The result of the operation.
+ */
+u32_t _impl_queue_num_probe(u32_t ctx)
+{
+    queue_context_t *pCtx = (queue_context_t *)ctx;
+    if (_queue_context_isInvalid(pCtx)) {
+        return 0u;
+    }
+
+    if (!_queue_context_isInit(pCtx)) {
+        return 0u;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (u32_t)ctx},
+    };
+    return kernel_privilege_invoke((const void *)_queue_msg_num_get_privilege_routine, arguments);
 }
 
 /**
