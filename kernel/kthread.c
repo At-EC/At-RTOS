@@ -41,6 +41,7 @@ const at_rtos_api_t os = {
     .thread_user_data_set = os_thread_user_data_set,
     .thread_user_data_get = os_thread_user_data_get,
     .thread_idle_id_probe = os_thread_idle_id_probe,
+    .thread_stack_free_size_probe = os_thread_stack_free_size_probe,
 
     .timer_init = os_timer_init,
     .timer_automatic = os_timer_automatic,

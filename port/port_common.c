@@ -130,13 +130,34 @@ u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t
 
 #if (__FPU_PRESENT)
 #if (THREAD_PSP_WITH_PRIVILEGED)
-    ((stack_snapshot_t *)psp_frame)->CONTROL = SBIT(1); /* PSP with privileged */
+    ((stack_snapshot_t *)psp_frame)->CONTROL = Bs(1); /* PSP with privileged */
 #else
-    ((stack_snapshot_t *)psp_frame)->CONTROL = SBIT(1) & SBIT(0); /* PSP with Unprivileged */
+    ((stack_snapshot_t *)psp_frame)->CONTROL = Bs(1) & Bs(0); /* PSP with Unprivileged */
 #endif
 
     ((stack_snapshot_t *)psp_frame)->EXC_RETURN = 0xFFFFFFFDu; /* EXC_RETURN */
 #endif
 
     return (u32_t)psp_frame;
+}
+
+/**
+ * @brief Get unused stack size.
+ *
+ * @param pAddress The stack address.
+ *
+ * @return The free stack size.
+ */
+u32_t port_stack_free_size_get(u32_t stack_addr)
+{
+    if (stack_addr == 0) {
+        return 0u;
+    }
+
+    uint8_t *ptr = (uint8_t *)stack_addr;
+    while (*ptr == STACT_UNUSED_DATA) {
+        ptr++;
+    }
+
+    return (u32_t)ptr - (u32_t)stack_addr;
 }

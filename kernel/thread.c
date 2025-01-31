@@ -98,6 +98,26 @@ static u32_t _thread_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
+static u32_t _thread_stack_free_get_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    thread_context_t *pCurThread = (thread_context_t *)pArgs[0].u32_val;
+
+    u32_t free = port_stack_free_size_get(pCurThread->pStackAddr);
+
+    EXIT_CRITICAL_SECTION();
+
+    return free;
+}
+
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
 static i32p_t _thread_user_data_register_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
@@ -314,6 +334,31 @@ u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t *pAddress, u32_t si
     };
 
     return kernel_privilege_invoke((const void *)_thread_init_privilege_routine, arguments);
+}
+
+/**
+ * @brief Get a thread stack free size.
+ *
+ * @param id The thread unique id.
+ *
+ * @return The result of thread free size.
+ */
+u32_t _impl_thread_stack_free_size_get(u32_t ctx)
+{
+    thread_context_t *pCtx = (thread_context_t *)ctx;
+    if (_thread_context_isInvalid(pCtx)) {
+        return 0;
+    }
+
+    if (!_thread_context_isInit(pCtx)) {
+        return 0;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (u32_t)ctx},
+    };
+
+    return kernel_privilege_invoke((const void *)_thread_stack_free_get_privilege_routine, arguments);
 }
 
 /**

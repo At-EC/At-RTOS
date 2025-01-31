@@ -215,6 +215,20 @@ static inline os_thread_id_t os_thread_idle_id_probe(void)
 }
 
 /**
+ * @brief Add a user thread data.
+ *
+ * @param id The thread unique id.
+ *
+ * @return The result of thread data operation.
+ */
+static inline u32_t os_thread_stack_free_size_probe(os_thread_id_t id)
+{
+    extern u32_t _impl_thread_stack_free_size_get(u32_t ctx);
+
+    return (u32_t)_impl_thread_stack_free_size_get(id.u32_val);
+}
+
+/**
  * @brief Initialize a new timer, or allocate a temporary timer to run.
  *
  * @param pCallFun The timer entry function pointer.
@@ -827,6 +841,7 @@ typedef struct {
     void *(*thread_user_data_get)(os_thread_id_t);
     void (*thread_idle_fn_register)(const pThread_entryFunc_t);
     os_thread_id_t (*thread_idle_id_probe)(void);
+    u32_t (*thread_stack_free_size_probe)(os_thread_id_t);
 
     os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, const char_t *);
     os_timer_id_t (*timer_automatic)(pTimer_callbackFunc_t, const char_t *);
