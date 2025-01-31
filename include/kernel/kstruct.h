@@ -23,7 +23,7 @@
 #endif
 
 typedef void (*pCallbackFunc_t)(void);
-typedef void (*pTimer_callbackFunc_t)(void);
+typedef void (*pTimer_callbackFunc_t)(void *);
 typedef void (*pTask_callbackFunc_t)(void *);
 typedef void (*pThread_entryFunc_t)(void);
 typedef void (*pEvent_callbackFunc_t)(void);
@@ -86,6 +86,8 @@ struct expired_time {
 
 struct timer_callback {
     list_node_t node;
+
+    void *pUserData;
 
     pTimer_callbackFunc_t pTimerCallEntry;
 };

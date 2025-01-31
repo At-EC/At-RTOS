@@ -232,18 +232,17 @@ static inline u32_t os_thread_stack_free_size_probe(os_thread_id_t id)
  * @brief Initialize a new timer, or allocate a temporary timer to run.
  *
  * @param pCallFun The timer entry function pointer.
- * @param control It defines the timer running mode.
- * @param timeout_ms The expired time.
+ * @param pUserData The timer callback user data.
  * @param pName The timer's name, it supported NULL pointer.
  *
  * @return The value of the timer unique id.
  */
-static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, const char_t *pName)
+static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, void *pUserData, const char_t *pName)
 {
-    extern u32_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, const char_t *pName);
+    extern u32_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, void *pUserData, const char_t *pName);
 
     os_timer_id_t id = {0u};
-    id.u32_val = _impl_timer_init(pEntryFun, pName);
+    id.u32_val = _impl_timer_init(pEntryFun, pUserData, pName);
     id.pName = pName;
 
     return id;
@@ -253,16 +252,17 @@ static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, const
  * @brief Allocate a temporary timer to run and release it when it stops.
  *
  * @param pCallFun The timer entry function pointer.
+ * @param pUserData The timer callback user data.
  * @param pName The timer's name, it supported NULL pointer.
  *
  * @return The value of the timer unique id.
  */
-static inline os_timer_id_t os_timer_automatic(pTimer_callbackFunc_t pEntryFun, const char_t *pName)
+static inline os_timer_id_t os_timer_automatic(pTimer_callbackFunc_t pEntryFun, void *pUserData, const char_t *pName)
 {
-    extern u32_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, const char_t *pName);
+    extern u32_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, void *pUserData, const char_t *pName);
 
     os_timer_id_t id = {0u};
-    id.u32_val = _impl_timer_automatic(pEntryFun, pName);
+    id.u32_val = _impl_timer_automatic(pEntryFun, pUserData, pName);
     id.pName = pName;
 
     return id;
@@ -875,8 +875,8 @@ typedef struct {
     os_thread_id_t (*thread_idle_id_probe)(void);
     u32_t (*thread_stack_free_size_probe)(os_thread_id_t);
 
-    os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, const char_t *);
-    os_timer_id_t (*timer_automatic)(pTimer_callbackFunc_t, const char_t *);
+    os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, void *, const char_t *);
+    os_timer_id_t (*timer_automatic)(pTimer_callbackFunc_t, void *, const char_t *);
     i32p_t (*timer_start)(os_timer_id_t, os_timer_ctrl_t, os_timeout_t);
     i32p_t (*timer_stop)(os_timer_id_t);
     i32p_t (*timer_busy)(os_timer_id_t);

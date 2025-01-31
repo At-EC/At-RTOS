@@ -262,7 +262,8 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].ptr_val);
-    const char_t *pName = (const char_t *)pArgs[1].pch_val;
+    void *pUserData = (const char_t *)pArgs[1].pv_val;
+    const char_t *pName = (const char_t *)pArgs[2].pch_val;
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_TIMER_LIST, timer_context_t, pCurTimer)
     {
@@ -277,6 +278,7 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
         os_memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
         pCurTimer->head.cs = CS_INITED;
         pCurTimer->head.pName = pName;
+        pCurTimer->call.pUserData = pUserData;
         pCurTimer->call.pTimerCallEntry = pCallFun;
         timeout_init(&pCurTimer->expire, timer_callback_fromTimeOut);
 
@@ -300,7 +302,8 @@ static u32_t _timer_automatic_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].ptr_val);
-    const char_t *pName = (const char_t *)pArgs[1].pch_val;
+    void *pUserData = (const char_t *)pArgs[1].pv_val;
+    const char_t *pName = (const char_t *)pArgs[2].pch_val;
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_TIMER_LIST, timer_context_t, pCurTimer)
     {
@@ -316,6 +319,7 @@ static u32_t _timer_automatic_privilege_routine(arguments_t *pArgs)
         pCurTimer->head.cs = CS_INITED;
         pCurTimer->head.pName = pName;
         pCurTimer->control = TIMER_CTRL_TEMPORARY_VAL;
+        pCurTimer->call.pUserData = pUserData;
         pCurTimer->call.pTimerCallEntry = pCallFun;
         timeout_init(&pCurTimer->expire, timer_callback_fromTimeOut);
 
@@ -416,15 +420,17 @@ static u32_t _timer_total_system_us_get_privilege_routine(arguments_t *pArgs)
  * @brief Initialize a new timer, or allocate a temporary timer to run.
  *
  * @param pCallFun The timer entry function pointer.
+ * @param pUserData The timer callback user data.
  * @param pName The timer's name, it supported NULL pointer.
  *
  * @return The value of the timer unique id.
  */
-u32_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, const char_t *pName)
+u32_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, void *pUserData, const char_t *pName)
 {
     arguments_t arguments[] = {
         [0] = {.ptr_val = (const void *)pCallFun},
-        [1] = {.pch_val = (const void *)pName},
+        [1] = {.pv_val = (const void *)pUserData},
+        [2] = {.pch_val = (const void *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_timer_init_privilege_routine, arguments);
@@ -434,14 +440,16 @@ u32_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, const char_t *pName)
  * @brief Allocate a temporary timer to run.
  *
  * @param pCallFun The timer entry function pointer.
+ * @param pUserData The timer callback user data.
  * @param pName The timer's name, it supported NULL pointer.
  *
  * @return The value of the timer unique id.
  */
-u32_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, const char_t *pName)
+u32_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, void *pUserData, const char_t *pName)
 {
     arguments_t arguments[] = {
         [0] = {.ptr_val = (const void *)pCallFun},
+        [1] = {.pv_val = (const void *)pUserData},
         [1] = {.pch_val = (const void *)pName},
     };
 
@@ -600,7 +608,7 @@ void timer_reamining_elapsed_handler(void)
 
     while (pCallFunEntry) {
         if (pCallFunEntry->pTimerCallEntry) {
-            pCallFunEntry->pTimerCallEntry();
+            pCallFunEntry->pTimerCallEntry((void *)pCallFunEntry->pUserData);
         }
 
         ENTER_CRITICAL_SECTION();
