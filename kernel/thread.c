@@ -228,11 +228,6 @@ static i32p_t _thread_delete_privilege_routine(arguments_t *pArgs)
     thread_context_t *pCurThread = (thread_context_t *)pArgs[0].u32_val;
     i32p_t postcode = PC_EOR;
 
-    if (pCurThread == kernel_thread_runContextGet()) {
-        EXIT_CRITICAL_SECTION();
-        return postcode;
-    }
-
     if (!schedule_hasTwoPendingItem()) {
         EXIT_CRITICAL_SECTION();
         return postcode;
