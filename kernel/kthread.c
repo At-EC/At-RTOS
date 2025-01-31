@@ -82,6 +82,8 @@ const at_rtos_api_t os = {
     .id_isInvalid = os_id_is_invalid,
     .schedule_run = os_kernel_run,
     .schedule_is_running = os_kernel_is_running,
+    .schedule_lock = os_kernel_lock,
+    .schedule_unlock = os_kernel_unlock,
     .current_thread = os_thread_self_probe,
 
     .trace_versison = os_trace_firmware_version,

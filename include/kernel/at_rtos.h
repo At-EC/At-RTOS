@@ -777,6 +777,26 @@ static inline b_t os_kernel_is_running(void)
 }
 
 /**
+ * @brief Force kernel schedule stop.
+ */
+static inline void os_kernel_lock(void)
+{
+    extern void _impl_kernel_schedule_lock(void);
+
+    _impl_kernel_schedule_lock();
+}
+
+/**
+ * @brief Kernel schedule recovery.
+ */
+static inline void os_kernel_unlock(void)
+{
+    extern void _impl_kernel_schedule_unlock(void);
+
+    _impl_kernel_schedule_unlock();
+}
+
+/**
  * @brief Trace At-RTOS firmware version.
  *
  * @return The value of firmware version number.
@@ -895,6 +915,8 @@ typedef struct {
     thread_context_t *(*current_thread)(void);
     i32p_t (*schedule_run)(void);
     b_t (*schedule_is_running)(void);
+    void (*schedule_lock)(void);
+    void (*schedule_unlock)(void);
 
     void (*trace_versison)(void);
     void (*trace_postcode_fn_register)(const pTrace_postcodeFunc_t);

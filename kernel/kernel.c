@@ -29,6 +29,8 @@ typedef struct {
 
     u32_t pendsv_ms;
 
+    i32_t sch_lock_nest_cnt;
+
     list_t sch_pend_list;
 
     list_t sch_entry_list;
@@ -259,6 +261,10 @@ b_t _schedule_can_preempt(struct schedule_task *pCurrent)
     struct schedule_task *pTmpTask = NULL;
     list_iterator_t it = ITERATION_NULL;
     list_t *pList = (list_t *)&g_kernel_rsc.sch_pend_list;
+
+    if (g_kernel_rsc.sch_lock_nest_cnt) {
+        return false;
+    }
 
     list_iterator_init(&it, pList);
     while (list_iterator_next_condition(&it, (void *)&pTmpTask)) {
@@ -542,3 +548,28 @@ void _impl_kernel_object_free(u32_t ctx)
     pHead->cs = 0u;
 }
 
+/**
+ * @brief Force kernel schedule stop.
+ */
+void _impl_kernel_schedule_lock(void)
+{
+    CRITICAL_SECTION()
+    {
+        g_kernel_rsc.sch_lock_nest_cnt++;
+    }
+}
+
+/**
+ * @brief Kernel schedule recovery.
+ */
+void _impl_kernel_schedule_unlock(void)
+{
+    CRITICAL_SECTION()
+    {
+        g_kernel_rsc.sch_lock_nest_cnt--;
+        if (g_kernel_rsc.sch_lock_nest_cnt <= 0) {
+            g_kernel_rsc.sch_lock_nest_cnt = 0;
+            kernel_thread_schedule_request();
+        }
+    }
+}
