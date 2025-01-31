@@ -40,6 +40,7 @@ const at_rtos_api_t os = {
     .thread_idle_fn_register = os_thread_idle_callback_register,
     .thread_user_data_set = os_thread_user_data_set,
     .thread_user_data_get = os_thread_user_data_get,
+    .thread_idle_id_probe = os_thread_idle_id_probe,
 
     .timer_init = os_timer_init,
     .timer_automatic = os_timer_automatic,
@@ -125,4 +126,12 @@ void kthread_message_idle_loop_fn(void)
 void _impl_kthread_idle_user_callback_register(const pThread_entryFunc_t fn)
 {
     g_idle_thread_user_entry_fn = fn;
+}
+
+/**
+ * @brief Get the idle thread id.
+ */
+os_thread_id_t _impl_idle_thread_id_get(void)
+{
+    return idle_th;
 }

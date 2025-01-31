@@ -46,6 +46,8 @@ typedef struct os_id os_subscribe_id_t;
 
 typedef struct evt_val os_evt_val_t;
 
+#define OS_ID_SET(p_handle, u32_value) p_handle->u32_val = (u32_value)
+
 #define OS_PRIORITY_INVALID             (OS_PRIOTITY_INVALID_LEVEL)
 #define OS_PRIORITY_APPLICATION_HIGHEST (OS_PRIORITY_APPLICATION_HIGHEST_LEVEL)
 #define OS_PRIORITY_APPLICATION_LOWEST  (OS_PRIORITY_APPLICATION_LOWEST_LEVEL)
@@ -199,6 +201,17 @@ static inline void os_thread_idle_callback_register(const pThread_entryFunc_t lo
     extern void _impl_kthread_idle_user_callback_register(const pThread_entryFunc_t fn);
 
     _impl_kthread_idle_user_callback_register(loop_fn);
+}
+
+/**
+ * @brief Get the idle thread id.
+ *
+ * @return The value of thread unique id.
+ */
+static inline os_thread_id_t os_thread_idle_id_probe(void)
+{
+    extern os_thread_id_t _impl_idle_thread_id_get(void);
+    return _impl_idle_thread_id_get();
 }
 
 /**
@@ -813,6 +826,7 @@ typedef struct {
     i32p_t (*thread_user_data_set)(os_thread_id_t, void *);
     void *(*thread_user_data_get)(os_thread_id_t);
     void (*thread_idle_fn_register)(const pThread_entryFunc_t);
+    os_thread_id_t (*thread_idle_id_probe)(void);
 
     os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, const char_t *);
     os_timer_id_t (*timer_automatic)(pTimer_callbackFunc_t, const char_t *);
