@@ -49,6 +49,7 @@ const at_rtos_api_t os = {
     .timer_stop = os_timer_stop,
     .timer_busy = os_timer_busy,
     .timer_system_total_ms = os_timer_system_total_ms,
+    .timer_system_busy_wait = os_timer_system_busy_wait,
 
     .sem_init = os_sem_init,
     .sem_take = os_sem_take,

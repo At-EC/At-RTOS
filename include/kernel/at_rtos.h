@@ -326,6 +326,18 @@ static inline u32_t os_timer_system_total_ms(void)
 }
 
 /**
+ * @brief System busy wait (us).
+ *
+ * @return The result of system busy wait.
+ */
+static inline u32_t os_timer_system_busy_wait(u32_t us)
+{
+    extern u32_t _impl_system_busy_wait(u32_t us);
+
+    return _impl_system_busy_wait(us);
+}
+
+/**
  * @brief Initialize a new semaphore.
  *
  * @param remain The initial count that allows the system take.
@@ -881,6 +893,7 @@ typedef struct {
     i32p_t (*timer_stop)(os_timer_id_t);
     i32p_t (*timer_busy)(os_timer_id_t);
     u32_t (*timer_system_total_ms)(void);
+    u32_t (*timer_system_busy_wait)(u32_t);
 
     os_sem_id_t (*sem_init)(u8_t, u8_t, const char_t *);
     i32p_t (*sem_take)(os_sem_id_t, os_timeout_t);

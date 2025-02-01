@@ -395,6 +395,15 @@ static u32_t _timer_total_system_ms_get_privilege_routine(arguments_t *pArgs)
     return ms;
 }
 
+static u32_t _system_us_get(void)
+{
+    u32_t us = (u32_t)((!g_timer_rsc.remaining_us) ? (clock_time_elapsed_get()) : (0u));
+
+    us += g_timer_rsc.system_us;
+
+    return us;
+}
+
 /**
  * @brief It's sub-routine running at privilege mode.
  *
@@ -408,12 +417,36 @@ static u32_t _timer_total_system_us_get_privilege_routine(arguments_t *pArgs)
 
     UNUSED_MSG(pArgs);
 
-    u32_t us = (u32_t)((!g_timer_rsc.remaining_us) ? (clock_time_elapsed_get()) : (0u));
-
-    us += g_timer_rsc.system_us;
+    u32_t us = _system_us_get();
 
     EXIT_CRITICAL_SECTION();
     return us;
+}
+
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static u32_t _system_busy_wait_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    u32_t wait_us = (u32_t)pArgs[0].u32_val;
+
+    u32_t start = _system_us_get();
+    while (wait_us) {
+        u32_t current = _system_us_get();
+
+        if ((current - start) >= wait_us) {
+            break;
+        }
+    }
+
+    EXIT_CRITICAL_SECTION();
+    return 0;
 }
 
 /**
@@ -563,6 +596,15 @@ u32_t _impl_timer_total_system_ms_get(void)
 u32_t _impl_timer_total_system_us_get(void)
 {
     return kernel_privilege_invoke((const void *)_timer_total_system_us_get_privilege_routine, NULL);
+}
+
+u32_t _impl_system_busy_wait(u32_t us)
+{
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (u32_t)us},
+    };
+
+    return kernel_privilege_invoke((const void *)_system_busy_wait_privilege_routine, arguments);
 }
 
 /**
