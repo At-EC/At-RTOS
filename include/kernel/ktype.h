@@ -74,6 +74,11 @@ struct evt_val {
 #pragma warning restore
 #endif
 
+struct foreach_item {
+    u8_t i;
+    u32_t u32_val;
+};
+
 static inline b_t kernel_os_id_is_invalid(struct os_id id)
 {
     if (id.p_val == NULL) {

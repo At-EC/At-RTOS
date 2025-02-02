@@ -869,7 +869,7 @@ static inline void os_object_free_force(struct os_id id)
 {
     extern void _impl_kernel_object_free(u32_t ctx);
 
-    return (void)_impl_kernel_object_free(id.u32_val);
+    _impl_kernel_object_free(id.u32_val);
 }
 
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */

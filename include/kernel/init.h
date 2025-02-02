@@ -10,7 +10,7 @@
 #include "type_def.h"
 #include "kstruct.h"
 
-#if (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+#if (__ARMCC_VERSION)
 #define INIT_SECTION_FUNC _INIT_FUNC_LIST
 #define INIT_SECTION_OS_THREAD_STATIC _INIT_OS_THREAD_STATIC
 #define INIT_SECTION_OS_THREAD_LIST _INIT_OS_THREAD_LIST
@@ -61,7 +61,7 @@
 #error "not supported compiler"
 #endif
 
-#if (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+#if (__ARMCC_VERSION)
 #define INIT_SECTION_BEGIN(name) name##$$Base
 #define INIT_SECTION_END(name)   name##$$Limit
 #define INIT_SECTION(name)       __attribute__((section(#name)))
@@ -298,7 +298,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
 #error "not supported compiler"
 #endif
 
-#if (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+#if (__ARMCC_VERSION)
 #define INIT_SECTION_FIRST(i_section, o_begin)                                                                                             \
     do {                                                                                                                                   \
         extern const int INIT_SECTION_BEGIN(i_section);                                                                                    \

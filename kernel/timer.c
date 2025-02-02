@@ -262,7 +262,7 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].ptr_val);
-    void *pUserData = (const char_t *)pArgs[1].pv_val;
+    void *pUserData = (void *)pArgs[1].pv_val;
     const char_t *pName = (const char_t *)pArgs[2].pch_val;
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_TIMER_LIST, timer_context_t, pCurTimer)
@@ -302,7 +302,7 @@ static u32_t _timer_automatic_privilege_routine(arguments_t *pArgs)
     ENTER_CRITICAL_SECTION();
 
     pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].ptr_val);
-    void *pUserData = (const char_t *)pArgs[1].pv_val;
+    void *pUserData = (void *)pArgs[1].pv_val;
     const char_t *pName = (const char_t *)pArgs[2].pch_val;
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_TIMER_LIST, timer_context_t, pCurTimer)
@@ -462,7 +462,7 @@ u32_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, void *pUserData, const ch
 {
     arguments_t arguments[] = {
         [0] = {.ptr_val = (const void *)pCallFun},
-        [1] = {.pv_val = (const void *)pUserData},
+        [1] = {.pv_val = (void *)pUserData},
         [2] = {.pch_val = (const void *)pName},
     };
 
@@ -482,7 +482,7 @@ u32_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, void *pUserData, con
 {
     arguments_t arguments[] = {
         [0] = {.ptr_val = (const void *)pCallFun},
-        [1] = {.pv_val = (const void *)pUserData},
+        [1] = {.pv_val = (void *)pUserData},
         [1] = {.pch_val = (const void *)pName},
     };
 

@@ -26,7 +26,8 @@
 
 #define ENTER_CRITICAL_SECTION() u32_t __val = port_irq_disable()
 #define EXIT_CRITICAL_SECTION()  port_irq_enable(__val)
-#define CRITICAL_SECTION()       for (u32_t ___val = port_irq_disable(), u8_t __i = 0; __i < 0; port_irq_enable(___val), __i++)
+#define CRITICAL_SECTION()                                                                                                                 \
+    for (struct foreach_item __item = {.i = 0, .u32_val = port_irq_disable()}; !__item.i; port_irq_enable(__item.u32_val), __item.i++)
 
 thread_context_t *kernel_thread_runContextGet(void);
 list_t *kernel_member_list_get(u8_t member_id, u8_t list_id);

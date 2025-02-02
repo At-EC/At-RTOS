@@ -104,7 +104,7 @@ static u32_t _thread_stack_free_get_privilege_routine(arguments_t *pArgs)
 
     thread_context_t *pCurThread = (thread_context_t *)pArgs[0].u32_val;
 
-    u32_t free = port_stack_free_size_get(pCurThread->pStackAddr);
+    u32_t free = port_stack_free_size_get(*pCurThread->pStackAddr);
 
     EXIT_CRITICAL_SECTION();
 
@@ -137,11 +137,11 @@ static i32p_t _thread_user_data_register_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static void *_thread_user_data_get_privilege_routine(arguments_t *pArgs)
+static u32_t _thread_user_data_get_privilege_routine(arguments_t *pArgs)
 {
     thread_context_t *pCurThread = (thread_context_t *)pArgs[0].u32_val;
 
-    return pCurThread->pUserData;
+    return (u32_t)pCurThread->pUserData;
 }
 
 /**
@@ -404,7 +404,7 @@ void *_impl_thread_user_data_get(u32_t ctx)
         [0] = {.u32_val = (u32_t)ctx},
     };
 
-    return kernel_privilege_invoke((const void *)_thread_user_data_get_privilege_routine, arguments);
+    return (void *)kernel_privilege_invoke((const void *)_thread_user_data_get_privilege_routine, arguments);
 }
 
 /**
