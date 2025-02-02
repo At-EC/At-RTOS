@@ -10,7 +10,7 @@
 /**
  * @brief ARM core trigger the svc call interrupt.
  */
-i32p_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
+_i32p_t kernel_svc_call(_u32_t args_0, _u32_t args_1, _u32_t args_2, _u32_t args_3)
 {
     /* TODO */
 }
@@ -85,17 +85,17 @@ void PendSV_Handler(void)
 /**
  * @brief ARM core trigger the first thread to run.
  */
-void port_run_theFirstThread(u32_t sp)
+void port_run_theFirstThread(_u32_t sp)
 {
     /* TODO */
 }
 
-u32_t port_irq_disable(void)
+_u32_t port_irq_disable(void)
 {
     /* TODO */
 }
 
-void port_irq_enable(u32_t value)
+void port_irq_enable(_u32_t value)
 {
     /* TODO */
 }
@@ -109,7 +109,7 @@ void port_irq_enable(u32_t value)
  *
  * @return The PSP stack address.
  */
-u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
+_u32_t port_stack_frame_init(void (*pEntryFunction)(void), _u32_t *pAddress, _u32_t size)
 {
     /* TODO */
 }

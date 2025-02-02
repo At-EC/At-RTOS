@@ -12,8 +12,8 @@
 #define FPU_ENABLED  0
 #endif
 
-extern void kernel_privilege_call_inSVC_c(u32_t *svc_args);
-extern void kernel_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP);
+extern void kernel_privilege_call_inSVC_c(_u32_t *svc_args);
+extern void kernel_scheduler_inPendSV_c(_u32_t **ppCurPsp, _u32_t **ppNextPSP);
 
 /**
  * @brief ARM core SVC interrupt handle function.
@@ -111,7 +111,7 @@ Exit
 /**
  * @brief ARM core trigger the first thread to run.
  */
-__asm void port_run_theFirstThread(u32_t sp)
+__asm void port_run_theFirstThread(_u32_t sp)
 {
     /**
      * initialize R4-R11 from context frame using passed SP

@@ -13,28 +13,18 @@
 #include <stdint.h>
 #include <stdio.h>
 
-typedef char char_t;
-typedef unsigned char uchar_t;
-typedef unsigned char u8_t;
-typedef unsigned short u16_t;
-typedef unsigned int u32_t;
-typedef unsigned long long u64_t;
-typedef signed char i8_t;
-typedef signed short i16_t;
-typedef signed int i32_t;
-typedef signed long long i64_t;
-typedef volatile char vchar_t;
-typedef volatile unsigned char vuchar_t;
-typedef volatile unsigned char vu8_t;
-typedef volatile unsigned short vu16_t;
-typedef volatile unsigned int vu32_t;
-typedef volatile unsigned long long vu64_t;
-typedef volatile signed char vi8_t;
-typedef volatile signed short vi16_t;
-typedef volatile signed int vi32_t;
-typedef volatile signed long long vi64_t;
-typedef bool b_t;
-typedef i32_t i32p_t;
+typedef char _char_t;
+typedef unsigned char _uchar_t;
+typedef unsigned char _u8_t;
+typedef unsigned short _u16_t;
+typedef unsigned int _u32_t;
+typedef unsigned long long _u64_t;
+typedef signed char _i8_t;
+typedef signed short _i16_t;
+typedef signed int _i32_t;
+typedef signed long long _i64_t;
+typedef bool _b_t;
+typedef _i32_t _i32p_t;
 
 #ifndef FALSE
 #define FALSE false
@@ -47,9 +37,9 @@ typedef i32_t i32p_t;
 #define U8_B    (8u)
 #define U16_B   (16u)
 #define U32_B   (32u)
-#define U8_MAX  ((u8_t)-1)
-#define U16_MAX ((u16_t)-1)
-#define U32_MAX ((u32_t)-1)
+#define U8_MAX  ((_u8_t)-1)
+#define U16_MAX ((_u16_t)-1)
+#define U32_MAX ((_u32_t)-1)
 
 #define UNUSED_MSG(x) (void)(x)
 #define UNUSED_ARG    (0u)
@@ -75,7 +65,7 @@ typedef i32_t i32p_t;
 #else
 #define _STATIC_MAGIC(pre) _STATIC_MAGIC_2(pre, COMPLIER_UNIQUE_NUMBER)
 #endif
-#define BUILD_ASSERT(cond, msg) typedef char_t _STATIC_MAGIC(static_assert)[FLAG(cond) * 2 - 1]
+#define BUILD_ASSERT(cond, msg) typedef _char_t _STATIC_MAGIC(static_assert)[FLAG(cond) * 2 - 1]
 
 #define RUN_ASSERT(c)                                                                                                                      \
     if (UNFLAG(c)) {                                                                                                                       \
@@ -84,14 +74,14 @@ typedef i32_t i32p_t;
 
 #define RUN_UNREACHABLE() RUN_ASSERT(0)
 
-#define VREG32(addr) (*(volatile u32_t *)(u32_t)(addr))
-#define VREG16(addr) (*(volatile u16_t *)(u32_t)(addr))
-#define VREG8(addr)  (*(volatile u8_t *)(u32_t)(addr))
+#define VREG32(addr) (*(volatile _u32_t *)(_u32_t)(addr))
+#define VREG16(addr) (*(volatile _u16_t *)(_u32_t)(addr))
+#define VREG8(addr)  (*(volatile _u8_t *)(_u32_t)(addr))
 
-#define B(x)                        (u32_t)((u32_t)1u << (x))
-#define MSK_B(x)                    (u32_t)(B(x) - 1u)
-#define Bs(start, end)              (u32_t)((0xFFFFFFFFul << (start)) & (0xFFFFFFFFul >> (31u - (u32_t)(end))))
-#define DUMP_Bs(regval, start, end) (u32_t)(((regval) & Bs((start), (end))) >> (start))
+#define B(x)                        (_u32_t)((_u32_t)1u << (x))
+#define MSK_B(x)                    (_u32_t)(B(x) - 1u)
+#define Bs(start, end)              (_u32_t)((0xFFFFFFFFul << (start)) & (0xFFFFFFFFul >> (31u - (_u32_t)(end))))
+#define DUMP_Bs(regval, start, end) (_u32_t)(((regval) & Bs((start), (end))) >> (start))
 
 #define BV_GET(v, m, p)    ((v >> ((p) * (m))) & (MSK_B(m)))
 #define BV_CLR(v, m, p)    (v &= ~((MSK_B(m)) << ((p) * (m))))
@@ -100,19 +90,19 @@ typedef i32_t i32p_t;
     BV_CLR(v, m, p);                                                                                                                       \
     BV_SET(v, m, p, n)
 
-#define DEQUALIFY(s, v)      ((s)(u32_t)(const volatile void *)(v))
-#define OFFSETOF(s, m)       ((u32_t)(&((s *)0)->m))
-#define CONTAINEROF(p, s, m) (DEQUALIFY(s *, ((const vu8_t *)(p)-OFFSETOF(s, m))))
+#define DEQUALIFY(s, v)      ((s)(_u32_t)(const volatile void *)(v))
+#define OFFSETOF(s, m)       ((_u32_t)(&((s *)0)->m))
+#define CONTAINEROF(p, s, m) (DEQUALIFY(s *, ((const volatile _u8_t *)(p)-OFFSETOF(s, m))))
 #define SIZEOF(arr)          (sizeof(arr))
 #define DIMOF(arr)           (SIZEOF(arr) / SIZEOF(arr[0]))
 
 #define MINI_AB(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX_AB(a, b)  (((a) > (b)) ? (a) : (b))
 
-#define ROUND_UP(size, align)   (((u32_t)(size) + (align - 1u)) & (~(align - 1)))
-#define ROUND_DOWN(size, align) (((u32_t)(size)) & (~(align - 1)))
+#define ROUND_UP(size, align)   (((_u32_t)(size) + (align - 1u)) & (~(align - 1)))
+#define ROUND_DOWN(size, align) (((_u32_t)(size)) & (~(align - 1)))
 #define RANGE_ADDRESS_CONDITION(address, pool)                                                                                             \
-    (((u32_t)(address) >= (u32_t)(pool)) && ((u32_t)(address) < ((u32_t)(pool) + (u16_t)SIZEOF(pool))))
+    (((_u32_t)(address) >= (_u32_t)(pool)) && ((_u32_t)(address) < ((_u32_t)(pool) + (_u16_t)SIZEOF(pool))))
 
 #define PC_COMMON_NUMBER_POS    (0u)
 #define PC_COMMON_NUMBER_MSK    (MSK_B(8)) /* The maximum pass information number up to 31 */
@@ -125,7 +115,7 @@ typedef i32_t i32p_t;
 #define _PC_LINE_VALUE(e)      (((e) & PC_LINE_NUMBER_MSK) << PC_LINE_NUMBER_POS)
 #define _PC_COMPONENT_VALUE(c) (((c) & PC_COMPONENT_NUMBER_MSK) << PC_COMPONENT_NUMBER_POS)
 #define _PC_VALUE(c, n)        (_PC_COMPONENT_VALUE(c) | _PC_LINE_VALUE(COMPLIER_LINE_NUMBER) | _PC_COMMON_VALUE(n))
-#define PC_NEGATIVE(v)         (i32_t)(U32_MAX - (i32_t)(v))
+#define PC_NEGATIVE(v)         (_i32_t)(U32_MAX - (_i32_t)(v))
 #define PC_IER(c)              (PC_NEGATIVE(_PC_VALUE(c, 0)))
 #define PC_NER(c, n)           (PC_NEGATIVE(_PC_VALUE(c, n)))
 

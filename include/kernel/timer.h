@@ -9,13 +9,13 @@
 
 #include "kstruct.h"
 
-void timeout_set(struct expired_time *pExpire, u32_t timeout_ms, b_t immediately);
-void timeout_remove(struct expired_time *pExpire, b_t immediately);
-u32_t timer_total_system_ms_get(void);
-u32_t timer_total_system_us_get(void);
-i32p_t timer_schedule(void);
+void timeout_set(struct expired_time *pExpire, _u32_t timeout_ms, _b_t immediately);
+void timeout_remove(struct expired_time *pExpire, _b_t immediately);
+_u32_t timer_total_system_ms_get(void);
+_u32_t timer_total_system_us_get(void);
+_i32p_t timer_schedule(void);
 void timer_reamining_elapsed_handler(void);
-void timeout_handler(u32_t elapsed_us);
+void timeout_handler(_u32_t elapsed_us);
 void timeout_init(struct expired_time *pExpire, pTimeout_callbackFunc_t fun);
 
 #endif /* _TIMER_H_ */

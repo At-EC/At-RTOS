@@ -302,13 +302,13 @@ extern void timer_callback_fromTimeOut(void *pNode);
 #define INIT_SECTION_FIRST(i_section, o_begin)                                                                                             \
     do {                                                                                                                                   \
         extern const int INIT_SECTION_BEGIN(i_section);                                                                                    \
-        o_begin = (u32_t)&INIT_SECTION_BEGIN(i_section);                                                                                   \
+        o_begin = (_u32_t)&INIT_SECTION_BEGIN(i_section);                                                                                  \
     } while(0)
 
 #define INIT_SECTION_LAST(i_section, o_end)                                                                                                \
     do {                                                                                                                                   \
         extern const int INIT_SECTION_END(i_section);                                                                                      \
-        o_end = (u32_t)&INIT_SECTION_END(i_section);                                                                                       \
+        o_end = (_u32_t)&INIT_SECTION_END(i_section);                                                                                      \
     } while(0)
 
 #define INIT_SECTION_FOREACH(section, type, item)                                                                                          \
@@ -318,12 +318,12 @@ extern void timer_callback_fromTimeOut(void *pNode);
 #elif defined(__ICCARM__)
 #define INIT_SECTION_FIRST(i_section, o_begin)                                                                                             \
     do {                                                                                                                                   \
-        o_begin = (u32_t)INIT_SECTION_BEGIN(i_section);                                                                                    \
+        o_begin = (_u32_t)INIT_SECTION_BEGIN(i_section);                                                                                   \
     } while(0)
 
 #define INIT_SECTION_LAST(i_section, o_end)                                                                                                \
     do {                                                                                                                                   \
-        o_end = (u32_t)INIT_SECTION_END(i_section);                                                                                        \
+        o_end = (_u32_t)INIT_SECTION_END(i_section);                                                                                       \
     } while(0)
 
 #define INIT_SECTION_FOREACH(i_section, type, item)                                                                                        \
@@ -347,11 +347,11 @@ enum {
 typedef void (*init_func)(void);
 typedef struct {
     init_func func;
-    u8_t level;
+    _u8_t level;
 } init_func_t;
 
 void init_func_list(void);
-void init_func_level(u8_t level);
+void init_func_level(_u8_t level);
 void init_static_thread_list(void);
 
 #endif

@@ -69,32 +69,32 @@ typedef struct {
     struct linker linker;
 
     /* The head id */
-    u32_t id;
+    _u32_t id;
 
-    u8_t sts;
+    _u8_t sts;
 
     /* The head string name, NULL is available */
-    const char_t *pName;
+    const _char_t *pName;
 } linker_head_t;
 
 /** @brief The pointer of condition function in order to allow the application register a speicfic rules to mannage the list node */
-typedef b_t (*pLinkerSpecificConditionFunc_t)(list_node_t *, list_node_t *);
+typedef _b_t (*pLinkerSpecificConditionFunc_t)(list_node_t *, list_node_t *);
 
-b_t list_node_isExisted(list_t *pList, list_node_t *pNode);
-u32_t list_size(list_t *pList);
+_b_t list_node_isExisted(list_t *pList, list_node_t *pNode);
+_u32_t list_size(list_t *pList);
 void *list_head(list_t *pList);
-b_t list_node_delete(list_t *pList, list_node_t *pTargetNode);
-b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTargetNode);
-b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t direction);
+_b_t list_node_delete(list_t *pList, list_node_t *pTargetNode);
+_b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTargetNode);
+_b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t direction);
 list_node_t *list_node_pop(list_t *pList, list_direction_t direction);
-b_t list_iterator_init(list_iterator_t *pIterator, list_t *pList);
-b_t list_iterator_next_condition(list_iterator_t *pIterator, list_node_t **ppOutNode);
+_b_t list_iterator_init(list_iterator_t *pIterator, list_t *pList);
+_b_t list_iterator_next_condition(list_iterator_t *pIterator, list_node_t **ppOutNode);
 list_node_t *list_iterator_next(list_iterator_t *pIterator);
 void linker_list_transaction_common(linker_t *pLinker, list_t *pToList, list_direction_t direction);
 void linker_list_transaction_specific(linker_t *pLinker, list_t *pToList, pLinkerSpecificConditionFunc_t pConditionFunc);
-void os_memcpy(void *dst, const void *src, u32_t cnt);
-void os_memset(void *dst, u8_t val, u32_t cnt);
-i32_t os_memcmp(const void *dst, const void *src, u32_t cnt);
-u32_t os_strlen(const uchar_t *str);
+void os_memcpy(void *dst, const void *src, _u32_t cnt);
+void os_memset(void *dst, _u8_t val, _u32_t cnt);
+_i32_t os_memcmp(const void *dst, const void *src, _u32_t cnt);
+_u32_t os_strlen(const _uchar_t *str);
 
 #endif /* _LINKER_H_ */

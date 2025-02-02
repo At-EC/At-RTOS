@@ -22,13 +22,13 @@
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _event_context_isInvalid(event_context_t *pCurEvt)
+static _b_t _event_context_isInvalid(event_context_t *pCurEvt)
 {
-    u32_t start, end;
+    _u32_t start, end;
     INIT_SECTION_FIRST(INIT_SECTION_OS_EVENT_LIST, start);
     INIT_SECTION_LAST(INIT_SECTION_OS_EVENT_LIST, end);
 
-    return ((u32_t)pCurEvt < start || (u32_t)pCurEvt >= end) ? true : false;
+    return ((_u32_t)pCurEvt < start || (_u32_t)pCurEvt >= end) ? true : false;
 }
 
 /**
@@ -38,7 +38,7 @@ static b_t _event_context_isInvalid(event_context_t *pCurEvt)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _event_context_isInit(event_context_t *pCurEvt)
+static _b_t _event_context_isInit(event_context_t *pCurEvt)
 {
     return ((pCurEvt) ? (((pCurEvt->head.cs) ? (true) : (false))) : false);
 }
@@ -54,7 +54,7 @@ static void _event_schedule(void *pTask)
 
     timeout_remove(&pCurTask->expire, true);
 
-    u32_t changed, any, edge, level, trigger = 0u;
+    _u32_t changed, any, edge, level, trigger = 0u;
     event_context_t *pCurEvent = (event_context_t *)pCurTask->pPendCtx;
     event_sch_t *pEvt_sche = (event_sch_t *)pCurTask->pPendData;
     if (!pEvt_sche) {
@@ -92,7 +92,7 @@ static void _event_schedule(void *pTask)
     trigger |= pCurEvent->triggered;
 
     pEvt_sche->pEvtVal->value = pCurEvent->value;
-    u32_t report = trigger & pEvt_sche->listen;
+    _u32_t report = trigger & pEvt_sche->listen;
     if (report) {
         pEvt_sche->pEvtVal->trigger = trigger;
         pCurEvent->triggered &= ~report;
@@ -108,15 +108,15 @@ static void _event_schedule(void *pTask)
  *
  * @return The result of privilege routine.
  */
-static u32_t _event_init_privilege_routine(arguments_t *pArgs)
+static _u32_t _event_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    u32_t anyMask = (u32_t)(pArgs[0].u32_val);
-    u32_t modeMask = (u32_t)(pArgs[1].u32_val);
-    u32_t dirMask = (u32_t)(pArgs[2].u32_val);
-    u32_t init = (u32_t)(pArgs[3].u32_val);
-    const char_t *pName = (const char_t *)(pArgs[4].pch_val);
+    _u32_t anyMask = (_u32_t)(pArgs[0].u32_val);
+    _u32_t modeMask = (_u32_t)(pArgs[1].u32_val);
+    _u32_t dirMask = (_u32_t)(pArgs[2].u32_val);
+    _u32_t init = (_u32_t)(pArgs[3].u32_val);
+    const _char_t *pName = (const _char_t *)(pArgs[4].pch_val);
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_EVENT_LIST, event_context_t, pCurEvent)
     {
@@ -128,7 +128,7 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((char_t *)pCurEvent, 0x0u, sizeof(event_context_t));
+        os_memset((_char_t *)pCurEvent, 0x0u, sizeof(event_context_t));
         pCurEvent->head.cs = CS_INITED;
         pCurEvent->head.pName = pName;
 
@@ -140,7 +140,7 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
         pCurEvent->call.pEvtCallEntry = NULL;
 
         EXIT_CRITICAL_SECTION();
-        return (u32_t)pCurEvent;
+        return (_u32_t)pCurEvent;
     };
 
     EXIT_CRITICAL_SECTION();
@@ -154,12 +154,12 @@ static u32_t _event_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _event_value_get_privilege_routine(arguments_t *pArgs)
+static _i32p_t _event_value_get_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     event_context_t *pCurEvent = (event_context_t *)pArgs[0].u32_val;
-    u32_t *pValue = (u32_t *)pArgs[1].pv_val;
+    _u32_t *pValue = (_u32_t *)pArgs[1].pv_val;
     *pValue = pCurEvent->value;
 
     EXIT_CRITICAL_SECTION();
@@ -173,18 +173,18 @@ static i32p_t _event_value_get_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _event_set_privilege_routine(arguments_t *pArgs)
+static _i32p_t _event_set_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     event_context_t *pCurEvent = (event_context_t *)pArgs[0].u32_val;
-    u32_t set = (u32_t)pArgs[1].u32_val;
-    u32_t clear = (u32_t)pArgs[2].u32_val;
-    u32_t toggle = (u32_t)pArgs[3].u32_val;
+    _u32_t set = (_u32_t)pArgs[1].u32_val;
+    _u32_t clear = (_u32_t)pArgs[2].u32_val;
+    _u32_t toggle = (_u32_t)pArgs[3].u32_val;
 
-    u32_t val = pCurEvent->value;
-    u32_t changed, any, edge, level, trigger = 0u;
-    i32p_t postcode = 0;
+    _u32_t val = pCurEvent->value;
+    _u32_t changed, any, edge, level, trigger = 0u;
+    _i32p_t postcode = 0;
 
     /// Clear bits
     val &= ~clear;
@@ -224,7 +224,7 @@ static i32p_t _event_set_privilege_routine(arguments_t *pArgs)
     // Triggered bits
     trigger |= pCurEvent->triggered;
 
-    u32_t report, reported = 0u;
+    _u32_t report, reported = 0u;
     list_iterator_t it = {0u};
     list_t *pList = (list_t *)&pCurEvent->q_list;
     list_iterator_init(&it, pList);
@@ -261,18 +261,18 @@ static i32p_t _event_set_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
+static _i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     event_context_t *pCurEvent = (event_context_t *)pArgs[0].u32_val;
     event_sch_t *pEvt_sch = (event_sch_t *)pArgs[1].pv_val;
-    u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
-    i32p_t postcode = 0;
+    _u32_t timeout_ms = (_u32_t)pArgs[2].u32_val;
+    _i32p_t postcode = 0;
 
     thread_context_t *pCurThread = kernel_thread_runContextGet();
     struct evt_val *pEvtData = pEvt_sch->pEvtVal;
-    u32_t changed, any, edge, level, trigger = 0u;
+    _u32_t changed, any, edge, level, trigger = 0u;
 
     changed = pEvtData->value ^ pCurEvent->value;
     if (changed) {
@@ -307,7 +307,7 @@ static i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
     trigger |= pCurEvent->triggered;
 
     pEvtData->value = pCurEvent->value;
-    u32_t report = trigger & pEvt_sch->listen;
+    _u32_t report = trigger & pEvt_sch->listen;
     if (report) {
         pEvtData->trigger = trigger;
         pCurEvent->triggered &= ~report;
@@ -336,11 +336,11 @@ static i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
  *
  * @return The event unique id.
  */
-u32_t _impl_event_init(u32_t anyMask, u32_t modeMask, u32_t dirMask, u32_t init, const char_t *pName)
+_u32_t _impl_event_init(_u32_t anyMask, _u32_t modeMask, _u32_t dirMask, _u32_t init, const _char_t *pName)
 {
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)anyMask}, [1] = {.u32_val = (u32_t)modeMask},       [2] = {.u32_val = (u32_t)dirMask},
-        [3] = {.u32_val = (u32_t)init},    [4] = {.pch_val = (const char_t *)pName},
+        [0] = {.u32_val = (_u32_t)anyMask}, [1] = {.u32_val = (_u32_t)modeMask},       [2] = {.u32_val = (_u32_t)dirMask},
+        [3] = {.u32_val = (_u32_t)init},    [4] = {.pch_val = (const _char_t *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_event_init_privilege_routine, arguments);
@@ -354,7 +354,7 @@ u32_t _impl_event_init(u32_t anyMask, u32_t modeMask, u32_t dirMask, u32_t init,
  *
  * @return The result of the operation.
  */
-i32p_t _impl_event_value_get(u32_t ctx, u32_t *pValue)
+_i32p_t _impl_event_value_get(_u32_t ctx, _u32_t *pValue)
 {
     event_context_t *pCtx = (event_context_t *)ctx;
     if (_event_context_isInvalid(pCtx)) {
@@ -366,7 +366,7 @@ i32p_t _impl_event_value_get(u32_t ctx, u32_t *pValue)
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
+        [0] = {.u32_val = (_u32_t)ctx},
         [1] = {.pv_val = (void *)pValue},
     };
 
@@ -383,7 +383,7 @@ i32p_t _impl_event_value_get(u32_t ctx, u32_t *pValue)
  *
  * @return The result of the operation.
  */
-i32p_t _impl_event_set(u32_t ctx, u32_t set, u32_t clear, u32_t toggle)
+_i32p_t _impl_event_set(_u32_t ctx, _u32_t set, _u32_t clear, _u32_t toggle)
 {
     event_context_t *pCtx = (event_context_t *)ctx;
     if (_event_context_isInvalid(pCtx)) {
@@ -395,10 +395,10 @@ i32p_t _impl_event_set(u32_t ctx, u32_t set, u32_t clear, u32_t toggle)
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
-        [1] = {.u32_val = (u32_t)set},
-        [2] = {.u32_val = (u32_t)clear},
-        [3] = {.u32_val = (u32_t)toggle},
+        [0] = {.u32_val = (_u32_t)ctx},
+        [1] = {.u32_val = (_u32_t)set},
+        [2] = {.u32_val = (_u32_t)clear},
+        [3] = {.u32_val = (_u32_t)toggle},
     };
 
     return kernel_privilege_invoke((const void *)_event_set_privilege_routine, arguments);
@@ -414,7 +414,7 @@ i32p_t _impl_event_set(u32_t ctx, u32_t set, u32_t clear, u32_t toggle)
  *
  * @return The result of the operation.
  */
-i32p_t _impl_event_wait(u32_t ctx, struct evt_val *pEvtData, u32_t listen_mask, u32_t timeout_ms)
+_i32p_t _impl_event_wait(_u32_t ctx, struct evt_val *pEvtData, _u32_t listen_mask, _u32_t timeout_ms)
 {
     event_context_t *pCtx = (event_context_t *)ctx;
     if (_event_context_isInvalid(pCtx)) {
@@ -442,12 +442,12 @@ i32p_t _impl_event_wait(u32_t ctx, struct evt_val *pEvtData, u32_t listen_mask, 
         .pEvtVal = pEvtData,
     };
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
+        [0] = {.u32_val = (_u32_t)ctx},
         [1] = {.pv_val = (void *)&evt_sch},
-        [2] = {.u32_val = (u32_t)timeout_ms},
+        [2] = {.u32_val = (_u32_t)timeout_ms},
     };
 
-    i32p_t postcode = kernel_privilege_invoke((const void *)_event_wait_privilege_routine, arguments);
+    _i32p_t postcode = kernel_privilege_invoke((const void *)_event_wait_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
 

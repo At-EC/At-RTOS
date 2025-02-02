@@ -31,16 +31,16 @@ enum {
  *
  * @return Return the original argument postcode.
  */
-static inline i32p_t _impl_postcode_cmpt_failed(i32p_t postcode)
+static inline _i32p_t _impl_postcode_cmpt_failed(_i32p_t postcode)
 {
-    extern void _impl_trace_postcode_set(u32_t cmpt, u32_t code);
+    extern void _impl_trace_postcode_set(_u32_t cmpt, _u32_t code);
 
     if (postcode >= 0) {
         return postcode;
     }
 
-    u32_t code = PC_NEGATIVE(postcode);
-    u32_t component = (((u32_t)code >> PC_COMPONENT_NUMBER_POS) & PC_COMPONENT_NUMBER_MSK);
+    _u32_t code = PC_NEGATIVE(postcode);
+    _u32_t component = (((_u32_t)code >> PC_COMPONENT_NUMBER_POS) & PC_COMPONENT_NUMBER_MSK);
     if (component < PC_OS_COMPONENT_NUMBER) {
         _impl_trace_postcode_set(component, code);
     }
@@ -59,11 +59,11 @@ static inline i32p_t _impl_postcode_cmpt_failed(i32p_t postcode)
     if (UNFLAG(c)) {                                                                                                                       \
         PCST(PC_NER(PC_CMPT_ASSERT, n));                                                                                                   \
     }
-#define _CHECK_CONDITION(cond)          _CHECK_COND((i32_t)cond, 1)
-#define _CHECK_POINTER(pointer)         _CHECK_COND((i32_t)pointer, 2)
-#define _CHECK_INDEX(index, high)       _CHECK_COND(((i32_t)index >= 0) && ((i32_t)index < high), 3)
-#define _CHECK_BOUND(val, high)         _CHECK_COND(((i32_t)val >= 0) && ((i32_t)val <= (i32_t)high), 4)
-#define _CHECK_RANGE(val, low, high)    _CHECK_COND(((i32_t)val >= (i32_t)low) && ((i32_t)val <= (i32_t)high), 5)
+#define _CHECK_CONDITION(cond)          _CHECK_COND((_i32_t)cond, 1)
+#define _CHECK_POINTER(pointer)         _CHECK_COND((_i32_t)pointer, 2)
+#define _CHECK_INDEX(index, high)       _CHECK_COND(((_i32_t)index >= 0) && ((_i32_t)index < high), 3)
+#define _CHECK_BOUND(val, high)         _CHECK_COND(((_i32_t)val >= 0) && ((_i32_t)val <= (_i32_t)high), 4)
+#define _CHECK_RANGE(val, low, high)    _CHECK_COND(((_i32_t)val >= (_i32_t)low) && ((_i32_t)val <= (_i32_t)high), 5)
 #define PC_ASSERT(cond)                 _CHECK_CONDITION(cond)
 #define PC_ASSERT_EQ(a, b)              _CHECK_CONDITION((a) == (b))
 #define PC_ASSERT_POINTER(pointer)      _CHECK_POINTER(pointer)

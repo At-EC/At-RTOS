@@ -27,7 +27,7 @@ void HardFault_Handler(void)
 /**
  * @brief To check if it's in interrupt content.
  */
-b_t port_isInInterruptContent(void)
+_b_t port_isInInterruptContent(void)
 {
     if (__get_IPSR()) {
         return true;
@@ -43,7 +43,7 @@ b_t port_isInInterruptContent(void)
 /**
  * @brief To check if it's in kernel thread content.
  */
-b_t port_isInThreadMode(void)
+_b_t port_isInThreadMode(void)
 {
     if (__get_IPSR()) {
         return false;
@@ -51,14 +51,14 @@ b_t port_isInThreadMode(void)
     return true;
 }
 
-u32_t port_irq_disable(void)
+_u32_t port_irq_disable(void)
 {
-    u32_t value = __get_PRIMASK();
+    _u32_t value = __get_PRIMASK();
     __disable_irq();
     return value;
 }
 
-void port_irq_enable(u32_t value)
+void port_irq_enable(_u32_t value)
 {
     __set_PRIMASK(value);
 }
@@ -90,16 +90,16 @@ void port_interrupt_init(void)
  *
  * @return The PSP stack address.
  */
-u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
+_u32_t port_stack_frame_init(void (*pEntryFunction)(void), _u32_t *pAddress, _u32_t size)
 {
-    os_memset((uchar_t *)pAddress, STACT_UNUSED_DATA, size);
+    os_memset((_uchar_t *)pAddress, STACT_UNUSED_DATA, size);
 
-    u32_t psp_frame = (u32_t)pAddress + size - sizeof(stack_snapshot_t);
+    _u32_t psp_frame = (_u32_t)pAddress + size - sizeof(stack_snapshot_t);
 
     psp_frame = STACK_ADDRESS_DOWN(psp_frame);
 
     ((stack_snapshot_t *)psp_frame)->xPSR = B(24);                   /* xPSR */
-    ((stack_snapshot_t *)psp_frame)->R15_PC = (u32_t)pEntryFunction; /* PC   */
+    ((stack_snapshot_t *)psp_frame)->R15_PC = (_u32_t)pEntryFunction; /* PC   */
     ((stack_snapshot_t *)psp_frame)->R14_LR = 0xFFFFFFFDu;           /* LR   */
 
     ((stack_snapshot_t *)psp_frame)->R12 = 0x12121212u; /* R12  */
@@ -138,7 +138,7 @@ u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t
     ((stack_snapshot_t *)psp_frame)->EXC_RETURN = 0xFFFFFFFDu; /* EXC_RETURN */
 #endif
 
-    return (u32_t)psp_frame;
+    return (_u32_t)psp_frame;
 }
 
 /**
@@ -148,7 +148,7 @@ u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t
  *
  * @return The free stack size.
  */
-u32_t port_stack_free_size_get(u32_t stack_addr)
+_u32_t port_stack_free_size_get(_u32_t stack_addr)
 {
     if (stack_addr == 0) {
         return 0u;
@@ -159,5 +159,5 @@ u32_t port_stack_free_size_get(u32_t stack_addr)
         ptr++;
     }
 
-    return (u32_t)ptr - (u32_t)stack_addr;
+    return (_u32_t)ptr - (_u32_t)stack_addr;
 }

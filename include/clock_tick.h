@@ -12,15 +12,15 @@
 /**
  * Function pointer structure for the clock tells how much time has passed.
  */
-typedef void (*time_report_handler_t)(u32_t);
+typedef void (*time_report_handler_t)(_u32_t);
 
 /**
  * The implement function lists for rtos kernel internal use.
  */
 void clock_isr(void);
-void clock_time_interval_set(u32_t interval_us);
-u32_t clock_time_elapsed_get(void);
-u32_t clock_time_get(void);
+void clock_time_interval_set(_u32_t interval_us);
+_u32_t clock_time_elapsed_get(void);
+_u32_t clock_time_get(void);
 void clock_time_enable(void);
 void clock_time_disable(void);
 void clock_time_init(time_report_handler_t pTime_function);

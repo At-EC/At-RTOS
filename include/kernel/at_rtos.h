@@ -7,12 +7,29 @@
 #ifndef _AT_RTOS_H_
 #define _AT_RTOS_H_
 
+#define AT_RTOS_TYPE_API_DEFINE
+
 #include "ktype.h"
 #include "kstruct.h"
 #include "configuration.h"
 #include "postcode.h"
 #include "trace.h"
 #include "init.h"
+
+#if (OS_TYPEDEF_DEFAULT_ENABLED)
+typedef _char_t char_t;
+typedef _uchar_t uchar_t;
+typedef _u8_t u8_t;
+typedef _u16_t u16_t;
+typedef _u32_t u32_t;
+typedef _u64_t u64_t;
+typedef _i8_t i8_t;
+typedef _i16_t i16_t;
+typedef _i32_t i32_t;
+typedef _i64_t i64_t;
+typedef _b_t b_t;
+typedef _i32p_t i32p_t;
+#endif
 
 #define OS_PC_OK          (PC_OS_OK)
 #define OS_PC_TIMEOUT     (PC_OS_WAIT_TIMEOUT)
@@ -873,7 +890,7 @@ static inline void os_object_free_force(struct os_id id)
 }
 
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
-#if (OS_API_ENABLE)
+#if (OS_API_ENABLED)
 typedef struct {
     os_thread_id_t (*thread_init)(u32_t *, u32_t, i16_t, pThread_entryFunc_t, const char_t *);
     i32p_t (*thread_sleep)(u32_t);

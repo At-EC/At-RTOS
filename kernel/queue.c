@@ -24,13 +24,13 @@
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _queue_context_isInvalid(queue_context_t *pCurQue)
+static _b_t _queue_context_isInvalid(queue_context_t *pCurQue)
 {
-    u32_t start, end;
+    _u32_t start, end;
     INIT_SECTION_FIRST(INIT_SECTION_OS_QUEUE_LIST, start);
     INIT_SECTION_LAST(INIT_SECTION_OS_QUEUE_LIST, end);
 
-    return ((u32_t)pCurQue < start || (u32_t)pCurQue >= end) ? true : false;
+    return ((_u32_t)pCurQue < start || (_u32_t)pCurQue >= end) ? true : false;
 }
 
 /**
@@ -40,7 +40,7 @@ static b_t _queue_context_isInvalid(queue_context_t *pCurQue)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _queue_context_isInit(queue_context_t *pCurQue)
+static _b_t _queue_context_isInit(queue_context_t *pCurQue)
 {
     return ((pCurQue) ? (((pCurQue->head.cs) ? (true) : (false))) : false);
 }
@@ -52,13 +52,13 @@ static b_t _queue_context_isInit(queue_context_t *pCurQue)
  * @param pUserBuffer The pointer of user's message buffer.
  * @param userSize The size of user's message buffer.
  */
-static void _message_send(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
+static void _message_send(queue_context_t *pCurQueue, const _u8_t *pUserBuffer, _u16_t userSize)
 {
-    u8_t *pInBuffer = NULL;
+    _u8_t *pInBuffer = NULL;
 
-    pInBuffer = (u8_t *)((u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress));
-    os_memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
-    os_memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
+    pInBuffer = (_u8_t *)((_u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (_u32_t)pCurQueue->pQueueBufferAddress));
+    os_memset((_char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
+    os_memcpy((_char_t *)pInBuffer, (const _char_t *)pUserBuffer, userSize);
 
     // Calculate the next left position
     // Receive empty: right + 1 == left
@@ -74,9 +74,9 @@ static void _message_send(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u
  * @param pUserBuffer The pointer of user's message buffer.
  * @param userSize The size of user's message buffer.
  */
-static void _message_send_front(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
+static void _message_send_front(queue_context_t *pCurQueue, const _u8_t *pUserBuffer, _u16_t userSize)
 {
-    u8_t *pInBuffer = NULL;
+    _u8_t *pInBuffer = NULL;
 
     if (pCurQueue->rightPosition) {
         pCurQueue->rightPosition--;
@@ -85,9 +85,9 @@ static void _message_send_front(queue_context_t *pCurQueue, const u8_t *pUserBuf
     }
     pCurQueue->cacheSize++;
 
-    pInBuffer = (u8_t *)((u32_t)((pCurQueue->rightPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress));
-    os_memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
-    os_memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
+    pInBuffer = (_u8_t *)((_u32_t)((pCurQueue->rightPosition * pCurQueue->elementLength) + (_u32_t)pCurQueue->pQueueBufferAddress));
+    os_memset((_char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
+    os_memcpy((_char_t *)pInBuffer, (const _char_t *)pUserBuffer, userSize);
 }
 
 /**
@@ -97,13 +97,13 @@ static void _message_send_front(queue_context_t *pCurQueue, const u8_t *pUserBuf
  * @param pUserBuffer The pointer of user's message buffer.
  * @param userSize The size of user's message buffer.
  */
-static void _message_receive(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
+static void _message_receive(queue_context_t *pCurQueue, const _u8_t *pUserBuffer, _u16_t userSize)
 {
-    u8_t *pOutBuffer = NULL;
+    _u8_t *pOutBuffer = NULL;
 
-    pOutBuffer = (u8_t *)((pCurQueue->rightPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress);
-    os_memset((char_t *)pUserBuffer, 0x0u, userSize);
-    os_memcpy((char_t *)pUserBuffer, (const char_t *)pOutBuffer, userSize);
+    pOutBuffer = (_u8_t *)((pCurQueue->rightPosition * pCurQueue->elementLength) + (_u32_t)pCurQueue->pQueueBufferAddress);
+    os_memset((_char_t *)pUserBuffer, 0x0u, userSize);
+    os_memcpy((_char_t *)pUserBuffer, (const _char_t *)pOutBuffer, userSize);
 
     // Calculate the next right position
     // Receive empty: right + 1 == left
@@ -119,9 +119,9 @@ static void _message_receive(queue_context_t *pCurQueue, const u8_t *pUserBuffer
  * @param pUserBuffer The pointer of user's message buffer.
  * @param userSize The size of user's message buffer.
  */
-static void _message_receive_behind(queue_context_t *pCurQueue, const u8_t *pUserBuffer, u16_t userSize)
+static void _message_receive_behind(queue_context_t *pCurQueue, const _u8_t *pUserBuffer, _u16_t userSize)
 {
-    u8_t *pInBuffer = NULL;
+    _u8_t *pInBuffer = NULL;
 
     if (pCurQueue->leftPosition) {
         pCurQueue->leftPosition--;
@@ -130,9 +130,9 @@ static void _message_receive_behind(queue_context_t *pCurQueue, const u8_t *pUse
     }
     pCurQueue->cacheSize--;
 
-    pInBuffer = (u8_t *)((u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (u32_t)pCurQueue->pQueueBufferAddress));
-    os_memset((char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
-    os_memcpy((char_t *)pInBuffer, (const char_t *)pUserBuffer, userSize);
+    pInBuffer = (_u8_t *)((_u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (_u32_t)pCurQueue->pQueueBufferAddress));
+    os_memset((_char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
+    os_memcpy((_char_t *)pInBuffer, (const _char_t *)pUserBuffer, userSize);
 }
 
 /**
@@ -176,14 +176,14 @@ static void _queue_schedule(void *pTask)
  *
  * @return The result of privilege routine.
  */
-static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
+static _u32_t _queue_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     const void *pQueueBufferAddr = (const void *)(pArgs[0].ptr_val);
-    u16_t elementLen = (u16_t)(pArgs[1].u16_val);
-    u16_t elementNum = (u16_t)(pArgs[2].u16_val);
-    const char_t *pName = (const char_t *)(pArgs[3].pch_val);
+    _u16_t elementLen = (_u16_t)(pArgs[1].u16_val);
+    _u16_t elementNum = (_u16_t)(pArgs[2].u16_val);
+    const _char_t *pName = (const _char_t *)(pArgs[3].pch_val);
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_QUEUE_LIST, queue_context_t, pCurQueue)
     {
@@ -195,7 +195,7 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((char_t *)pCurQueue, 0x0u, sizeof(queue_context_t));
+        os_memset((_char_t *)pCurQueue, 0x0u, sizeof(queue_context_t));
         pCurQueue->head.cs = CS_INITED;
         pCurQueue->head.pName = pName;
 
@@ -207,7 +207,7 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
         pCurQueue->cacheSize = 0u;
 
         EXIT_CRITICAL_SECTION();
-        return (u32_t)pCurQueue;
+        return (_u32_t)pCurQueue;
     };
 
     EXIT_CRITICAL_SECTION();
@@ -221,7 +221,7 @@ static u32_t _queue_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _queue_msg_num_get_privilege_routine(arguments_t *pArgs)
+static _u32_t _queue_msg_num_get_privilege_routine(arguments_t *pArgs)
 {
     queue_context_t *pCurQueue = (queue_context_t *)pArgs[0].u32_val;
 
@@ -235,14 +235,14 @@ static u32_t _queue_msg_num_get_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
+static _i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     queue_context_t *pCurQueue = (queue_context_t *)pArgs[0].u32_val;
     queue_sch_t *pQue_sch = (queue_sch_t *)pArgs[1].ptr_val;
-    u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
-    i32p_t postcode = 0;
+    _u32_t timeout_ms = (_u32_t)pArgs[2].u32_val;
+    _i32p_t postcode = 0;
 
     thread_context_t *pCurThread = kernel_thread_runContextGet();
     if (pQue_sch->size > pCurQueue->elementLength) {
@@ -288,14 +288,14 @@ static i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
+static _i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     queue_context_t *pCurQueue = (queue_context_t *)pArgs[0].u32_val;
     queue_sch_t *pQue_sch = (queue_sch_t *)pArgs[1].ptr_val;
-    u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
-    i32p_t postcode = 0;
+    _u32_t timeout_ms = (_u32_t)pArgs[2].u32_val;
+    _i32p_t postcode = 0;
 
     thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
     if (pQue_sch->size > pCurQueue->elementLength) {
@@ -315,9 +315,9 @@ static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
         }
     } else {
         if (pQue_sch->reverse) {
-            _message_receive_behind(pCurQueue, (const u8_t *)pQue_sch->pUsrBuf, pQue_sch->size);
+            _message_receive_behind(pCurQueue, (const _u8_t *)pQue_sch->pUsrBuf, pQue_sch->size);
         } else {
-            _message_receive(pCurQueue, (const u8_t *)pQue_sch->pUsrBuf, pQue_sch->size);
+            _message_receive(pCurQueue, (const _u8_t *)pQue_sch->pUsrBuf, pQue_sch->size);
         }
 
         /* Try to wakeup a blocking task */
@@ -344,7 +344,7 @@ static i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
  *
  * @return The queue unique id.
  */
-u32_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
+_u32_t _impl_queue_init(const void *pQueueBufferAddr, _u16_t elementLen, _u16_t elementNum, const _char_t *pName)
 {
     if (!pQueueBufferAddr) {
         return OS_INVALID_ID_VAL;
@@ -359,10 +359,10 @@ u32_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t ele
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)pQueueBufferAddr},
-        [1] = {.u16_val = (u16_t)elementLen},
-        [2] = {.u16_val = (u16_t)elementNum},
-        [3] = {.pch_val = (const char_t *)pName},
+        [0] = {.u32_val = (_u32_t)pQueueBufferAddr},
+        [1] = {.u16_val = (_u16_t)elementLen},
+        [2] = {.u16_val = (_u16_t)elementNum},
+        [3] = {.pch_val = (const _char_t *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_queue_init_privilege_routine, arguments);
@@ -375,7 +375,7 @@ u32_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t ele
  *
  * @return The result of the operation.
  */
-u32_t _impl_queue_num_probe(u32_t ctx)
+_u32_t _impl_queue_num_probe(_u32_t ctx)
 {
     queue_context_t *pCtx = (queue_context_t *)ctx;
     if (_queue_context_isInvalid(pCtx)) {
@@ -387,7 +387,7 @@ u32_t _impl_queue_num_probe(u32_t ctx)
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
+        [0] = {.u32_val = (_u32_t)ctx},
     };
     return kernel_privilege_invoke((const void *)_queue_msg_num_get_privilege_routine, arguments);
 }
@@ -403,7 +403,7 @@ u32_t _impl_queue_num_probe(u32_t ctx)
  *
  * @return The result of the operation.
  */
-i32p_t _impl_queue_send(u32_t ctx, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms)
+_i32p_t _impl_queue_send(_u32_t ctx, const _u8_t *pUserBuffer, _u16_t bufferSize, _b_t isToFront, _u32_t timeout_ms)
 {
     queue_context_t *pCtx = (queue_context_t *)ctx;
     if (_queue_context_isInvalid(pCtx)) {
@@ -422,11 +422,11 @@ i32p_t _impl_queue_send(u32_t ctx, const u8_t *pUserBuffer, u16_t bufferSize, b_
 
     queue_sch_t que_sch = {.pUsrBuf = pUserBuffer, .size = bufferSize, .reverse = isToFront};
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
+        [0] = {.u32_val = (_u32_t)ctx},
         [1] = {.ptr_val = (void *)&que_sch},
-        [2] = {.u32_val = (u32_t)timeout_ms},
+        [2] = {.u32_val = (_u32_t)timeout_ms},
     };
-    i32p_t postcode = kernel_privilege_invoke((const void *)_queue_send_privilege_routine, arguments);
+    _i32p_t postcode = kernel_privilege_invoke((const void *)_queue_send_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
     if (postcode == PC_OS_WAIT_UNAVAILABLE) {
@@ -455,7 +455,7 @@ i32p_t _impl_queue_send(u32_t ctx, const u8_t *pUserBuffer, u16_t bufferSize, b_
  *
  * @return The result of the operation.
  */
-i32p_t _impl_queue_receive(u32_t ctx, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms)
+_i32p_t _impl_queue_receive(_u32_t ctx, const _u8_t *pUserBuffer, _u16_t bufferSize, _b_t isFromBack, _u32_t timeout_ms)
 {
     queue_context_t *pCtx = (queue_context_t *)ctx;
     if (_queue_context_isInvalid(pCtx)) {
@@ -474,11 +474,11 @@ i32p_t _impl_queue_receive(u32_t ctx, const u8_t *pUserBuffer, u16_t bufferSize,
 
     queue_sch_t que_sch = {.pUsrBuf = pUserBuffer, .size = bufferSize, .reverse = isFromBack};
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
+        [0] = {.u32_val = (_u32_t)ctx},
         [1] = {.ptr_val = (void *)&que_sch},
-        [2] = {.u32_val = (u32_t)timeout_ms},
+        [2] = {.u32_val = (_u32_t)timeout_ms},
     };
-    i32p_t postcode = kernel_privilege_invoke((const void *)_queue_receive_privilege_routine, arguments);
+    _i32p_t postcode = kernel_privilege_invoke((const void *)_queue_receive_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
 

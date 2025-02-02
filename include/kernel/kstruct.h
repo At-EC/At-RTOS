@@ -27,14 +27,14 @@ typedef void (*pTimer_callbackFunc_t)(void *);
 typedef void (*pTask_callbackFunc_t)(void *);
 typedef void (*pThread_entryFunc_t)(void);
 typedef void (*pEvent_callbackFunc_t)(void);
-typedef void (*pSubscribe_callbackFunc_t)(const void *, u16_t);
+typedef void (*pSubscribe_callbackFunc_t)(const void *, _u16_t);
 typedef void (*pTimeout_callbackFunc_t)(void *);
 typedef void (*pNotify_callbackFunc_t)(void *);
 
 struct base_head {
-    u8_t cs; // control and status
+    _u8_t cs; // control and status
 
-    const char_t *pName;
+    const _char_t *pName;
 };
 
 struct publish_context {
@@ -47,13 +47,13 @@ typedef struct publish_context publish_context_t;
 struct notify_callback {
     linker_t linker;
 
-    u32_t updated;
+    _u32_t updated;
 
-    u32_t muted;
+    _u32_t muted;
 
     void *pData;
 
-    u16_t len;
+    _u16_t len;
 
     pNotify_callbackFunc_t fn;
 };
@@ -69,7 +69,7 @@ typedef struct {
 
     struct publish_context *pPublisher;
 
-    u32_t accepted;
+    _u32_t accepted;
 
     struct notify_callback notify;
 
@@ -79,7 +79,7 @@ typedef struct {
 struct expired_time {
     linker_t linker;
 
-    u64_t duration_us;
+    _u64_t duration_us;
 
     pTimeout_callbackFunc_t fn;
 };
@@ -95,9 +95,9 @@ struct timer_callback {
 typedef struct {
     struct base_head head;
 
-    u8_t control;
+    _u8_t control;
 
-    u32_t timeout_ms;
+    _u32_t timeout_ms;
 
     struct expired_time expire;
 
@@ -107,11 +107,11 @@ typedef struct {
 typedef struct {
     struct base_head head;
 
-    u8_t remains;
+    _u8_t remains;
 
-    u8_t limits;
+    _u8_t limits;
 
-    u32_t timeout_ms;
+    _u32_t timeout_ms;
 
     list_t q_list;
 } semaphore_context_t;
@@ -119,19 +119,19 @@ typedef struct {
 typedef struct {
     struct base_head head;
 
-    b_t locked;
+    _b_t locked;
 
     struct schedule_task *pHoldTask;
 
-    i16_t originalPriority;
+    _i16_t originalPriority;
 
     list_t q_list;
 } mutex_context_t;
 
 typedef struct {
-    const u8_t *pUsrBuf;
-    u16_t size;
-    b_t reverse;
+    const _u8_t *pUsrBuf;
+    _u16_t size;
+    _b_t reverse;
 } queue_sch_t;
 
 typedef struct {
@@ -139,15 +139,15 @@ typedef struct {
 
     const void *pQueueBufferAddress;
 
-    u16_t elementLength;
+    _u16_t elementLength;
 
-    u16_t elementNumber;
+    _u16_t elementNumber;
 
-    u16_t leftPosition;
+    _u16_t leftPosition;
 
-    u16_t rightPosition;
+    _u16_t rightPosition;
 
-    u16_t cacheSize;
+    _u16_t cacheSize;
 
     list_t in_QList;
 
@@ -159,18 +159,18 @@ typedef struct {
 
     const void *pMemAddress;
 
-    u16_t elementLength;
+    _u16_t elementLength;
 
-    u16_t elementNumber;
+    _u16_t elementNumber;
 
-    u32_t elementFreeBits;
+    _u32_t elementFreeBits;
 
     list_t q_list;
 } pool_context_t;
 
 typedef struct {
     /* The listen bits*/
-    u32_t listen;
+    _u32_t listen;
 
     struct evt_val *pEvtVal;
 } event_sch_t;
@@ -185,19 +185,19 @@ typedef struct {
     struct base_head head;
 
     /* The event signal value */
-    u32_t value;
+    _u32_t value;
 
     /* Changed bits always trigger = 1, See dirMask below = 0. */
-    u32_t anyMask;
+    _u32_t anyMask;
 
     /* Level trigger = 0, Edge trigger = 1. */
-    u32_t modeMask;
+    _u32_t modeMask;
 
     /* Fall or Low trigger = 0, Rise or high trigger = 1. */
-    u32_t dirMask;
+    _u32_t dirMask;
 
     /* The triggered value */
-    u32_t triggered;
+    _u32_t triggered;
 
     /* When the event change that meet with edge setting, the function will be called */
     struct event_callback call;
@@ -208,23 +208,23 @@ typedef struct {
 struct call_exit {
     list_t *pToList;
 
-    u32_t timeout_ms;
+    _u32_t timeout_ms;
 };
 
 struct call_entry {
-    i32p_t result;
+    _i32p_t result;
 
     pTask_callbackFunc_t fun;
 };
 
 struct call_analyze {
-    u32_t last_pend_ms;
+    _u32_t last_pend_ms;
 
-    u32_t last_active_ms;
+    _u32_t last_active_ms;
 
-    u32_t last_run_ms;
+    _u32_t last_run_ms;
 
-    u32_t total_run_ms;
+    _u32_t total_run_ms;
 };
 
 struct call_exec {
@@ -240,9 +240,9 @@ struct call_exec {
 struct schedule_task {
     linker_t linker;
 
-    u32_t psp;
+    _u32_t psp;
 
-    i16_t prior;
+    _i16_t prior;
 
     void *pPendCtx;
 
@@ -258,9 +258,9 @@ struct thread_context {
 
     pThread_entryFunc_t pEntryFunc;
 
-    u32_t *pStackAddr;
+    _u32_t *pStackAddr;
 
-    u32_t stackSize;
+    _u32_t stackSize;
 
     void *pUserData;
 
@@ -276,9 +276,9 @@ typedef struct {
 typedef struct {
     struct schedule_task *pTask;
 
-    b_t run;
+    _b_t run;
 
-    u32_t pendsv_ms;
+    _u32_t pendsv_ms;
 
 } kernel_context_t;
 

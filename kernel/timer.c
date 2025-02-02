@@ -21,10 +21,10 @@
  */
 typedef struct {
     /* The last load count value */
-    u64_t system_us;
+    _u64_t system_us;
 
     /* The clock time total count value */
-    u32_t remaining_us;
+    _u32_t remaining_us;
 
     list_t tt_wait_list;
 
@@ -47,13 +47,13 @@ _timer_resource_t g_timer_rsc = {0u};
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _timer_context_isInvalid(timer_context_t *pCurTimer)
+static _b_t _timer_context_isInvalid(timer_context_t *pCurTimer)
 {
-    u32_t start, end;
+    _u32_t start, end;
     INIT_SECTION_FIRST(INIT_SECTION_OS_TIMER_LIST, start);
     INIT_SECTION_LAST(INIT_SECTION_OS_TIMER_LIST, end);
 
-    return ((u32_t)pCurTimer < start || (u32_t)pCurTimer >= end) ? true : false;
+    return ((_u32_t)pCurTimer < start || (_u32_t)pCurTimer >= end) ? true : false;
 }
 
 /**
@@ -63,7 +63,7 @@ static b_t _timer_context_isInvalid(timer_context_t *pCurTimer)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _timer_context_isInit(timer_context_t *pCurTimer)
+static _b_t _timer_context_isInit(timer_context_t *pCurTimer)
 {
     return (pCurTimer) ? (((pCurTimer->head.cs) ? (true) : (false))) : false;
 }
@@ -77,7 +77,7 @@ static b_t _timer_context_isInit(timer_context_t *pCurTimer)
  * @return The false value indicates it is right position and it can kiil the loop routine,
  *         otherwise is not a correct position.
  */
-static b_t _timeout_node_order_compare_condition(list_node_t *pCurNode, list_node_t *pExtractNode)
+static _b_t _timeout_node_order_compare_condition(list_node_t *pCurNode, list_node_t *pExtractNode)
 {
     struct expired_time *pCurTime = (struct expired_time *)pCurNode;
     struct expired_time *pExtractTime = (struct expired_time *)pExtractNode;
@@ -202,8 +202,8 @@ void timer_callback_fromTimeOut(void *pNode)
     struct expired_time *pExpired = (struct expired_time *)&pCurTimer->expire;
 
     if (pCurTimer->control == TIMER_CTRL_CYCLE_VAL) {
-        u64_t timeout_us = pCurTimer->timeout_ms * 1000u;
-        u64_t elapsed_us = g_timer_rsc.system_us - pExpired->duration_us;
+        _u64_t timeout_us = pCurTimer->timeout_ms * 1000u;
+        _u64_t elapsed_us = g_timer_rsc.system_us - pExpired->duration_us;
 
         while (elapsed_us >= timeout_us) {
             elapsed_us -= timeout_us;
@@ -214,7 +214,7 @@ void timer_callback_fromTimeOut(void *pNode)
         _timeout_transfer_toIdleList((linker_t *)&pExpired->linker);
     } else if (pCurTimer->control == TIMER_CTRL_TEMPORARY_VAL) {
         _timeout_transfer_toNoInitList((linker_t *)&pExpired->linker);
-        os_memset((u8_t *)pCurTimer, 0u, sizeof(timer_context_t));
+        os_memset((_u8_t *)pCurTimer, 0u, sizeof(timer_context_t));
     }
 
     list_t *pCallback_list = (list_t *)&g_timer_rsc.callback_list;
@@ -230,7 +230,7 @@ void timer_callback_fromTimeOut(void *pNode)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _timer_schedule_request_privilege_routine(arguments_t *pArgs)
+static _i32p_t _timer_schedule_request_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -245,7 +245,7 @@ static i32p_t _timer_schedule_request_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of timer schedule request.
  */
-static i32p_t _timer_schedule(void)
+static _i32p_t _timer_schedule(void)
 {
     return kernel_privilege_invoke((const void *)_timer_schedule_request_privilege_routine, NULL);
 }
@@ -257,13 +257,13 @@ static i32p_t _timer_schedule(void)
  *
  * @return The result of privilege routine.
  */
-static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
+static _u32_t _timer_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].ptr_val);
     void *pUserData = (void *)pArgs[1].pv_val;
-    const char_t *pName = (const char_t *)pArgs[2].pch_val;
+    const _char_t *pName = (const _char_t *)pArgs[2].pch_val;
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_TIMER_LIST, timer_context_t, pCurTimer)
     {
@@ -275,7 +275,7 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
+        os_memset((_char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
         pCurTimer->head.cs = CS_INITED;
         pCurTimer->head.pName = pName;
         pCurTimer->call.pUserData = pUserData;
@@ -283,7 +283,7 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
         timeout_init(&pCurTimer->expire, timer_callback_fromTimeOut);
 
         EXIT_CRITICAL_SECTION();
-        return (u32_t)pCurTimer;
+        return (_u32_t)pCurTimer;
     }
 
     EXIT_CRITICAL_SECTION();
@@ -297,13 +297,13 @@ static u32_t _timer_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _timer_automatic_privilege_routine(arguments_t *pArgs)
+static _u32_t _timer_automatic_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     pTimer_callbackFunc_t pCallFun = (pTimer_callbackFunc_t)(pArgs[0].ptr_val);
     void *pUserData = (void *)pArgs[1].pv_val;
-    const char_t *pName = (const char_t *)pArgs[2].pch_val;
+    const _char_t *pName = (const _char_t *)pArgs[2].pch_val;
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_TIMER_LIST, timer_context_t, pCurTimer)
     {
@@ -315,7 +315,7 @@ static u32_t _timer_automatic_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
+        os_memset((_char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
         pCurTimer->head.cs = CS_INITED;
         pCurTimer->head.pName = pName;
         pCurTimer->control = TIMER_CTRL_TEMPORARY_VAL;
@@ -324,7 +324,7 @@ static u32_t _timer_automatic_privilege_routine(arguments_t *pArgs)
         timeout_init(&pCurTimer->expire, timer_callback_fromTimeOut);
 
         EXIT_CRITICAL_SECTION();
-        return (u32_t)pCurTimer;
+        return (_u32_t)pCurTimer;
     }
 
     EXIT_CRITICAL_SECTION();
@@ -338,13 +338,13 @@ static u32_t _timer_automatic_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
+static _u32_t _timer_start_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     timer_context_t *pCurTimer = (timer_context_t *)pArgs[0].u32_val;
-    u8_t ctrl = (u8_t)pArgs[1].u8_val;
-    u32_t timeout_ms = (u32_t)pArgs[2].u32_val;
+    _u8_t ctrl = (_u8_t)pArgs[1].u8_val;
+    _u32_t timeout_ms = (_u32_t)pArgs[2].u32_val;
 
     pCurTimer->timeout_ms = timeout_ms;
     pCurTimer->control = ctrl;
@@ -361,7 +361,7 @@ static u32_t _timer_start_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
+static _u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -379,25 +379,25 @@ static u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _timer_total_system_ms_get_privilege_routine(arguments_t *pArgs)
+static _u32_t _timer_total_system_ms_get_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     UNUSED_MSG(pArgs);
 
-    u64_t us = (!g_timer_rsc.remaining_us) ? (clock_time_elapsed_get()) : (0u);
+    _u64_t us = (!g_timer_rsc.remaining_us) ? (clock_time_elapsed_get()) : (0u);
 
     us += g_timer_rsc.system_us;
 
-    u32_t ms = ((us / 1000u) & 0xFFFFFFFFu);
+    _u32_t ms = ((us / 1000u) & 0xFFFFFFFFu);
 
     EXIT_CRITICAL_SECTION();
     return ms;
 }
 
-static u32_t _system_us_get(void)
+static _u32_t _system_us_get(void)
 {
-    u32_t us = (u32_t)((!g_timer_rsc.remaining_us) ? (clock_time_elapsed_get()) : (0u));
+    _u32_t us = (_u32_t)((!g_timer_rsc.remaining_us) ? (clock_time_elapsed_get()) : (0u));
 
     us += g_timer_rsc.system_us;
 
@@ -411,13 +411,13 @@ static u32_t _system_us_get(void)
  *
  * @return The result of privilege routine.
  */
-static u32_t _timer_total_system_us_get_privilege_routine(arguments_t *pArgs)
+static _u32_t _timer_total_system_us_get_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     UNUSED_MSG(pArgs);
 
-    u32_t us = _system_us_get();
+    _u32_t us = _system_us_get();
 
     EXIT_CRITICAL_SECTION();
     return us;
@@ -430,15 +430,15 @@ static u32_t _timer_total_system_us_get_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _system_busy_wait_privilege_routine(arguments_t *pArgs)
+static _u32_t _system_busy_wait_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    u32_t wait_us = (u32_t)pArgs[0].u32_val;
+    _u32_t wait_us = (_u32_t)pArgs[0].u32_val;
 
-    u32_t start = _system_us_get();
+    _u32_t start = _system_us_get();
     while (wait_us) {
-        u32_t current = _system_us_get();
+        _u32_t current = _system_us_get();
 
         if ((current - start) >= wait_us) {
             break;
@@ -458,7 +458,7 @@ static u32_t _system_busy_wait_privilege_routine(arguments_t *pArgs)
  *
  * @return The value of the timer unique id.
  */
-u32_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, void *pUserData, const char_t *pName)
+_u32_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, void *pUserData, const _char_t *pName)
 {
     arguments_t arguments[] = {
         [0] = {.ptr_val = (const void *)pCallFun},
@@ -478,7 +478,7 @@ u32_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, void *pUserData, const ch
  *
  * @return The value of the timer unique id.
  */
-u32_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, void *pUserData, const char_t *pName)
+_u32_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, void *pUserData, const _char_t *pName)
 {
     arguments_t arguments[] = {
         [0] = {.ptr_val = (const void *)pCallFun},
@@ -499,7 +499,7 @@ u32_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, void *pUserData, con
  *
  * @return The result of timer start operation.
  */
-i32p_t _impl_timer_start(u32_t ctx, u8_t control, u32_t timeout_ms)
+_i32p_t _impl_timer_start(_u32_t ctx, _u8_t control, _u32_t timeout_ms)
 {
     timer_context_t *pCtx = (timer_context_t *)ctx;
     if (_timer_context_isInvalid(pCtx)) {
@@ -519,9 +519,9 @@ i32p_t _impl_timer_start(u32_t ctx, u8_t control, u32_t timeout_ms)
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
-        [1] = {.u8_val = (u8_t)control},
-        [2] = {.u32_val = (u32_t)timeout_ms},
+        [0] = {.u32_val = (_u32_t)ctx},
+        [1] = {.u8_val = (_u8_t)control},
+        [2] = {.u32_val = (_u32_t)timeout_ms},
     };
 
     return kernel_privilege_invoke((const void *)_timer_start_privilege_routine, arguments);
@@ -534,7 +534,7 @@ i32p_t _impl_timer_start(u32_t ctx, u8_t control, u32_t timeout_ms)
  *
  * @return The result of timer stop operation.
  */
-i32p_t _impl_timer_stop(u32_t ctx)
+_i32p_t _impl_timer_stop(_u32_t ctx)
 {
     timer_context_t *pCtx = (timer_context_t *)ctx;
     if (_timer_context_isInvalid(pCtx)) {
@@ -546,7 +546,7 @@ i32p_t _impl_timer_stop(u32_t ctx)
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
+        [0] = {.u32_val = (_u32_t)ctx},
     };
 
     return kernel_privilege_invoke((const void *)_timer_stop_privilege_routine, arguments);
@@ -559,7 +559,7 @@ i32p_t _impl_timer_stop(u32_t ctx)
  *
  * @return The true result indicates time busy, otherwise is free status.
  */
-b_t _impl_timer_busy(u32_t ctx)
+_b_t _impl_timer_busy(_u32_t ctx)
 {
     timer_context_t *pCtx = (timer_context_t *)ctx;
     if (_timer_context_isInvalid(pCtx)) {
@@ -572,7 +572,7 @@ b_t _impl_timer_busy(u32_t ctx)
 
     ENTER_CRITICAL_SECTION();
     timer_context_t *pCurTimer = (timer_context_t *)ctx;
-    b_t isBusy = (pCurTimer->expire.linker.pList == (list_t *)&g_timer_rsc.tt_wait_list) ? true : false;
+    _b_t isBusy = (pCurTimer->expire.linker.pList == (list_t *)&g_timer_rsc.tt_wait_list) ? true : false;
 
     EXIT_CRITICAL_SECTION();
     return isBusy;
@@ -583,7 +583,7 @@ b_t _impl_timer_busy(u32_t ctx)
  *
  * @return The value of the total system time (ms).
  */
-u32_t _impl_timer_total_system_ms_get(void)
+_u32_t _impl_timer_total_system_ms_get(void)
 {
     return kernel_privilege_invoke((const void *)_timer_total_system_ms_get_privilege_routine, NULL);
 }
@@ -593,15 +593,15 @@ u32_t _impl_timer_total_system_ms_get(void)
  *
  * @return The value of the total system time (us).
  */
-u32_t _impl_timer_total_system_us_get(void)
+_u32_t _impl_timer_total_system_us_get(void)
 {
     return kernel_privilege_invoke((const void *)_timer_total_system_us_get_privilege_routine, NULL);
 }
 
-u32_t _impl_system_busy_wait(u32_t us)
+_u32_t _impl_system_busy_wait(_u32_t us)
 {
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)us},
+        [0] = {.u32_val = (_u32_t)us},
     };
 
     return kernel_privilege_invoke((const void *)_system_busy_wait_privilege_routine, arguments);
@@ -612,7 +612,7 @@ u32_t _impl_system_busy_wait(u32_t us)
  *
  * @return The value of the total system time (ms).
  */
-u32_t timer_total_system_ms_get(void)
+_u32_t timer_total_system_ms_get(void)
 {
     return _impl_timer_total_system_ms_get();
 }
@@ -622,7 +622,7 @@ u32_t timer_total_system_ms_get(void)
  *
  * @return The value of the total system time (us).
  */
-u32_t timer_total_system_us_get(void)
+_u32_t timer_total_system_us_get(void)
 {
     return _impl_timer_total_system_us_get();
 }
@@ -632,7 +632,7 @@ u32_t timer_total_system_us_get(void)
  *
  * @return The result of timer schedule request.
  */
-i32p_t timer_schedule(void)
+_i32p_t timer_schedule(void)
 {
     return _timer_schedule();
 }
@@ -666,10 +666,10 @@ void timeout_init(struct expired_time *pExpire, pTimeout_callbackFunc_t fun)
     _timeout_transfer_toIdleList((linker_t *)pExpire);
 }
 
-void timeout_set(struct expired_time *pExpire, u32_t timeout_ms, b_t immediately)
+void timeout_set(struct expired_time *pExpire, _u32_t timeout_ms, _b_t immediately)
 {
     ENTER_CRITICAL_SECTION();
-    b_t need = false;
+    _b_t need = false;
     if (pExpire->linker.pList == &g_timer_rsc.tt_wait_list) {
         _timeout_remove_fromWaitList((linker_t *)&pExpire->linker);
         need = true;
@@ -691,11 +691,11 @@ void timeout_set(struct expired_time *pExpire, u32_t timeout_ms, b_t immediately
     EXIT_CRITICAL_SECTION();
 }
 
-void timeout_remove(struct expired_time *pExpire, b_t immediately)
+void timeout_remove(struct expired_time *pExpire, _b_t immediately)
 {
     ENTER_CRITICAL_SECTION();
 
-    b_t need = false;
+    _b_t need = false;
     if (pExpire->linker.pList == &g_timer_rsc.tt_wait_list) {
         _timeout_remove_fromWaitList((linker_t *)&pExpire->linker);
         need = true;
@@ -714,7 +714,7 @@ void timeout_remove(struct expired_time *pExpire, b_t immediately)
  *
  * @param elapsed_us Clock time reported elapsed time.
  */
-void timeout_handler(u32_t elapsed_us)
+void timeout_handler(_u32_t elapsed_us)
 {
     ENTER_CRITICAL_SECTION();
 
@@ -746,7 +746,7 @@ void timeout_handler(u32_t elapsed_us)
     g_timer_rsc.system_us += g_timer_rsc.remaining_us;
     g_timer_rsc.remaining_us = 0u;
 
-    b_t need = false;
+    _b_t need = false;
     list_t *pListPending = (list_t *)&g_timer_rsc.tt_pend_list;
     list_iterator_init(&it, pListPending);
     while (list_iterator_next_condition(&it, (void *)&pCurExpired)) {

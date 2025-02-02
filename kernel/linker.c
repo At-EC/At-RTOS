@@ -13,10 +13,10 @@
  * @param src The pointer of the source.
  * @param cnt The opereation specific length.
  */
-void os_memcpy(void *dst, const void *src, u32_t cnt)
+void os_memcpy(void *dst, const void *src, _u32_t cnt)
 {
-    uchar_t *d = (uchar_t *)dst;
-    const uchar_t *s = (const uchar_t *)src;
+    _uchar_t *d = (_uchar_t *)dst;
+    const _uchar_t *s = (const _uchar_t *)src;
     while (cnt--) {
         *d++ = *s++;
     }
@@ -29,11 +29,11 @@ void os_memcpy(void *dst, const void *src, u32_t cnt)
  * @param val The character value.
  * @param cnt The opereation specific length.
  */
-void os_memset(void *dst, u8_t val, u32_t cnt)
+void os_memset(void *dst, _u8_t val, _u32_t cnt)
 {
-    uchar_t *d = (uchar_t *)dst;
+    _uchar_t *d = (_uchar_t *)dst;
     while (cnt--) {
-        *d++ = (u8_t)val;
+        *d++ = (_u8_t)val;
     }
 }
 
@@ -46,9 +46,9 @@ void os_memset(void *dst, u8_t val, u32_t cnt)
  *
  * @return The value 0 indicates the both strings are same, otherwise is different
  */
-i32_t os_memcmp(const void *dst, const void *src, u32_t cnt)
+_i32_t os_memcmp(const void *dst, const void *src, _u32_t cnt)
 {
-    const uchar_t *d = (const uchar_t *)dst, *s = (const uchar_t *)src;
+    const _uchar_t *d = (const _uchar_t *)dst, *s = (const _uchar_t *)src;
     int r = 0;
     while (cnt-- && (r = *d++ - *s++) == 0)
         ;
@@ -62,9 +62,9 @@ i32_t os_memcmp(const void *dst, const void *src, u32_t cnt)
  *
  * @return The value of the string length
  */
-u32_t os_strlen(const uchar_t *str)
+_u32_t os_strlen(const _uchar_t *str)
 {
-    u32_t len = 0u;
+    _u32_t len = 0u;
     while (*str++ != '\0') {
         len++;
     }
@@ -83,7 +83,7 @@ u32_t os_strlen(const uchar_t *str)
  *
  * @return The true indicates the node is existed, otherwist is not existed.
  */
-b_t list_node_isExisted(list_t *pList, list_node_t *pNode)
+_b_t list_node_isExisted(list_t *pList, list_node_t *pNode)
 {
     if (!pList) {
         return false;
@@ -114,13 +114,13 @@ b_t list_node_isExisted(list_t *pList, list_node_t *pNode)
  *
  * @return Value The total number of node
  */
-u32_t list_size(list_t *pList)
+_u32_t list_size(list_t *pList)
 {
     if (!pList) {
         return 0u;
     }
 
-    u32_t size = 0;
+    _u32_t size = 0;
     list_node_t *pCurNode_temp = pList->pHead;
     while (pCurNode_temp) {
         pCurNode_temp = pCurNode_temp->pNext;
@@ -156,7 +156,7 @@ void *list_head(list_t *pList)
  *
  * @return The value true indicates the process of removing a node is successful, otherwise is failed.
  */
-b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
+_b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
 {
     if (!pList) {
         return false;
@@ -199,7 +199,7 @@ b_t list_node_delete(list_t *pList, list_node_t *pTargetNode)
  *
  * @return The value true indicates the process is successful, otherwise is failed.
  */
-b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTargetNode)
+_b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTargetNode)
 {
     if (!pList) {
         return false;
@@ -246,7 +246,7 @@ b_t list_node_insertBefore(list_t *pList, list_node_t *pBefore, list_node_t *pTa
  *
  * @return The value true indicates the process is successful, otherwise is failed.
  */
-b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t direction)
+_b_t list_node_push(list_t *pList, list_node_t *pInNode, list_direction_t direction)
 {
     if (!pList) {
         return false;
@@ -344,7 +344,7 @@ list_node_t *list_node_pop(list_t *pList, list_direction_t direction)
  *
  * @return The true indicates the iterator symbol created successful, otherwist is failed.
  */
-b_t list_iterator_init(list_iterator_t *pIterator, list_t *pList)
+_b_t list_iterator_init(list_iterator_t *pIterator, list_t *pList)
 {
     if (!pIterator) {
         return false;
@@ -354,7 +354,7 @@ b_t list_iterator_init(list_iterator_t *pIterator, list_t *pList)
         return false;
     }
 
-    os_memset((char_t *)pIterator, 0x0u, sizeof(list_iterator_t));
+    os_memset((_char_t *)pIterator, 0x0u, sizeof(list_iterator_t));
     if (!pList->pHead) {
         return false;
     }
@@ -398,11 +398,11 @@ list_node_t *list_iterator_next(list_iterator_t *pIterator)
  *
  * @return The true indicates the output node is not NULL.
  */
-b_t list_iterator_next_condition(list_iterator_t *pIterator, list_node_t **ppOutNode)
+_b_t list_iterator_next_condition(list_iterator_t *pIterator, list_node_t **ppOutNode)
 {
     *ppOutNode = list_iterator_next(pIterator);
 
-    return (b_t)((*ppOutNode) ? true : false);
+    return (_b_t)((*ppOutNode) ? true : false);
 }
 
 /**

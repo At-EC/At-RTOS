@@ -10,9 +10,6 @@
 #include "atos_configuration.h"
 #include "build_version.h"
 
-#define ENABLED  (1u)
-#define DISABLED (0u)
-
 #ifndef THREAD_RUNTIME_NUMBER_SUPPORTED
 #define THREAD_RUNTIME_NUMBER_SUPPORTED (1u)
 #endif
@@ -57,10 +54,6 @@
 #define PORTAL_SYSTEM_CLOCK_INTERVAL_MIN_US (50u)
 #endif
 
-#ifndef AT_RTOS_USE_INTERNAL_IRQ_ENUM
-#define AT_RTOS_USE_INTERNAL_IRQ_ENUM (DISABLED)
-#endif
-
 #ifndef STACK_ALIGN
 #define STACK_ALIGN (8u)
 #endif
@@ -86,8 +79,13 @@
 #endif
 
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
-#ifndef OS_API_ENABLE
-#define OS_API_ENABLE (ENABLED)
+#ifndef OS_API_DISABLED
+#define OS_API_ENABLED (1)
+#endif
+
+/* It defined the AtOS extern symbol typedef for convenience use, but it has extra memory consumption */
+#ifndef OS_TYPEDEF_DISABLED
+#define OS_TYPEDEF_DEFAULT_ENABLED (1)
 #endif
 
 /* Configuration of the Cortex-M Processor and Core Peripherals.

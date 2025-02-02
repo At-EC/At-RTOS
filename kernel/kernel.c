@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#include "at_rtos.h"
 #include "kernel.h"
 #include "timer.h"
 #include "compiler.h"
@@ -13,6 +12,7 @@
 #include "postcode.h"
 #include "trace.h"
 #include "init.h"
+#include "at_rtos.h"
 
 /**
  * Local unique postcode.
@@ -25,11 +25,11 @@
 typedef struct {
     struct schedule_task *pTask;
 
-    b_t run;
+    _b_t run;
 
-    u32_t pendsv_ms;
+    _u32_t pendsv_ms;
 
-    i32_t sch_lock_nest_cnt;
+    _i32_t sch_lock_nest_cnt;
 
     list_t sch_pend_list;
 
@@ -57,7 +57,7 @@ static _kernel_resource_t g_kernel_rsc = {
  *
  * @return The false indicates it's a right position and it can kill the loop calling.
  */
-static b_t _schedule_priority_node_order_compare_condition(list_node_t *pCurNode, list_node_t *pExtractNode)
+static _b_t _schedule_priority_node_order_compare_condition(list_node_t *pCurNode, list_node_t *pExtractNode)
 {
     struct schedule_task *pCurTask = (struct schedule_task *)pCurNode;
     struct schedule_task *pExtractTask = (struct schedule_task *)pExtractNode;
@@ -135,16 +135,16 @@ static struct schedule_task *_schedule_nextTaskGet(void)
     return (struct schedule_task *)g_kernel_rsc.sch_pend_list.pHead;
 }
 
-static void _schedule_time_analyze(struct schedule_task *pFrom, struct schedule_task *pTo, u32_t ms)
+static void _schedule_time_analyze(struct schedule_task *pFrom, struct schedule_task *pTo, _u32_t ms)
 {
     pFrom->exec.analyze.last_run_ms = ms - pFrom->exec.analyze.last_active_ms;
     pFrom->exec.analyze.total_run_ms += pFrom->exec.analyze.last_run_ms;
     pTo->exec.analyze.last_active_ms = ms;
 }
 
-static void _schedule_exit(u32_t ms)
+static void _schedule_exit(_u32_t ms)
 {
-    b_t need = false;
+    _b_t need = false;
     struct schedule_task *pCurTask = NULL;
     list_iterator_t it = ITERATION_NULL;
     list_t *pList = (list_t *)&g_kernel_rsc.sch_exit_list;
@@ -165,8 +165,8 @@ static void _schedule_exit(u32_t ms)
             thread_context_t *pDelThread = (thread_context_t *)CONTAINEROF(pCurTask, thread_context_t, task);
 
             _schedule_transfer_toNullList((linker_t *)&pCurTask->linker);
-            os_memset((char_t *)pDelThread->pStackAddr, STACT_UNUSED_DATA, pDelThread->stackSize);
-            os_memset((char_t *)pDelThread, 0x0u, sizeof(thread_context_t));
+            os_memset((_char_t *)pDelThread->pStackAddr, STACT_UNUSED_DATA, pDelThread->stackSize);
+            os_memset((_char_t *)pDelThread, 0x0u, sizeof(thread_context_t));
         }
 
         os_memset(pExit, 0x0, sizeof(struct call_exit));
@@ -178,7 +178,7 @@ static void _schedule_exit(u32_t ms)
     }
 }
 
-static void _schedule_entry(u32_t ms)
+static void _schedule_entry(_u32_t ms)
 {
     struct schedule_task *pCurTask = NULL;
     list_iterator_t it = ITERATION_NULL;
@@ -198,8 +198,8 @@ static void _schedule_entry(u32_t ms)
     }
 }
 
-i32p_t schedule_exit_trigger(struct schedule_task *pTask, void *pHoldCtx, void *pHoldData, list_t *pToList, u32_t timeout_ms,
-                             b_t immediately)
+_i32p_t schedule_exit_trigger(struct schedule_task *pTask, void *pHoldCtx, void *pHoldData, list_t *pToList, _u32_t timeout_ms,
+                              _b_t immediately)
 {
     pTask->pPendCtx = pHoldCtx;
     pTask->pPendData = pHoldData;
@@ -215,7 +215,7 @@ i32p_t schedule_exit_trigger(struct schedule_task *pTask, void *pHoldCtx, void *
     return kernel_thread_schedule_request();
 }
 
-i32p_t schedule_entry_trigger(struct schedule_task *pTask, pTask_callbackFunc_t callback, u32_t result)
+_i32p_t schedule_entry_trigger(struct schedule_task *pTask, pTask_callbackFunc_t callback, _u32_t result)
 {
     pTask->exec.entry.result = result;
     pTask->exec.entry.fun = callback;
@@ -229,7 +229,7 @@ void schedule_callback_fromTimeOut(void *pNode)
     schedule_entry_trigger(pCurTask, NULL, PC_OS_WAIT_TIMEOUT);
 }
 
-b_t schedule_hasTwoPendingItem(void)
+_b_t schedule_hasTwoPendingItem(void)
 {
     if (!g_kernel_rsc.sch_pend_list.pHead) {
         return false;
@@ -256,7 +256,7 @@ list_t *schedule_waitList(void)
     return (list_t *)&g_kernel_rsc.sch_wait_list;
 }
 
-b_t _schedule_can_preempt(struct schedule_task *pCurrent)
+_b_t _schedule_can_preempt(struct schedule_task *pCurrent)
 {
     struct schedule_task *pTmpTask = NULL;
     list_iterator_t it = ITERATION_NULL;
@@ -290,9 +290,9 @@ b_t _schedule_can_preempt(struct schedule_task *pCurrent)
  * @param ppCurThreadPsp The current thread psp address.
  * @param ppNextThreadPSP The next thread psp address.
  */
-void kernel_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
+void kernel_scheduler_inPendSV_c(_u32_t **ppCurPsp, _u32_t **ppNextPSP)
 {
-    u32_t ms = timer_total_system_ms_get();
+    _u32_t ms = timer_total_system_ms_get();
 
     _schedule_exit(ms);
     _schedule_entry(ms);
@@ -301,15 +301,15 @@ void kernel_scheduler_inPendSV_c(u32_t **ppCurPsp, u32_t **ppNextPSP)
     struct schedule_task *pNext = _schedule_nextTaskGet();
 
     if (_schedule_can_preempt(pCurrent)) {
-        *ppCurPsp = (u32_t *)&pCurrent->psp;
-        *ppNextPSP = (u32_t *)&pNext->psp;
+        *ppCurPsp = (_u32_t *)&pCurrent->psp;
+        *ppNextPSP = (_u32_t *)&pNext->psp;
 
         _schedule_time_analyze(pCurrent, pNext, ms);
         g_kernel_rsc.pTask = pNext;
         g_kernel_rsc.pendsv_ms = ms;
     } else {
-        *ppCurPsp = (u32_t *)&pCurrent->psp;
-        *ppNextPSP = (u32_t *)&pCurrent->psp;
+        *ppCurPsp = (_u32_t *)&pCurrent->psp;
+        *ppNextPSP = (_u32_t *)&pCurrent->psp;
     }
 }
 
@@ -326,7 +326,7 @@ static void _kernel_setPendSV(void)
  *
  * @return The true indicates the kernel is in privilege mode.
  */
-static b_t _kernel_isInPrivilegeMode(void)
+static _b_t _kernel_isInPrivilegeMode(void)
 {
     return port_isInInterruptContent();
 }
@@ -338,7 +338,7 @@ static b_t _kernel_isInPrivilegeMode(void)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _kernel_start_privilege_routine(arguments_t *pArgs)
+static _i32p_t _kernel_start_privilege_routine(arguments_t *pArgs)
 {
     UNUSED_MSG(pArgs);
 
@@ -362,7 +362,7 @@ static i32p_t _kernel_start_privilege_routine(arguments_t *pArgs)
 /**
  * @brief To check if the kernel message arrived.
  */
-static i32p_t _kernel_message_arrived(void)
+static _i32p_t _kernel_message_arrived(void)
 {
     return kthread_message_arrived();
 }
@@ -376,9 +376,9 @@ static i32p_t _kernel_message_arrived(void)
  *
  * @return The PSP stack address.
  */
-u32_t kernel_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size)
+_u32_t kernel_stack_frame_init(void (*pEntryFunction)(void), _u32_t *pAddress, _u32_t size)
 {
-    return (u32_t)port_stack_frame_init(pEntryFunction, pAddress, size);
+    return (_u32_t)port_stack_frame_init(pEntryFunction, pAddress, size);
 }
 
 /**
@@ -398,11 +398,11 @@ thread_context_t *kernel_thread_runContextGet(void)
  *
  * @return The result of the thread schedule.
  */
-i32p_t kernel_schedule_result_take(void)
+_i32p_t kernel_schedule_result_take(void)
 {
     thread_context_t *pCurThread = kernel_thread_runContextGet();
 
-    i32p_t ret = (i32p_t)pCurThread->task.exec.entry.result;
+    _i32p_t ret = (_i32p_t)pCurThread->task.exec.entry.result;
     pCurThread->task.exec.entry.result = PC_EOR;
 
     return ret;
@@ -413,7 +413,7 @@ i32p_t kernel_schedule_result_take(void)
  *
  * @return The true indicates the kernel is in thread mode.
  */
-b_t kernel_isInThreadMode(void)
+_b_t kernel_isInThreadMode(void)
 {
     return port_isInThreadMode();
 }
@@ -423,7 +423,7 @@ b_t kernel_isInThreadMode(void)
  *
  * @return The result of the request operation.
  */
-i32p_t kernel_thread_schedule_request(void)
+_i32p_t kernel_thread_schedule_request(void)
 {
     if (!_kernel_isInPrivilegeMode()) {
         return PC_EOR;
@@ -472,7 +472,7 @@ void kernel_idle_thread(void)
  *
  * @param svc_args The function arguments.
  */
-void kernel_privilege_call_inSVC_c(u32_t *svc_args)
+void kernel_privilege_call_inSVC_c(_u32_t *svc_args)
 {
     /*
      * Stack contains:
@@ -480,12 +480,12 @@ void kernel_privilege_call_inSVC_c(u32_t *svc_args)
      * First argument (r0) is svc_args[0]
      * Put the result into R0
      */
-    u8_t svc_number = ((u8_t *)svc_args[6])[-2];
+    _u8_t svc_number = ((_u8_t *)svc_args[6])[-2];
 
     if (svc_number == SVC_KERNEL_INVOKE_NUMBER) {
         pPrivilege_callFunc_t pCall = (pPrivilege_callFunc_t)svc_args[0];
 
-        svc_args[0] = (u32_t)pCall((arguments_t *)svc_args[1]);
+        svc_args[0] = (_u32_t)pCall((arguments_t *)svc_args[1]);
     }
 }
 
@@ -497,19 +497,19 @@ void kernel_privilege_call_inSVC_c(u32_t *svc_args)
  *
  * @return The result of the privilege function.
  */
-i32p_t kernel_privilege_invoke(const void *pCallFun, arguments_t *pArgs)
+_i32p_t kernel_privilege_invoke(const void *pCallFun, arguments_t *pArgs)
 {
     if (!pCallFun) {
         return PC_EOR;
     }
 
     if (!_kernel_isInPrivilegeMode()) {
-        return (i32p_t)kernel_svc_call((u32_t)pCallFun, (u32_t)pArgs, 0u, 0u);
+        return (_i32p_t)kernel_svc_call((_u32_t)pCallFun, (_u32_t)pArgs, 0u, 0u);
     }
 
     ENTER_CRITICAL_SECTION();
     pPrivilege_callFunc_t pCall = (pPrivilege_callFunc_t)pCallFun;
-    i32p_t ret = (i32p_t)pCall((arguments_t *)pArgs);
+    _i32p_t ret = (_i32p_t)pCall((arguments_t *)pArgs);
     EXIT_CRITICAL_SECTION();
 
     return ret;
@@ -520,15 +520,15 @@ i32p_t kernel_privilege_invoke(const void *pCallFun, arguments_t *pArgs)
  *
  * return The true indicates the kernel OS is running.
  */
-b_t _impl_kernel_rtos_isRun(void)
+_b_t _impl_kernel_rtos_isRun(void)
 {
-    return (b_t)((g_kernel_rsc.run) ? (true) : (false));
+    return (_b_t)((g_kernel_rsc.run) ? (true) : (false));
 }
 
 /**
  * @brief The kernel OS start to run.
  */
-i32p_t _impl_kernel_at_rtos_run(void)
+_i32p_t _impl_kernel_at_rtos_run(void)
 {
     if (_impl_kernel_rtos_isRun()) {
         return 0;
@@ -542,7 +542,7 @@ i32p_t _impl_kernel_at_rtos_run(void)
  *
  * @param id The kernel object unique id.
  */
-void _impl_kernel_object_free(u32_t ctx)
+void _impl_kernel_object_free(_u32_t ctx)
 {
     struct base_head *pHead = (struct base_head *)ctx;
     pHead->cs = 0u;

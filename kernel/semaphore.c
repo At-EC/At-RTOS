@@ -22,13 +22,13 @@
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _semaphore_context_isInvalid(semaphore_context_t *pCurSemaphore)
+static _b_t _semaphore_context_isInvalid(semaphore_context_t *pCurSemaphore)
 {
-    u32_t start, end;
+    _u32_t start, end;
     INIT_SECTION_FIRST(INIT_SECTION_OS_SEMAPHORE_LIST, start);
     INIT_SECTION_LAST(INIT_SECTION_OS_SEMAPHORE_LIST, end);
 
-    return ((u32_t)pCurSemaphore < start || (u32_t)pCurSemaphore >= end) ? true : false;
+    return ((_u32_t)pCurSemaphore < start || (_u32_t)pCurSemaphore >= end) ? true : false;
 }
 
 /**
@@ -38,7 +38,7 @@ static b_t _semaphore_context_isInvalid(semaphore_context_t *pCurSemaphore)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _semaphore_context_isInit(semaphore_context_t *pCurSemaphore)
+static _b_t _semaphore_context_isInit(semaphore_context_t *pCurSemaphore)
 {
     return ((pCurSemaphore) ? (((pCurSemaphore->head.cs) ? (true) : (false))) : false);
 }
@@ -65,13 +65,13 @@ static void _semaphore_schedule(void *pTask)
  *
  * @return The result of privilege routine.
  */
-static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
+static _u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    u8_t initialCount = (u8_t)(pArgs[0].u8_val);
-    u8_t limitCount = (u8_t)(pArgs[1].u8_val);
-    const char_t *pName = (const char_t *)(pArgs[2].pch_val);
+    _u8_t initialCount = (_u8_t)(pArgs[0].u8_val);
+    _u8_t limitCount = (_u8_t)(pArgs[1].u8_val);
+    const _char_t *pName = (const _char_t *)(pArgs[2].pch_val);
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_SEMAPHORE_LIST, semaphore_context_t, pCurSemaphore)
     {
@@ -83,14 +83,14 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((char_t *)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
+        os_memset((_char_t *)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
         pCurSemaphore->head.cs = CS_INITED;
         pCurSemaphore->head.pName = pName;
         pCurSemaphore->remains = initialCount;
         pCurSemaphore->limits = limitCount;
 
         EXIT_CRITICAL_SECTION();
-        return (u32_t)pCurSemaphore;
+        return (_u32_t)pCurSemaphore;
     }
 
     EXIT_CRITICAL_SECTION();
@@ -104,14 +104,14 @@ static u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _semaphore_take_privilege_routine(arguments_t *pArgs)
+static _i32p_t _semaphore_take_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     semaphore_context_t *pCurSemaphore = (semaphore_context_t *)pArgs[0].u32_val;
-    u32_t timeout_ms = (u32_t)pArgs[1].u32_val;
+    _u32_t timeout_ms = (_u32_t)pArgs[1].u32_val;
     thread_context_t *pCurThread = NULL;
-    i32p_t postcode = PC_OS_WAIT_AVAILABLE;
+    _i32p_t postcode = PC_OS_WAIT_AVAILABLE;
 
     pCurThread = kernel_thread_runContextGet();
     if (!pCurSemaphore->remains) {
@@ -140,12 +140,12 @@ static i32p_t _semaphore_take_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _semaphore_give_privilege_routine(arguments_t *pArgs)
+static _i32p_t _semaphore_give_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     semaphore_context_t *pCurSemaphore = (semaphore_context_t *)pArgs[0].u32_val;
-    i32p_t postcode = 0;
+    _i32p_t postcode = 0;
 
     if (pCurSemaphore->remains < pCurSemaphore->limits) {
         pCurSemaphore->remains++;
@@ -167,12 +167,12 @@ static i32p_t _semaphore_give_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
+static _i32p_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     semaphore_context_t *pCurSemaphore = (semaphore_context_t *)pArgs[0].u32_val;
-    i32p_t postcode = 0;
+    _i32p_t postcode = 0;
 
     list_iterator_t it = {0u};
     list_t *pQList = (list_t *)&pCurSemaphore->q_list;
@@ -200,7 +200,7 @@ static i32p_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
  *
  * @return The semaphore unique id.
  */
-u32_t _impl_semaphore_init(u8_t remainCount, u8_t limitCount, const char_t *pName)
+_u32_t _impl_semaphore_init(_u8_t remainCount, _u8_t limitCount, const _char_t *pName)
 {
     if (!limitCount) {
         return OS_INVALID_ID_VAL;
@@ -211,9 +211,9 @@ u32_t _impl_semaphore_init(u8_t remainCount, u8_t limitCount, const char_t *pNam
     }
 
     arguments_t arguments[] = {
-        [0] = {.u8_val = (u8_t)remainCount},
-        [1] = {.u8_val = (u8_t)limitCount},
-        [2] = {.pch_val = (const char_t *)pName},
+        [0] = {.u8_val = (_u8_t)remainCount},
+        [1] = {.u8_val = (_u8_t)limitCount},
+        [2] = {.pch_val = (const _char_t *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_semaphore_init_privilege_routine, arguments);
@@ -226,7 +226,7 @@ u32_t _impl_semaphore_init(u8_t remainCount, u8_t limitCount, const char_t *pNam
  *
  * @return The result of the operation.
  */
-i32p_t _impl_semaphore_take(u32_t ctx, u32_t timeout_ms)
+_i32p_t _impl_semaphore_take(_u32_t ctx, _u32_t timeout_ms)
 {
     semaphore_context_t *pCtx = (semaphore_context_t *)ctx;
     if (_semaphore_context_isInvalid(pCtx)) {
@@ -246,11 +246,11 @@ i32p_t _impl_semaphore_take(u32_t ctx, u32_t timeout_ms)
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
-        [1] = {.u32_val = (u32_t)timeout_ms},
+        [0] = {.u32_val = (_u32_t)ctx},
+        [1] = {.u32_val = (_u32_t)timeout_ms},
     };
 
-    i32p_t postcode = kernel_privilege_invoke((const void *)_semaphore_take_privilege_routine, arguments);
+    _i32p_t postcode = kernel_privilege_invoke((const void *)_semaphore_take_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
 
@@ -276,7 +276,7 @@ i32p_t _impl_semaphore_take(u32_t ctx, u32_t timeout_ms)
  *
  * @return The result of the operation.
  */
-i32p_t _impl_semaphore_give(u32_t ctx)
+_i32p_t _impl_semaphore_give(_u32_t ctx)
 {
     semaphore_context_t *pCtx = (semaphore_context_t *)ctx;
     if (_semaphore_context_isInvalid(pCtx)) {
@@ -288,7 +288,7 @@ i32p_t _impl_semaphore_give(u32_t ctx)
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
+        [0] = {.u32_val = (_u32_t)ctx},
     };
 
     return kernel_privilege_invoke((const void *)_semaphore_give_privilege_routine, arguments);
@@ -301,7 +301,7 @@ i32p_t _impl_semaphore_give(u32_t ctx)
  *
  * @return The result of the operation.
  */
-i32p_t _impl_semaphore_flush(u32_t ctx)
+_i32p_t _impl_semaphore_flush(_u32_t ctx)
 {
     semaphore_context_t *pCtx = (semaphore_context_t *)ctx;
     if (_semaphore_context_isInvalid(pCtx)) {
@@ -313,7 +313,7 @@ i32p_t _impl_semaphore_flush(u32_t ctx)
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
+        [0] = {.u32_val = (_u32_t)ctx},
     };
 
     return kernel_privilege_invoke((const void *)_semaphore_flush_privilege_routine, arguments);

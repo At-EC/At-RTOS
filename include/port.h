@@ -13,10 +13,10 @@
 #define STACT_UNUSED_DATA       (0xDEu)
 #define STACT_UNUSED_FRAME_MARK (0xDEDEDEDEu)
 
-#define STACK_ADDRESS_UP(address)   (u32_t)(ROUND_UP((address), STACK_ALIGN))
-#define STACK_ADDRESS_DOWN(address) (u32_t)(ROUND_DOWN((address), STACK_ALIGN))
+#define STACK_ADDRESS_UP(address)   (_u32_t)(ROUND_UP((address), STACK_ALIGN))
+#define STACK_ADDRESS_DOWN(address) (_u32_t)(ROUND_DOWN((address), STACK_ALIGN))
 
-#define PORT_ENTER_CRITICAL_SECTION() u32_t __val = port_irq_disable()
+#define PORT_ENTER_CRITICAL_SECTION() _u32_t __val = port_irq_disable()
 #define PORT_EXIT_CRITICAL_SECTION()  port_irq_enable(__val)
 
 /**
@@ -40,50 +40,50 @@
 typedef struct {
     union {
         /* The function arguments */
-        u32_t u32_val;
+        _u32_t u32_val;
 
-        u16_t u16_val;
+        _u16_t u16_val;
 
-        u8_t u8_val;
+        _u8_t u8_val;
 
-        b_t b_val;
+        _b_t b_val;
 
         void *pv_val;
 
         const void *ptr_val;
 
-        const char_t *pch_val;
+        const _char_t *pch_val;
     };
 } arguments_t;
 
 /**
  * Define the privilege call function interface.
  */
-typedef u32_t (*pPrivilege_callFunc_t)(arguments_t *);
+typedef _u32_t (*pPrivilege_callFunc_t)(arguments_t *);
 
 /**
  * Define the ARM core register layout.
  */
 typedef struct {
-    u32_t R4;
-    u32_t R5;
-    u32_t R6;
-    u32_t R7;
-    u32_t R8;
-    u32_t R9;
-    u32_t R10;
-    u32_t R11;
+    _u32_t R4;
+    _u32_t R5;
+    _u32_t R6;
+    _u32_t R7;
+    _u32_t R8;
+    _u32_t R9;
+    _u32_t R10;
+    _u32_t R11;
 } cmx_t;
 
 typedef struct {
-    u32_t R8;
-    u32_t R9;
-    u32_t R10;
-    u32_t R11;
-    u32_t R4;
-    u32_t R5;
-    u32_t R6;
-    u32_t R7;
+    _u32_t R8;
+    _u32_t R9;
+    _u32_t R10;
+    _u32_t R11;
+    _u32_t R4;
+    _u32_t R5;
+    _u32_t R6;
+    _u32_t R7;
 } cm0_t;
 
 /**
@@ -91,8 +91,8 @@ typedef struct {
  */
 typedef struct {
 #if (__FPU_PRESENT)
-    u32_t EXC_RETURN; /* LR */
-    u32_t CONTROL;    /* CONTROL */
+    _u32_t EXC_RETURN; /* LR */
+    _u32_t CONTROL;    /* CONTROL */
 #endif
 
     union {
@@ -100,15 +100,15 @@ typedef struct {
         cm0_t cm0;
     };
 
-    u32_t R0;  /* N-32 */
-    u32_t R1;  /* N-28 */
-    u32_t R2;  /* N-24 */
-    u32_t R3;  /* N-20 */
-    u32_t R12; /* N-16 */
+    _u32_t R0;  /* N-32 */
+    _u32_t R1;  /* N-28 */
+    _u32_t R2;  /* N-24 */
+    _u32_t R3;  /* N-20 */
+    _u32_t R12; /* N-16 */
 
-    u32_t R14_LR; /* N-12. Link Register */
-    u32_t R15_PC; /* N-8. Program Counter */
-    u32_t xPSR;   /* N-4. Program status register */
+    _u32_t R14_LR; /* N-12. Link Register */
+    _u32_t R15_PC; /* N-8. Program Counter */
+    _u32_t xPSR;   /* N-4. Program status register */
 } stack_snapshot_t;
 
 /* End of section using anonymous unions */
@@ -126,25 +126,25 @@ typedef struct {
 /**
  * @brief Trigger system svc call.
  */
-__svc(SVC_KERNEL_INVOKE_NUMBER) i32p_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+__svc(SVC_KERNEL_INVOKE_NUMBER) _i32p_t kernel_svc_call(_u32_t args_0, _u32_t args_1, _u32_t args_2, _u32_t args_3);
 
 /**
  * @brief Schedule the first thread.
  */
-__asm void port_run_theFirstThread(u32_t sp);
+__asm void port_run_theFirstThread(_u32_t sp);
 
 #if 0 /* Disable it to use CMSIS Library */
 /**
  * @brief To check if it's in interrupt content.
  */
-static inline b_t port_isInInterruptContent(void)
+static inline _b_t port_isInInterruptContent(void)
 {
-    register u32_t reg_ipsr __asm("ipsr");
+    register _u32_t reg_ipsr __asm("ipsr");
     if (reg_ipsr) {
         return true;
     }
 
-    register u32_t reg_primask __asm("primask");
+    register _u32_t reg_primask __asm("primask");
     if (reg_primask == 0x01u) {
         return true;
     }
@@ -155,9 +155,9 @@ static inline b_t port_isInInterruptContent(void)
 /**
  * @brief To check if it's in kernel thread content.
  */
-static inline b_t port_isInThreadMode(void)
+static inline _b_t port_isInThreadMode(void)
 {
-    register u32_t reg_ipsr __asm("ipsr");
+    register _u32_t reg_ipsr __asm("ipsr");
     if (reg_ipsr) {
         return false;
     }
@@ -171,12 +171,12 @@ static inline b_t port_isInThreadMode(void)
 /**
  * @brief Trigger system svc call.
  */
-static inline i32p_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3)
+static inline _i32p_t kernel_svc_call(_u32_t args_0, _u32_t args_1, _u32_t args_2, _u32_t args_3)
 {
-    register u32_t r0 __asm__("r0") = args_0;
-    register u32_t r1 __asm__("r1") = args_1;
-    register u32_t r2 __asm__("r2") = args_2;
-    register u32_t r3 __asm__("r3") = args_3;
+    register _u32_t r0 __asm__("r0") = args_0;
+    register _u32_t r1 __asm__("r1") = args_1;
+    register _u32_t r2 __asm__("r2") = args_2;
+    register _u32_t r3 __asm__("r3") = args_3;
 
     __asm __volatile("svc %1" : "+r"(r0) : "i"(SVC_KERNEL_INVOKE_NUMBER), "r"(r0), "r"(r1), "r"(r2), "r"(r3) : "memory");
 
@@ -186,22 +186,22 @@ static inline i32p_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u
 /**
  * @brief Schedule the first thread.
  */
-void port_run_theFirstThread(u32_t sp);
+void port_run_theFirstThread(_u32_t sp);
 
 #if 0 /* Disable it to use CMSIS Library */
 /**
  * @brief To check if it's in interrupt content.
  */
-static inline b_t port_isInInterruptContent(void)
+static inline _b_t port_isInInterruptContent(void)
 {
-    u32_t ipsr;
+    _u32_t ipsr;
 
     __asm__ volatile("mrs %0, IPSR\n\t" : "=r"(ipsr));
     if (ipsr) {
         return true;
     }
 
-    u32_t primask;
+    _u32_t primask;
 
     __ASM volatile("MRS %0, primask" : "=r"(primask));
     if (primask) {
@@ -214,9 +214,9 @@ static inline b_t port_isInInterruptContent(void)
 /**
  * @brief To check if it's in kernel thread content.
  */
-static inline b_t port_isInThreadMode(void)
+static inline _b_t port_isInThreadMode(void)
 {
-    u32_t ipsr;
+    _u32_t ipsr;
 
     __asm__ volatile("mrs %0, IPSR\n\t" : "=r"(ipsr));
     if (reg_ipsr) {
@@ -233,25 +233,25 @@ static inline b_t port_isInThreadMode(void)
 /**
  * @brief Trigger system svc call.
  */
-__swi i32p_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
+__swi _i32p_t kernel_svc_call(_u32_t args_0, _u32_t args_1, _u32_t args_2, _u32_t args_3);
 
 /**
  * @brief Schedule the first thread.
  */
-void port_run_theFirstThread(u32_t sp);
+void port_run_theFirstThread(_u32_t sp);
 
 #if 0 /* Disable it to use CMSIS Library */
 /**
  * @brief To check if it's in interrupt content.
  */
-static inline b_t port_isInInterruptContent(void)
+static inline _b_t port_isInInterruptContent(void)
 {
-    register u32_t reg_ipsr = __arm_rsr("IPSR");
+    register _u32_t reg_ipsr = __arm_rsr("IPSR");
     if (reg_ipsr) {
         return true;
     }
 
-    register u32_t reg_primask = __arm_rsr("PRIMASK");
+    register _u32_t reg_primask = __arm_rsr("PRIMASK");
     if (reg_primask == 0x01u) {
         return true;
     }
@@ -262,9 +262,9 @@ static inline b_t port_isInInterruptContent(void)
 /**
  * @brief To check if it's in kernel thread content.
  */
-static inline b_t port_isInThreadMode(void)
+static inline _b_t port_isInThreadMode(void)
 {
-    register u32_t reg_ipsr = __arm_rsr("IPSR");
+    register _u32_t reg_ipsr = __arm_rsr("IPSR");
     if (reg_ipsr) {
         return false;
     }
@@ -272,14 +272,14 @@ static inline b_t port_isInThreadMode(void)
     return true;
 }
 
-static inline u32_t port_irq_disable(void)
+static inline _u32_t port_irq_disable(void)
 {
-    register u32_t reg_primask = __arm_rsr("PRIMASK");
+    register _u32_t reg_primask = __arm_rsr("PRIMASK");
     __disable_irq();
     return reg_primask;
 }
 
-static inline void port_irq_enable(u32_t value)
+static inline void port_irq_enable(_u32_t value)
 {
     __arm_wsr("PRIMASK", (value));
 }
@@ -296,8 +296,8 @@ static inline void port_irq_enable(u32_t value)
 /* TODO */
 
 #elif defined(ARCH_NATIVE_GCC)
-i32p_t kernel_svc_call(u32_t args_0, u32_t args_1, u32_t args_2, u32_t args_3);
-void port_run_theFirstThread(u32_t sp);
+_i32p_t kernel_svc_call(_u32_t args_0, _u32_t args_1, _u32_t args_2, _u32_t args_3);
+void port_run_theFirstThread(_u32_t sp);
 
 #else
 #warning Not supported compiler type
@@ -306,13 +306,13 @@ void port_run_theFirstThread(u32_t sp);
 /**
  * The implement function lists for rtos kernel internal use.
  */
-b_t port_isInInterruptContent(void);
-b_t port_isInThreadMode(void);
-u32_t port_irq_disable(void);
-void port_irq_enable(u32_t value);
+_b_t port_isInInterruptContent(void);
+_b_t port_isInThreadMode(void);
+_u32_t port_irq_disable(void);
+void port_irq_enable(_u32_t value);
 void port_setPendSV(void);
 void port_interrupt_init(void);
-u32_t port_stack_frame_init(void (*pEntryFunction)(void), u32_t *pAddress, u32_t size);
-u32_t port_stack_free_size_get(u32_t stack_addr);
+_u32_t port_stack_frame_init(void (*pEntryFunction)(void), _u32_t *pAddress, _u32_t size);
+_u32_t port_stack_free_size_get(_u32_t stack_addr);
 
 #endif /* _PORT_H_ */

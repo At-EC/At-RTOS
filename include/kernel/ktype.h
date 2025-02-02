@@ -12,7 +12,7 @@
 #include "linker.h"
 
 #define CS_INITED                              (1u)
-#define STACK_STATIC_VALUE_DEFINE(stack, size) u32_t stack[((u32_t)(size) / sizeof(u32_t))] = {0};
+#define STACK_STATIC_VALUE_DEFINE(stack, size) _u32_t stack[((_u32_t)(size) / sizeof(_u32_t))] = {0};
 
 #define OS_INVALID_ID_VAL (0xFFFFFFFFu)
 
@@ -56,15 +56,15 @@ enum {
 
 struct os_id {
     union {
-        u32_t u32_val;
+        _u32_t u32_val;
         void *p_val;
     };
-    const char_t *pName;
+    const _char_t *pName;
 };
 
 struct evt_val {
-    u32_t value;
-    u32_t trigger;
+    _u32_t value;
+    _u32_t trigger;
 };
 
 /* End of section using anonymous unions */
@@ -75,11 +75,11 @@ struct evt_val {
 #endif
 
 struct foreach_item {
-    u8_t i;
-    u32_t u32_val;
+    _u8_t i;
+    _u32_t u32_val;
 };
 
-static inline b_t kernel_os_id_is_invalid(struct os_id id)
+static inline _b_t kernel_os_id_is_invalid(struct os_id id)
 {
     if (id.p_val == NULL) {
         return true;

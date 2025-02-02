@@ -22,13 +22,13 @@
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _pool_context_isInvalid(pool_context_t *pCurPool)
+static _b_t _pool_context_isInvalid(pool_context_t *pCurPool)
 {
-    u32_t start, end;
+    _u32_t start, end;
     INIT_SECTION_FIRST(INIT_SECTION_OS_POOL_LIST, start);
     INIT_SECTION_LAST(INIT_SECTION_OS_POOL_LIST, end);
 
-    return ((u32_t)pCurPool < start || (u32_t)pCurPool >= end) ? true : false;
+    return ((_u32_t)pCurPool < start || (_u32_t)pCurPool >= end) ? true : false;
 }
 
 /**
@@ -38,7 +38,7 @@ static b_t _pool_context_isInvalid(pool_context_t *pCurPool)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _pool_context_isInit(pool_context_t *pCurPool)
+static _b_t _pool_context_isInit(pool_context_t *pCurPool)
 {
     return ((pCurPool) ? (((pCurPool->head.cs) ? (true) : (false))) : false);
 }
@@ -52,18 +52,18 @@ static b_t _pool_context_isInit(pool_context_t *pCurPool)
  */
 static void *_mem_take(pool_context_t *pCurPool)
 {
-    u32_t free = pCurPool->elementFreeBits;
-    u32_t num = pCurPool->elementNumber;
+    _u32_t free = pCurPool->elementFreeBits;
+    _u32_t num = pCurPool->elementNumber;
     void *pMemTake = NULL;
-    u8_t i = 0u;
+    _u8_t i = 0u;
 
     do {
         if (!(free & B(i))) {
             continue;
         }
 
-        pMemTake = (void *)((u32_t)((i * pCurPool->elementLength) + (u32_t)pCurPool->pMemAddress));
-        os_memset((char_t *)pMemTake, 0x0u, pCurPool->elementLength);
+        pMemTake = (void *)((_u32_t)((i * pCurPool->elementLength) + (_u32_t)pCurPool->pMemAddress));
+        os_memset((_char_t *)pMemTake, 0x0u, pCurPool->elementLength);
         pCurPool->elementFreeBits &= ~B(i);
         break;
 
@@ -81,19 +81,19 @@ static void *_mem_take(pool_context_t *pCurPool)
  */
 static bool _mem_release(pool_context_t *pCurPool, void *pUserMem)
 {
-    u32_t free = pCurPool->elementFreeBits;
-    u32_t num = pCurPool->elementNumber;
+    _u32_t free = pCurPool->elementFreeBits;
+    _u32_t num = pCurPool->elementNumber;
     void *pMemTake = NULL;
-    u8_t i = 0u;
+    _u8_t i = 0u;
 
     do {
         if (free & B(i)) {
             continue;
         }
 
-        pMemTake = (void *)((u32_t)((i * pCurPool->elementLength) + (u32_t)pCurPool->pMemAddress));
+        pMemTake = (void *)((_u32_t)((i * pCurPool->elementLength) + (_u32_t)pCurPool->pMemAddress));
         if (pMemTake == pUserMem) {
-            os_memset((char_t *)pMemTake, 0x0u, pCurPool->elementLength);
+            os_memset((_char_t *)pMemTake, 0x0u, pCurPool->elementLength);
             pCurPool->elementFreeBits |= B(i);
             break;
         }
@@ -131,14 +131,14 @@ static void _pool_schedule(void *pTask)
  *
  * @return The result of privilege routine.
  */
-static u32_t _pool_init_privilege_routine(arguments_t *pArgs)
+static _u32_t _pool_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     const void *pMemAddr = (const void *)(pArgs[0].ptr_val);
-    u16_t elementLen = (u16_t)(pArgs[1].u16_val);
-    u16_t elementNum = (u16_t)(pArgs[2].u16_val);
-    const char_t *pName = (const char_t *)(pArgs[3].pch_val);
+    _u16_t elementLen = (_u16_t)(pArgs[1].u16_val);
+    _u16_t elementNum = (_u16_t)(pArgs[2].u16_val);
+    const _char_t *pName = (const _char_t *)(pArgs[3].pch_val);
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_POOL_LIST, pool_context_t, pCurPool)
     {
@@ -149,7 +149,7 @@ static u32_t _pool_init_privilege_routine(arguments_t *pArgs)
         if (_pool_context_isInit(pCurPool)) {
             continue;
         }
-        os_memset((char_t *)pCurPool, 0x0u, sizeof(pool_context_t));
+        os_memset((_char_t *)pCurPool, 0x0u, sizeof(pool_context_t));
         pCurPool->head.cs = CS_INITED;
         pCurPool->head.pName = pName;
 
@@ -159,7 +159,7 @@ static u32_t _pool_init_privilege_routine(arguments_t *pArgs)
         pCurPool->elementFreeBits = Bs(0u, (elementNum - 1u));
 
         EXIT_CRITICAL_SECTION();
-        return (u32_t)pCurPool;
+        return (_u32_t)pCurPool;
     };
 
     EXIT_CRITICAL_SECTION();
@@ -173,16 +173,16 @@ static u32_t _pool_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _pool_take_privilege_routine(arguments_t *pArgs)
+static _i32p_t _pool_take_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     pool_context_t *pCurPool = (pool_context_t *)pArgs[0].u32_val;
     void **ppUserBuffer = (void **)pArgs[1].pv_val;
-    u16_t bufferSize = (u16_t)pArgs[2].u16_val;
-    u32_t timeout_ms = (u32_t)pArgs[3].u32_val;
+    _u16_t bufferSize = (_u16_t)pArgs[2].u16_val;
+    _u32_t timeout_ms = (_u32_t)pArgs[3].u32_val;
     thread_context_t *pCurThread = NULL;
-    i32p_t postcode = 0;
+    _i32p_t postcode = 0;
 
     pCurThread = kernel_thread_runContextGet();
     if (bufferSize > pCurPool->elementLength) {
@@ -219,13 +219,13 @@ static i32p_t _pool_take_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static i32p_t _pool_release_privilege_routine(arguments_t *pArgs)
+static _i32p_t _pool_release_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     pool_context_t *pCurPool = (pool_context_t *)pArgs[0].u32_val;
     void **ppUserBuffer = (void **)pArgs[1].ptr_val;
-    i32p_t postcode = 0;
+    _i32p_t postcode = 0;
 
     if (!_mem_release(pCurPool, *ppUserBuffer)) {
         EXIT_CRITICAL_SECTION();
@@ -256,7 +256,7 @@ static i32p_t _pool_release_privilege_routine(arguments_t *pArgs)
  *
  * @return The pool unique id.
  */
-u32_t _impl_pool_init(const void *pMemAddr, u16_t elementLen, u16_t elementNum, const char_t *pName)
+_u32_t _impl_pool_init(const void *pMemAddr, _u16_t elementLen, _u16_t elementNum, const _char_t *pName)
 {
     if (!pMemAddr) {
         return OS_INVALID_ID_VAL;
@@ -276,9 +276,9 @@ u32_t _impl_pool_init(const void *pMemAddr, u16_t elementLen, u16_t elementNum, 
 
     arguments_t arguments[] = {
         [0] = {.ptr_val = (const void *)pMemAddr},
-        [1] = {.u16_val = (u16_t)elementLen},
-        [2] = {.u16_val = (u16_t)elementNum},
-        [3] = {.pch_val = (const char_t *)pName},
+        [1] = {.u16_val = (_u16_t)elementLen},
+        [2] = {.u16_val = (_u16_t)elementNum},
+        [3] = {.pch_val = (const _char_t *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_pool_init_privilege_routine, arguments);
@@ -294,7 +294,7 @@ u32_t _impl_pool_init(const void *pMemAddr, u16_t elementLen, u16_t elementNum, 
  *
  * @return The result of the operation.
  */
-i32p_t _impl_pool_take(u32_t ctx, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms)
+_i32p_t _impl_pool_take(_u32_t ctx, void **ppUserBuffer, _u16_t bufferSize, _u32_t timeout_ms)
 {
     pool_context_t *pCtx = (pool_context_t *)ctx;
     if (_pool_context_isInvalid(pCtx)) {
@@ -312,13 +312,13 @@ i32p_t _impl_pool_take(u32_t ctx, void **ppUserBuffer, u16_t bufferSize, u32_t t
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
+        [0] = {.u32_val = (_u32_t)ctx},
         [1] = {.pv_val = (void **)ppUserBuffer},
-        [2] = {.u16_val = (u16_t)bufferSize},
-        [3] = {.u32_val = (u32_t)timeout_ms},
+        [2] = {.u16_val = (_u16_t)bufferSize},
+        [3] = {.u32_val = (_u32_t)timeout_ms},
     };
 
-    i32p_t postcode = kernel_privilege_invoke((const void *)_pool_take_privilege_routine, arguments);
+    _i32p_t postcode = kernel_privilege_invoke((const void *)_pool_take_privilege_routine, arguments);
 
     ENTER_CRITICAL_SECTION();
     if (postcode == PC_OS_WAIT_UNAVAILABLE) {
@@ -344,7 +344,7 @@ i32p_t _impl_pool_take(u32_t ctx, void **ppUserBuffer, u16_t bufferSize, u32_t t
  *
  * @return The result of the operation.
  */
-i32p_t _impl_pool_release(u32_t ctx, void **ppUserBuffer)
+_i32p_t _impl_pool_release(_u32_t ctx, void **ppUserBuffer)
 {
     pool_context_t *pCtx = (pool_context_t *)ctx;
     if (_pool_context_isInvalid(pCtx)) {
@@ -360,7 +360,7 @@ i32p_t _impl_pool_release(u32_t ctx, void **ppUserBuffer)
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)ctx},
+        [0] = {.u32_val = (_u32_t)ctx},
         [1] = {.pv_val = (void **)ppUserBuffer},
     };
 

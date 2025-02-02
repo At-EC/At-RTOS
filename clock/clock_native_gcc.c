@@ -12,19 +12,19 @@
  */
 typedef struct {
     /* The last load count value */
-    u32_t last_load;
+    _u32_t last_load;
 
     /* The clock time total count value */
-    u32_t total;
+    _u32_t total;
 
     /* The clock time has reported count value */
-    u32_t reported;
+    _u32_t reported;
 
     /* The hook function interface for clock time data pushing */
     time_report_handler_t pCallFunc;
 
     /* The flag indicates the clock ctrl register enabled status */
-    b_t ctrl_enabled;
+    _b_t ctrl_enabled;
 } _clock_resource_t;
 
 /**
@@ -37,10 +37,10 @@ static _clock_resource_t g_clock_resource = {0u};
  *
  * @return True if the clock wrap, otherwise return false
  */
-static b_t _clock_isWrap(void)
+static _b_t _clock_isWrap(void)
 {
     /* Nothing need to do for kernel cmake sample build. */
-    return FALSE;
+    return false;
 }
 
 /**
@@ -48,7 +48,7 @@ static b_t _clock_isWrap(void)
  *
  * @return Value of the elapsed time.
  */
-static u32_t _clock_elapsed(void)
+static _u32_t _clock_elapsed(void)
 {
     /* Nothing need to do for kernel cmake sample build. */
     return 0u;
@@ -59,7 +59,7 @@ static u32_t _clock_elapsed(void)
  *
  * @param Value of the elapsed time.
  */
-static void _clock_time_elapsed_report(u32_t us)
+static void _clock_time_elapsed_report(_u32_t us)
 {
     if (g_clock_resource.pCallFunc) {
         g_clock_resource.pCallFunc(us);
@@ -79,7 +79,7 @@ void clock_isr(void)
  *
  * @param Value of the next timeout.
  */
-void clock_time_interval_set(u32_t interval_us)
+void clock_time_interval_set(_u32_t interval_us)
 {
     /* Nothing need to do for kernel cmake sample build. */
 }
@@ -89,7 +89,7 @@ void clock_time_interval_set(u32_t interval_us)
  *
  * @return Value of the unreported elapse time.
  */
-u32_t clock_time_elapsed_get(void)
+_u32_t clock_time_elapsed_get(void)
 {
     /* Nothing need to do for kernel cmake sample build. */
     return 0u;
@@ -100,7 +100,7 @@ u32_t clock_time_elapsed_get(void)
  *
  * @return Value of the current clock time.
  */
-u32_t clock_time_get(void)
+_u32_t clock_time_get(void)
 {
     /* Nothing need to do for kernel cmake sample build. */
     return 0u;

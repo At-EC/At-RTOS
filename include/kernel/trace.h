@@ -11,13 +11,13 @@
 #include "linker.h"
 #include "kstruct.h"
 
-typedef void (*pTrace_postcodeFunc_t)(u32_t, u32_t);
+typedef void (*pTrace_postcodeFunc_t)(_u32_t, _u32_t);
 typedef void (*pTrace_threadFunc_t)(const thread_context_t *pThread);
 typedef void (*pTrace_analyzeFunc_t)(const struct call_analyze analyze);
 
-u32_t _impl_trace_firmware_version_get(void);
+_u32_t _impl_trace_firmware_version_get(void);
 void _impl_trace_postcode_callback_register(const pTrace_postcodeFunc_t fn);
-b_t _impl_trace_postcode_failed_get(const pTrace_postcodeFunc_t fn);
+_b_t _impl_trace_postcode_failed_get(const pTrace_postcodeFunc_t fn);
 void _impl_trace_thread(const pTrace_threadFunc_t fn);
 void _impl_trace_analyze(const pTrace_analyzeFunc_t fn);
 

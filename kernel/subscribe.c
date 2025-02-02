@@ -33,13 +33,13 @@ _sp_resource_t g_sp_rsc = {0u};
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _publish_context_isInvalid(publish_context_t *pCurPub)
+static _b_t _publish_context_isInvalid(publish_context_t *pCurPub)
 {
-    u32_t start, end;
+    _u32_t start, end;
     INIT_SECTION_FIRST(INIT_SECTION_OS_PUBLISH_LIST, start);
     INIT_SECTION_LAST(INIT_SECTION_OS_PUBLISH_LIST, end);
 
-    return ((u32_t)pCurPub < start || (u32_t)pCurPub >= end) ? true : false;
+    return ((_u32_t)pCurPub < start || (_u32_t)pCurPub >= end) ? true : false;
 }
 
 /**
@@ -49,7 +49,7 @@ static b_t _publish_context_isInvalid(publish_context_t *pCurPub)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _publish_context_isInit(publish_context_t *pCurPub)
+static _b_t _publish_context_isInit(publish_context_t *pCurPub)
 {
     return ((pCurPub) ? (((pCurPub->head.cs) ? (true) : (false))) : false);
 }
@@ -61,13 +61,13 @@ static b_t _publish_context_isInit(publish_context_t *pCurPub)
  *
  * @return The true is invalid, otherwise is valid.
  */
-static b_t _subscribe_context_isInvalid(subscribe_context_t *pCurSub)
+static _b_t _subscribe_context_isInvalid(subscribe_context_t *pCurSub)
 {
-    u32_t start, end;
+    _u32_t start, end;
     INIT_SECTION_FIRST(INIT_SECTION_OS_SUBSCRIBE_LIST, start);
     INIT_SECTION_LAST(INIT_SECTION_OS_SUBSCRIBE_LIST, end);
 
-    return ((u32_t)pCurSub < start || (u32_t)pCurSub >= end) ? true : false;
+    return ((_u32_t)pCurSub < start || (_u32_t)pCurSub >= end) ? true : false;
 }
 
 /**
@@ -77,7 +77,7 @@ static b_t _subscribe_context_isInvalid(subscribe_context_t *pCurSub)
  *
  * @return The true is initialized, otherwise is uninitialized.
  */
-static b_t _subscribe_context_isInit(subscribe_context_t *pCurSub)
+static _b_t _subscribe_context_isInit(subscribe_context_t *pCurSub)
 {
     return ((pCurSub) ? (((pCurSub->head.cs) ? (true) : (false))) : false);
 }
@@ -105,11 +105,11 @@ static void _subscribe_list_transfer_toTargetHead(linker_t *pLinker, publish_con
  *
  * @return The result of privilege routine.
  */
-static u32_t _publish_init_privilege_routine(arguments_t *pArgs)
+static _u32_t _publish_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    const char_t *pName = (const char_t *)(pArgs[0].pch_val);
+    const _char_t *pName = (const _char_t *)(pArgs[0].pch_val);
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_PUBLISH_LIST, publish_context_t, pCurPublish)
     {
@@ -121,12 +121,12 @@ static u32_t _publish_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((char_t *)pCurPublish, 0x0u, sizeof(publish_context_t));
+        os_memset((_char_t *)pCurPublish, 0x0u, sizeof(publish_context_t));
         pCurPublish->head.cs = CS_INITED;
         pCurPublish->head.pName = pName;
 
         EXIT_CRITICAL_SECTION();
-        return (u32_t)pCurPublish;
+        return (_u32_t)pCurPublish;
     };
 
     EXIT_CRITICAL_SECTION();
@@ -140,15 +140,15 @@ static u32_t _publish_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _publish_data_submit_privilege_routine(arguments_t *pArgs)
+static _u32_t _publish_data_submit_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     publish_context_t *pCurSub = (publish_context_t *)pArgs[0].u32_val;
     const void *pPublishData = (const void *)pArgs[1].ptr_val;
-    u16_t publishSize = (u16_t)pArgs[2].u16_val;
-    b_t need = false;
-    i32p_t postcode = 0;
+    _u16_t publishSize = (_u16_t)pArgs[2].u16_val;
+    _b_t need = false;
+    _i32p_t postcode = 0;
 
     struct notify_callback *pNotify = NULL;
     list_iterator_t it = {0u};
@@ -156,7 +156,7 @@ static u32_t _publish_data_submit_privilege_routine(arguments_t *pArgs)
     list_iterator_init(&it, pList);
     while (list_iterator_next_condition(&it, (void *)&pNotify)) {
         pNotify->updated++;
-        os_memcpy((u8_t *)pNotify->pData, (const u8_t *)pPublishData, MINI_AB(publishSize, pNotify->len));
+        os_memcpy((_u8_t *)pNotify->pData, (const _u8_t *)pPublishData, MINI_AB(publishSize, pNotify->len));
         if ((!pNotify->muted) && (pNotify->fn)) {
             need = true;
             pNotify->fn((void *)&pNotify->linker.node);
@@ -188,13 +188,13 @@ void subscribe_notification(void *pNode)
  *
  * @return The result of privilege routine.
  */
-static u32_t _subscribe_init_privilege_routine(arguments_t *pArgs)
+static _u32_t _subscribe_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     void *pData = (void *)pArgs[0].pv_val;
-    u16_t size = (u16_t)pArgs[1].u16_val;
-    const char_t *pName = (const char_t *)(pArgs[2].pch_val);
+    _u16_t size = (_u16_t)pArgs[1].u16_val;
+    const _char_t *pName = (const _char_t *)(pArgs[2].pch_val);
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_SUBSCRIBE_LIST, subscribe_context_t, pCurSubscribe)
     {
@@ -206,7 +206,7 @@ static u32_t _subscribe_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((char_t *)pCurSubscribe, 0x0u, sizeof(subscribe_context_t));
+        os_memset((_char_t *)pCurSubscribe, 0x0u, sizeof(subscribe_context_t));
         pCurSubscribe->head.cs = CS_INITED;
         pCurSubscribe->head.pName = pName;
 
@@ -219,7 +219,7 @@ static u32_t _subscribe_init_privilege_routine(arguments_t *pArgs)
         pCurSubscribe->notify.fn = subscribe_notification;
 
         EXIT_CRITICAL_SECTION();
-        return (u32_t)pCurSubscribe;
+        return (_u32_t)pCurSubscribe;
     };
 
     EXIT_CRITICAL_SECTION();
@@ -233,13 +233,13 @@ static u32_t _subscribe_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _subscribe_register_privilege_routine(arguments_t *pArgs)
+static _u32_t _subscribe_register_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     subscribe_context_t *pCurSub = (subscribe_context_t *)pArgs[0].u32_val;
     publish_context_t *pCurPub = (publish_context_t *)pArgs[1].u32_val;
-    b_t isMute = (b_t)pArgs[2].b_val;
+    _b_t isMute = (_b_t)pArgs[2].b_val;
     pSubscribe_callbackFunc_t pCallFun = (pSubscribe_callbackFunc_t)(pArgs[3].ptr_val);
 
     pCurSub->pPublisher = pCurPub;
@@ -260,12 +260,12 @@ static u32_t _subscribe_register_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _subscribe_data_is_ready_privilege_routine(arguments_t *pArgs)
+static _u32_t _subscribe_data_is_ready_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     subscribe_context_t *pCurSub = (subscribe_context_t *)pArgs[0].u32_val;
-    b_t ready = (pCurSub->accepted == pCurSub->notify.updated) ? (true) : (false);
+    _b_t ready = (pCurSub->accepted == pCurSub->notify.updated) ? (true) : (false);
 
     EXIT_CRITICAL_SECTION();
     return ready;
@@ -278,13 +278,13 @@ static u32_t _subscribe_data_is_ready_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
-static u32_t _subscribe_apply_data_privilege_routine(arguments_t *pArgs)
+static _u32_t _subscribe_apply_data_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
     subscribe_context_t *pCurSub = (subscribe_context_t *)pArgs[0].u32_val;
-    u8_t *pDataBuffer = (u8_t *)pArgs[1].pv_val;
-    u16_t *pDataLen = (u16_t *)pArgs[2].pv_val;
+    _u8_t *pDataBuffer = (_u8_t *)pArgs[1].pv_val;
+    _u16_t *pDataLen = (_u16_t *)pArgs[2].pv_val;
 
     if (pCurSub->accepted < pCurSub->notify.updated) {
         *pDataLen = MINI_AB(*pDataLen, pCurSub->notify.len);
@@ -306,10 +306,10 @@ static u32_t _subscribe_apply_data_privilege_routine(arguments_t *pArgs)
  *
  * @return The publish unique id.
  */
-u32_t _impl_publish_init(const char_t *pName)
+_u32_t _impl_publish_init(const _char_t *pName)
 {
     arguments_t arguments[] = {
-        [0] = {.pch_val = (const char_t *)pName},
+        [0] = {.pch_val = (const _char_t *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_publish_init_privilege_routine, arguments);
@@ -324,7 +324,7 @@ u32_t _impl_publish_init(const char_t *pName)
  *
  * @return Value The result fo subscribe init operation.
  */
-u32_t _impl_subscribe_init(void *pDataAddr, u16_t size, const char_t *pName)
+_u32_t _impl_subscribe_init(void *pDataAddr, _u16_t size, const _char_t *pName)
 {
     if (!pDataAddr) {
         return OS_INVALID_ID_VAL;
@@ -336,8 +336,8 @@ u32_t _impl_subscribe_init(void *pDataAddr, u16_t size, const char_t *pName)
 
     arguments_t arguments[] = {
         [0] = {.pv_val = (void *)pDataAddr},
-        [1] = {.u16_val = (u16_t)size},
-        [2] = {.pch_val = (const char_t *)pName},
+        [1] = {.u16_val = (_u16_t)size},
+        [2] = {.pch_val = (const _char_t *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_subscribe_init_privilege_routine, arguments);
@@ -353,7 +353,7 @@ u32_t _impl_subscribe_init(void *pDataAddr, u16_t size, const char_t *pName)
  *
  * @return Value The result fo subscribe init operation.
  */
-i32p_t _impl_subscribe_register(u32_t sub_ctx, u32_t pub_ctx, b_t isMute, pSubscribe_callbackFunc_t pNotificationHandler)
+_i32p_t _impl_subscribe_register(_u32_t sub_ctx, _u32_t pub_ctx, _b_t isMute, pSubscribe_callbackFunc_t pNotificationHandler)
 {
     subscribe_context_t *pCtx_sub = (subscribe_context_t *)sub_ctx;
     publish_context_t *pCtx_pub = (publish_context_t *)pub_ctx;
@@ -375,9 +375,9 @@ i32p_t _impl_subscribe_register(u32_t sub_ctx, u32_t pub_ctx, b_t isMute, pSubsc
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)sub_ctx},
-        [1] = {.u32_val = (u32_t)pub_ctx},
-        [2] = {.b_val = (b_t)isMute},
+        [0] = {.u32_val = (_u32_t)sub_ctx},
+        [1] = {.u32_val = (_u32_t)pub_ctx},
+        [2] = {.b_val = (_b_t)isMute},
         [3] = {.ptr_val = (const void *)pNotificationHandler},
     };
 
@@ -393,7 +393,7 @@ i32p_t _impl_subscribe_register(u32_t sub_ctx, u32_t pub_ctx, b_t isMute, pSubsc
  *
  * @return Value The result of subscribe init operation.
  */
-i32p_t _impl_subscribe_data_apply(u32_t sub_ctx, void *pDataBuffer, u16_t *pDataLen)
+_i32p_t _impl_subscribe_data_apply(_u32_t sub_ctx, void *pDataBuffer, _u16_t *pDataLen)
 {
     subscribe_context_t *pCtx_sub = (subscribe_context_t *)sub_ctx;
 
@@ -414,7 +414,7 @@ i32p_t _impl_subscribe_data_apply(u32_t sub_ctx, void *pDataBuffer, u16_t *pData
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)sub_ctx},
+        [0] = {.u32_val = (_u32_t)sub_ctx},
         [1] = {.pv_val = (void *)pDataBuffer},
         [2] = {.pv_val = (void *)pDataLen},
     };
@@ -429,7 +429,7 @@ i32p_t _impl_subscribe_data_apply(u32_t sub_ctx, void *pDataBuffer, u16_t *pData
  *
  * @return Value The result of subscribe data is ready.
  */
-b_t _impl_subscribe_data_is_ready(u32_t sub_ctx)
+_b_t _impl_subscribe_data_is_ready(_u32_t sub_ctx)
 {
     subscribe_context_t *pCtx_sub = (subscribe_context_t *)sub_ctx;
 
@@ -442,7 +442,7 @@ b_t _impl_subscribe_data_is_ready(u32_t sub_ctx)
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)sub_ctx},
+        [0] = {.u32_val = (_u32_t)sub_ctx},
     };
 
     return kernel_privilege_invoke((const void *)_subscribe_data_is_ready_privilege_routine, arguments);
@@ -457,7 +457,7 @@ b_t _impl_subscribe_data_is_ready(u32_t sub_ctx)
  *
  * @return Value The result of the publisher data operation.
  */
-i32p_t _impl_publish_data_submit(u32_t pub_ctx, const void *pPublishData, u16_t publishSize)
+_i32p_t _impl_publish_data_submit(_u32_t pub_ctx, const void *pPublishData, _u16_t publishSize)
 {
     publish_context_t *pCtx_sub = (publish_context_t *)pub_ctx;
 
@@ -470,9 +470,9 @@ i32p_t _impl_publish_data_submit(u32_t pub_ctx, const void *pPublishData, u16_t 
     }
 
     arguments_t arguments[] = {
-        [0] = {.u32_val = (u32_t)pub_ctx},
+        [0] = {.u32_val = (_u32_t)pub_ctx},
         [1] = {.ptr_val = (const void *)pPublishData},
-        [2] = {.u16_val = (u16_t)publishSize},
+        [2] = {.u16_val = (_u16_t)publishSize},
     };
 
     return kernel_privilege_invoke((const void *)_publish_data_submit_privilege_routine, arguments);

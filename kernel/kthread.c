@@ -4,11 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#include "at_rtos.h"
 #include "ktype.h"
 #include "kernel.h"
 #include "timer.h"
 #include "init.h"
+#include "at_rtos.h"
 
 INIT_OS_THREAD_RUNTIME_NUM_DEFINE(THREAD_RUNTIME_NUMBER_SUPPORTED);
 INIT_OS_TIMER_RUNTIME_NUM_DEFINE(TIMER_RUNTIME_NUMBER_SUPPORTED);
@@ -29,7 +29,7 @@ static pThread_entryFunc_t g_idle_thread_user_entry_fn = NULL;
 /**
  * Global At_RTOS application interface init.
  */
-#if (OS_API_ENABLE)
+#if (OS_API_ENABLED)
 const at_rtos_api_t os = {
     .thread_init = os_thread_init,
     .thread_sleep = os_thread_sleep,
@@ -111,7 +111,7 @@ void kthread_message_notification(void)
 /**
  * @brief To check if the kernel message arrived.
  */
-i32p_t kthread_message_arrived(void)
+_i32p_t kthread_message_arrived(void)
 {
     return os_sem_take(kernel_sem, OS_TIME_FOREVER_VAL);
 }

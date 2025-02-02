@@ -6,7 +6,7 @@
  **/
 #include "init.h"
 
-void init_func_level(u8_t level)
+void init_func_level(_u8_t level)
 {
     INIT_SECTION_FOREACH(INIT_SECTION_FUNC, init_func_t, ifun)
     {
@@ -18,7 +18,7 @@ void init_func_level(u8_t level)
 
 void init_func_list(void)
 {
-    for (u8_t lv = INIT_LEVEL_0; lv < INIT_LEVEL_NUM; lv++) {
+    for (_u8_t lv = INIT_LEVEL_0; lv < INIT_LEVEL_NUM; lv++) {
         init_func_level(lv);
     }
 }

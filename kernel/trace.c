@@ -13,15 +13,15 @@
 /**
  * Local trace postcode contrainer
  */
-u32_t g_postcode_os_cmpt_failed_container[PC_OS_COMPONENT_NUMBER] = {0u};
+_u32_t g_postcode_os_cmpt_failed_container[PC_OS_COMPONENT_NUMBER] = {0u};
 pTrace_postcodeFunc_t g_postcode_failed_callback_fn = NULL;
 
 /**
  * @brief Take firmare snapshot information.
  */
-u32_t _impl_trace_firmware_version_get(void)
+_u32_t _impl_trace_firmware_version_get(void)
 {
-    u32_t version = ATOS_VERSION_PATCH_NUMBER_POS;
+    _u32_t version = ATOS_VERSION_PATCH_NUMBER_POS;
     version |= (ATOS_VERSION_MINOR_NUMBER & ATOS_VERSION_MINOR_NUMBER_MASK) < ATOS_VERSION_MINOR_NUMBER_POS;
     version |= (ATOS_VERSION_MAJOR_NUMBER & ATOS_VERSION_MAJOR_NUMBER_MASK) < ATOS_VERSION_MAJOR_NUMBER_POS;
     return version;
@@ -38,7 +38,7 @@ void _impl_trace_postcode_callback_register(const pTrace_postcodeFunc_t fn)
 /**
  * @brief  Failed postcode calls.
  */
-void _impl_trace_postcode_set(u32_t cmpt, u32_t code)
+void _impl_trace_postcode_set(_u32_t cmpt, _u32_t code)
 {
     g_postcode_os_cmpt_failed_container[cmpt] = code;
     if (g_postcode_failed_callback_fn) {
@@ -49,11 +49,11 @@ void _impl_trace_postcode_set(u32_t cmpt, u32_t code)
 /**
  * @brief Take postcode snapshot information.
  */
-b_t _impl_trace_postcode_failed_get(const pTrace_postcodeFunc_t fn)
+_b_t _impl_trace_postcode_failed_get(const pTrace_postcodeFunc_t fn)
 {
-    b_t failed = false;
-    for (u32_t i = 0u; i < PC_OS_COMPONENT_NUMBER; i++) {
-        u32_t code = g_postcode_os_cmpt_failed_container[i];
+    _b_t failed = false;
+    for (_u32_t i = 0u; i < PC_OS_COMPONENT_NUMBER; i++) {
+        _u32_t code = g_postcode_os_cmpt_failed_container[i];
         if (code) {
             failed = true;
             if (fn) {
