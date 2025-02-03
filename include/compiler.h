@@ -9,7 +9,7 @@
 #define _COMPILER_H_
 
 #if !defined(ARCH_NATIVE_GCC)
-#include "../arch/arch32/arm/cmsis/include/cmsis_compiler.h"
+#include "./arch/arch32/arm/cmsis/include/cmsis_compiler.h"
 #endif
 
 #endif /* _COMPILER_H_ */

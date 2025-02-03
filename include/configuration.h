@@ -8,7 +8,7 @@
 #define _CONFIGURATION_H_
 
 #include "atos_configuration.h"
-#include "build_version.h"
+#include "../build_version.h"
 
 #ifndef THREAD_RUNTIME_NUMBER_SUPPORTED
 #define THREAD_RUNTIME_NUMBER_SUPPORTED (1u)

@@ -8,7 +8,7 @@
 #define _PORT_H_
 
 #include "type_def.h"
-#include "arch.h"
+#include "./arch/arch.h"
 
 #define STACT_UNUSED_DATA       (0xDEu)
 #define STACT_UNUSED_FRAME_MARK (0xDEDEDEDEu)

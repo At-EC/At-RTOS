@@ -203,26 +203,6 @@ int main(void)
 OS_THREAD_INIT(static_id, OS_PRIORITY_COOPERATION_SET(2), STACK_SIZE, entry_function);
 ```
 
-The following kernel H file path must be included in your project workshop.
-
-```shell
-<root path>\
-<root path>\include\
-<root path>\include\kernel\
-```
-The following kernel C file should be placed in your project workshop based on your chip feature and compiler.
-
-```shell
-<root path>\kernel\<all of them>.c
-<root path>\clock\clock_systick.c
-<root path>\port\port_common.c
-<root path>\port\<your compiler>.c
-```
-
-## Roadmap
-
-The At-EC road-map documentation is not ready. The At-RTOS is a beginning and basic component and will be an important member of the At-EC family.
-
 ## Contribution
 
 The contributing documentation is not ready, You can check the open issue right now that we're developing.

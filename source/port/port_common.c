@@ -4,9 +4,9 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
+#include "./port/port.h"
+#include "./clock/clock_tick.h"
 #include "linker.h"
-#include "clock_tick.h"
-#include "port.h"
 
 /**
  * @brief ARM core systick interrupt handle function.
@@ -98,9 +98,9 @@ _u32_t port_stack_frame_init(void (*pEntryFunction)(void), _u32_t *pAddress, _u3
 
     psp_frame = STACK_ADDRESS_DOWN(psp_frame);
 
-    ((stack_snapshot_t *)psp_frame)->xPSR = B(24);                   /* xPSR */
+    ((stack_snapshot_t *)psp_frame)->xPSR = B(24);                    /* xPSR */
     ((stack_snapshot_t *)psp_frame)->R15_PC = (_u32_t)pEntryFunction; /* PC   */
-    ((stack_snapshot_t *)psp_frame)->R14_LR = 0xFFFFFFFDu;           /* LR   */
+    ((stack_snapshot_t *)psp_frame)->R14_LR = 0xFFFFFFFDu;            /* LR   */
 
     ((stack_snapshot_t *)psp_frame)->R12 = 0x12121212u; /* R12  */
     ((stack_snapshot_t *)psp_frame)->R3 = 0x03030303u;  /* R3   */

@@ -8,15 +8,13 @@ jobs:
       matrix:
         path:
           - check: './include'
-            exclude: './include/kernel/init.h' # Nothing to exclude
-          - check: './kernel'
-            exclude: ''              # Nothing to exclude
-          - check: './clock'
-            exclude: ''              # Nothing to exclude
+            exclude: 'arch32|init' # Nothing to exclude
+          - check: './source'
+            exclude: './source/port'              # Nothing to exclude
     steps:
     - uses: actions/checkout@v3
     - name: Run clang-format style check for C programs.
-      uses: jidicula/clang-format-action@v4.11.0
+      uses: jidicula/clang-format-action@v4.14.0
       with:
         clang-format-version: '17'
         check-path: ${{ matrix.path['check'] }}

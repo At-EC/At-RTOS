@@ -4,10 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#include "clock_tick.h"
+#include "./arch/arch.h"
+#include "./port/port.h"
+#include "./clock/clock_tick.h"
 #include "configuration.h"
-#include "arch.h"
-#include "port.h"
 #include "ktype.h"
 
 /* Convert the microsecond to clock count */

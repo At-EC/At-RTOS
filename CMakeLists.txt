@@ -12,9 +12,9 @@ target_sources(atos_kernel
 )
 
 include(${CMAKE_CURRENT_LIST_DIR}/include/CMakeLists.txt)
-include(${CMAKE_CURRENT_LIST_DIR}/kernel/CMakeLists.txt)
-include(${CMAKE_CURRENT_LIST_DIR}/clock/CMakeLists.txt)
-include(${CMAKE_CURRENT_LIST_DIR}/port/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/source/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/source/clock/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/source/port/CMakeLists.txt)
 
 if(NOT TARGET atos_config)
     message(FATAL_ERROR " atos_config target not specified. Please specify a cmake target that defines the include path for atos_configuration.h\n")

@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  **/
 #include "kernel.h"
-#include "clock_tick.h"
 #include "timer.h"
 #include "postcode.h"
 #include "trace.h"

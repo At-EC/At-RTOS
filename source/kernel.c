@@ -7,7 +7,6 @@
 #include "kernel.h"
 #include "timer.h"
 #include "compiler.h"
-#include "clock_tick.h"
 #include "ktype.h"
 #include "postcode.h"
 #include "trace.h"

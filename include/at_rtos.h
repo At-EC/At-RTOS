@@ -7,8 +7,6 @@
 #ifndef _AT_RTOS_H_
 #define _AT_RTOS_H_
 
-#define AT_RTOS_TYPE_API_DEFINE
-
 #include "ktype.h"
 #include "kstruct.h"
 #include "configuration.h"

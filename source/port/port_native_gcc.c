@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
+#include "./arch/arch.h"
 #include "type_def.h"
-#include "arch.h"
 
 /**
  * @brief ARM core trigger the svc call interrupt.

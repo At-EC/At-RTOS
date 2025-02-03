@@ -7,10 +7,11 @@
 #ifndef _KERNEL_H_
 #define _KERNEL_H_
 
+#include "./arch/arch.h"
+#include "./port/port.h"
+#include "./clock/clock_tick.h"
 #include "kstruct.h"
-#include "arch.h"
 #include "ktype.h"
-#include "port.h"
 
 #ifndef KERNEL_THREAD_STACK_SIZE
 #define KERNEL_SCHEDULE_THREAD_STACK_SIZE (1024u)

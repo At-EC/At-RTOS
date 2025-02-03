@@ -90,25 +90,25 @@ typedef enum IRQn {
 #endif
 
 #if defined(ARCH_ARM_CORTEX_CM0)
-#include "../arch/arch32/arm/cmsis/include/core_cm0.h"
+#include "./arch/arch32/arm/cmsis/include/core_cm0.h"
 
 #elif defined(ARCH_ARM_CORTEX_CM0plus)
-#include "../arch/arch32/arm/cmsis/include/core_cm0plus.h"
+#include "./arch/arch32/arm/cmsis/include/core_cm0plus.h"
 
 #elif defined(ARCH_ARM_CORTEX_CM3)
-#include "../arch/arch32/arm/cmsis/include/core_cm3.h"
+#include "./arch/arch32/arm/cmsis/include/core_cm3.h"
 
 #elif defined(ARCH_ARM_CORTEX_CM4)
-#include "../arch/arch32/arm/cmsis/include/core_cm4.h"
+#include "./arch/arch32/arm/cmsis/include/core_cm4.h"
 
 #elif defined(ARCH_ARM_CORTEX_CM23)
-#include "../arch/arch32/arm/cmsis/include/core_cm23.h"
+#include "./arch/arch32/arm/cmsis/include/core_cm23.h"
 
 #elif defined(ARCH_ARM_CORTEX_CM33)
-#include "../arch/arch32/arm/cmsis/include/core_cm33.h"
+#include "./arch/arch32/arm/cmsis/include/core_cm33.h"
 
 #elif defined ARCH_ARM_CORTEX_CM7
-#include "../arch/arch32/arm/cmsis/include/core_cm7.h"
+#include "./arch/arch32/arm/cmsis/include/core_cm7.h"
 
 #elif defined ARCH_NATIVE_GCC
 // Nothing to do
