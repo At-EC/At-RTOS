@@ -19,8 +19,8 @@ INIT_OS_POOL_RUNTIME_NUM_DEFINE(POOL_RUNTIME_NUMBER_SUPPORTED);
 INIT_OS_PUBLISH_RUNTIME_NUM_DEFINE(PUBLISH_RUNTIME_NUMBER_SUPPORTED);
 INIT_OS_SUBSCRIBE_RUNTIME_NUM_DEFINE(SUBSCRIBE_RUNTIME_NUMBER_SUPPORTED);
 
-INIT_OS_THREAD_DEFINE(kernel_th, OS_PRIORITY_KERNEL_SCHEDULE_LEVEL, KERNEL_SCHEDULE_THREAD_STACK_SIZE, kernel_schedule_thread);
-INIT_OS_THREAD_DEFINE(idle_th, OS_PRIORITY_KERNEL_IDLE_LEVEL, KERNEL_IDLE_THREAD_STACK_SIZE, kernel_idle_thread);
+INIT_OS_THREAD_DEFINE(kernel_th, OS_PRIORITY_KERNEL_SCHEDULE_LEVEL, KERNEL_SCHEDULE_THREAD_STACK_SIZE, kernel_schedule_thread, NULL);
+INIT_OS_THREAD_DEFINE(idle_th, OS_PRIORITY_KERNEL_IDLE_LEVEL, KERNEL_IDLE_THREAD_STACK_SIZE, kernel_idle_thread, NULL);
 INIT_OS_SEMAPHORE_DEFINE(kernel_sem, 0u, OS_SEM_LIMIT_BINARY);
 
 static pThread_entryFunc_t g_idle_thread_user_entry_fn = NULL;
@@ -121,7 +121,7 @@ _i32p_t kthread_message_arrived(void)
 void kthread_message_idle_loop_fn(void)
 {
     if (g_idle_thread_user_entry_fn) {
-        g_idle_thread_user_entry_fn();
+        g_idle_thread_user_entry_fn(NULL);
     }
 }
 

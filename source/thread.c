@@ -8,7 +8,6 @@
 #include "timer.h"
 #include "postcode.h"
 #include "trace.h"
-#include "init.h"
 
 /**
  * Local unique postcode.
@@ -58,7 +57,8 @@ static _u32_t _thread_init_privilege_routine(arguments_t *pArgs)
     _u32_t *pAddress = (_u32_t *)pArgs[1].u32_val;
     _u32_t size = (_u32_t)pArgs[2].u32_val;
     _i16_t priority = (_i16_t)pArgs[3].u16_val;
-    const _char_t *pName = (const _char_t *)pArgs[4].pch_val;
+    void *p_arg = (void *)pArgs[4].pv_val;
+    const _char_t *pName = (const _char_t *)pArgs[5].pch_val;
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_THREAD_LIST, thread_context_t, pCurThread)
     {
@@ -79,7 +79,7 @@ static _u32_t _thread_init_privilege_routine(arguments_t *pArgs)
         pCurThread->stackSize = size;
 
         pCurThread->task.prior = priority;
-        pCurThread->task.psp = (_u32_t)kernel_stack_frame_init(pEntryFun, pAddress, size);
+        pCurThread->task.psp = (_u32_t)kernel_stack_frame_init(pEntryFun, pAddress, size, p_arg);
         timeout_init(&pCurThread->task.expire, schedule_callback_fromTimeOut);
         schedule_setPend(&pCurThread->task);
 
@@ -279,15 +279,21 @@ const _char_t *_impl_thread_name_get(_u32_t ctx)
     return (const _char_t *)((pCtx) ? (pCtx->head.pName) : (NULL));
 }
 
-void _impl_thread_static_init(thread_context_t *pCurThread)
+void _impl_thread_static_init(thread_context_t *pCurThread, void *p_arg)
 {
     ENTER_CRITICAL_SECTION();
 
-    pCurThread->task.psp = (_u32_t)kernel_stack_frame_init(pCurThread->pEntryFunc, pCurThread->pStackAddr, pCurThread->stackSize);
+    pCurThread->task.psp = (_u32_t)kernel_stack_frame_init(pCurThread->pEntryFunc, pCurThread->pStackAddr, pCurThread->stackSize, p_arg);
     timeout_init(&pCurThread->task.expire, schedule_callback_fromTimeOut);
     schedule_setPend(&pCurThread->task);
 
     EXIT_CRITICAL_SECTION();
+}
+
+void _impl_thread_entry(pThread_entryFunc_t pEntryFn, void *pArg)
+{
+    pEntryFn(pArg);
+    RUN_UNREACHABLE();
 }
 
 /**
@@ -301,7 +307,7 @@ void _impl_thread_static_init(thread_context_t *pCurThread)
  *
  * @return The value of thread unique id.
  */
-_u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, _u32_t *pAddress, _u32_t size, _i16_t priority, const _char_t *pName)
+_u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, _u32_t *pAddress, _u32_t size, _i16_t priority, void *pArg, const _char_t *pName)
 {
     if (!pEntryFun) {
         return OS_INVALID_ID_VAL;
@@ -324,8 +330,8 @@ _u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, _u32_t *pAddress, _u32_t
     }
 
     arguments_t arguments[] = {
-        [0] = {.ptr_val = (void *)pEntryFun}, [1] = {.u32_val = (_u32_t)pAddress},    [2] = {.u32_val = (_u32_t)size},
-        [3] = {.u16_val = (_i16_t)priority},  [4] = {.pch_val = (const void *)pName},
+        [0] = {.ptr_val = (void *)pEntryFun}, [1] = {.u32_val = (_u32_t)pAddress}, [2] = {.u32_val = (_u32_t)size},
+        [3] = {.u16_val = (_i16_t)priority},  [4] = {.pv_val = (void *)pArg},      [5] = {.pch_val = (const void *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_thread_init_privilege_routine, arguments);

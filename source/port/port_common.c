@@ -84,29 +84,32 @@ void port_interrupt_init(void)
 /**
  * @brief Initialize a thread stack frame.
  *
- * @param pEntryFunction The entry function pointer.
+ * @param pEntryFn The entry function pointer.
  * @param pAddress The stack address.
  * @param size The stack size.
  *
  * @return The PSP stack address.
  */
-_u32_t port_stack_frame_init(void (*pEntryFunction)(void), _u32_t *pAddress, _u32_t size)
+_u32_t port_stack_frame_init(void (*pEntryFn)(void *), _u32_t *pAddress, _u32_t size, void *pArg)
 {
+    extern void _impl_thread_entry(void (*pEntryFn)(void *), void *pArg);
+
     os_memset((_uchar_t *)pAddress, STACT_UNUSED_DATA, size);
 
     _u32_t psp_frame = (_u32_t)pAddress + size - sizeof(stack_snapshot_t);
 
     psp_frame = STACK_ADDRESS_DOWN(psp_frame);
 
-    ((stack_snapshot_t *)psp_frame)->xPSR = B(24);                    /* xPSR */
-    ((stack_snapshot_t *)psp_frame)->R15_PC = (_u32_t)pEntryFunction; /* PC   */
-    ((stack_snapshot_t *)psp_frame)->R14_LR = 0xFFFFFFFDu;            /* LR   */
+    ((stack_snapshot_t *)psp_frame)->xPSR = B(24);                        /* xPSR */
+    ((stack_snapshot_t *)psp_frame)->R15_PC = (_u32_t)_impl_thread_entry; /* PC   */
+    ((stack_snapshot_t *)psp_frame)->R15_PC &= 0xFFFFFFFEu;               /* ARM mode: Clear LSB of address */
+    ((stack_snapshot_t *)psp_frame)->R14_LR = 0xFFFFFFFDu;                /* LR   */
 
-    ((stack_snapshot_t *)psp_frame)->R12 = 0x12121212u; /* R12  */
-    ((stack_snapshot_t *)psp_frame)->R3 = 0x03030303u;  /* R3   */
-    ((stack_snapshot_t *)psp_frame)->R2 = 0x02020202u;  /* R2   */
-    ((stack_snapshot_t *)psp_frame)->R1 = 0x01010101u;  /* R1   */
-    ((stack_snapshot_t *)psp_frame)->R0 = 0x0B0B0B0Bu;  /* R0   */
+    ((stack_snapshot_t *)psp_frame)->R12 = 0x12121212u;     /* R12  */
+    ((stack_snapshot_t *)psp_frame)->R3 = 0x03030303u;      /* R3   */
+    ((stack_snapshot_t *)psp_frame)->R2 = 0x02020202u;      /* R2   */
+    ((stack_snapshot_t *)psp_frame)->R1 = (_u32_t)pArg;     /* R1   */
+    ((stack_snapshot_t *)psp_frame)->R0 = (_u32_t)pEntryFn; /* R0   */
 
 #if defined(ARCH_ARM_CORTEX_CM0)
     ((stack_snapshot_t *)psp_frame)->cm0.R11 = 0x11111111u; /* R11  */
@@ -154,7 +157,7 @@ _u32_t port_stack_free_size_get(_u32_t stack_addr)
         return 0u;
     }
 
-    uint8_t *ptr = (uint8_t *)stack_addr;
+    _u8_t *ptr = (_u8_t *)stack_addr;
     while (*ptr == STACT_UNUSED_DATA) {
         ptr++;
     }

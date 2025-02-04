@@ -100,17 +100,19 @@ struct foreach_item {
  * @param pStackAddr The pointer of the thread stack address. The stack memory must be predefined and allocated in your system.
  * @param stackSize The size of the the stack is base on your specified variable.
  * @param priority The thread priority specified the thread's priority when the AtOS do kernel schedule.
+ * @param pArg The thread entry function argument.
  * @param pName The thread name.
  *
  * @return The value of thread unique id.
  */
-static inline os_thread_id_t os_thread_init(u32_t *pStackAddr, u32_t size, i16_t priority, pThread_entryFunc_t pEntryFun,
+static inline os_thread_id_t os_thread_init(u32_t *pStackAddr, u32_t size, i16_t priority, pThread_entryFunc_t pEntryFun, void *pArg,
                                             const char_t *pName)
 {
-    extern u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t * pAddress, u32_t size, i16_t priority, const char_t *pName);
+    extern _u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, _u32_t * pAddress, _u32_t size, _i16_t priority, void *pArg,
+                                    const _char_t *pName);
 
     os_thread_id_t id = {0u};
-    id.u32_val = _impl_thread_init(pEntryFun, pStackAddr, size, priority, pName);
+    id.u32_val = _impl_thread_init(pEntryFun, pStackAddr, size, priority, pArg, pName);
     id.pName = pName;
 
     return id;
@@ -898,7 +900,7 @@ static inline void os_object_free_force(struct os_id id)
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
 #ifdef OS_API_ENABLED
 typedef struct {
-    os_thread_id_t (*thread_init)(u32_t *, u32_t, i16_t, pThread_entryFunc_t, const char_t *);
+    os_thread_id_t (*thread_init)(u32_t *, u32_t, i16_t, pThread_entryFunc_t, void *, const char_t *);
     i32p_t (*thread_sleep)(u32_t);
     i32p_t (*thread_resume)(os_thread_id_t);
     i32p_t (*thread_suspend)(os_thread_id_t);

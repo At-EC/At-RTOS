@@ -312,7 +312,7 @@ _u32_t port_irq_disable(void);
 void port_irq_enable(_u32_t value);
 void port_setPendSV(void);
 void port_interrupt_init(void);
-_u32_t port_stack_frame_init(void (*pEntryFunction)(void), _u32_t *pAddress, _u32_t size);
+_u32_t port_stack_frame_init(void (*pEntryFn)(void *), _u32_t *pAddress, _u32_t size, void *pArg);
 _u32_t port_stack_free_size_get(_u32_t stack_addr);
 
 #endif /* _PORT_H_ */

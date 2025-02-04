@@ -25,12 +25,12 @@ void init_func_list(void)
 
 void init_static_thread_list(void)
 {
-    extern void _impl_thread_static_init(thread_context_t * pCurThread);
+    extern void _impl_thread_static_init(thread_context_t * pCurThread, void *p_arg);
 
     INIT_SECTION_FOREACH(INIT_SECTION_OS_THREAD_STATIC, thread_context_init_t, pInit)
     {
-        if (pInit->pThread) {
-            _impl_thread_static_init(pInit->pThread);
+        if (pInit->p_thread) {
+            _impl_thread_static_init(pInit->p_thread, pInit->p_arg);
         }
     }
 }

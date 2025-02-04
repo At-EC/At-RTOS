@@ -374,9 +374,9 @@ static _i32p_t _kernel_message_arrived(void)
  *
  * @return The PSP stack address.
  */
-_u32_t kernel_stack_frame_init(void (*pEntryFunction)(void), _u32_t *pAddress, _u32_t size)
+_u32_t kernel_stack_frame_init(void (*pEntryFn)(void *), _u32_t *pAddress, _u32_t size, void *p_arg)
 {
-    return (_u32_t)port_stack_frame_init(pEntryFunction, pAddress, size);
+    return (_u32_t)port_stack_frame_init(pEntryFn, pAddress, size, p_arg);
 }
 
 /**
@@ -442,7 +442,7 @@ void kernel_message_notification(void)
 /**
  * @brief The kernel thread only serve for RTOS with highest priority.
  */
-void kernel_schedule_thread(void)
+void kernel_schedule_thread(void *p_arg)
 {
     while (1) {
         PC_IF(_kernel_message_arrived(), PC_PASS)
@@ -458,7 +458,7 @@ void kernel_schedule_thread(void)
 /**
  * @brief The idle thread entry function.
  */
-void kernel_idle_thread(void)
+void kernel_idle_thread(void *p_arg)
 {
     while (1) {
         kthread_message_idle_loop_fn();

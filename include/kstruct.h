@@ -25,7 +25,7 @@
 typedef void (*pCallbackFunc_t)(void);
 typedef void (*pTimer_callbackFunc_t)(void *);
 typedef void (*pTask_callbackFunc_t)(void *);
-typedef void (*pThread_entryFunc_t)(void);
+typedef void (*pThread_entryFunc_t)(void *);
 typedef void (*pEvent_callbackFunc_t)(void);
 typedef void (*pSubscribe_callbackFunc_t)(const void *, _u16_t);
 typedef void (*pTimeout_callbackFunc_t)(void *);
@@ -269,7 +269,8 @@ struct thread_context {
 typedef struct thread_context thread_context_t;
 
 typedef struct {
-    struct thread_context *pThread;
+    struct thread_context *p_thread;
+    void *p_arg;
 } thread_context_init_t;
 
 /** @brief The rtos kernel structure. */

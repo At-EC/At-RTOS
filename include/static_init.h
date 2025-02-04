@@ -73,7 +73,7 @@
 #define INIT_OS_THREAD_RUNTIME_NUM_DEFINE(num)                                                                                             \
     INIT_USED thread_context_t _init_runtime_thread[num] INIT_SECTION(_INIT_OS_THREAD_LIST) = {0}
 
-#define INIT_OS_THREAD_DEFINE(id_name, priority, stack_size, pEntryFn)                                                                     \
+#define INIT_OS_THREAD_DEFINE(id_name, priority, stack_size, pEntryFn, pArg)                                                               \
     STACK_STATIC_VALUE_DEFINE(id_name##_stack, stack_size);                                                                                \
     INIT_USED thread_context_t _init_##id_name##_thread INIT_SECTION(_INIT_OS_THREAD_LIST) =                                               \
         {.head = {.cs = CS_INITED, .pName = #id_name},                                                                                     \
@@ -82,7 +82,7 @@
          .pEntryFunc = pEntryFn,                                                                                                           \
          .task = {.prior = priority, .psp = 0u}};                                                                                          \
     INIT_USED thread_context_init_t _init_##id_name##_thread_init INIT_SECTION(_INIT_OS_THREAD_STATIC) =                                   \
-        {.pThread = &_init_##id_name##_thread};                                                                                            \
+        {.p_thread = &_init_##id_name##_thread, .p_arg = pArg};                                                                            \
     os_thread_id_t id_name = {.p_val = (void*)&_init_##id_name##_thread, .pName = #id_name}
 
 #define INIT_OS_TIMER_RUNTIME_NUM_DEFINE(num)                                                                                              \
@@ -188,7 +188,7 @@ extern void subscribe_notification(void *pLinker);
 #define INIT_OS_THREAD_RUNTIME_NUM_DEFINE(num)                                                                                             \
     static __root thread_context_t _init_runtime_thread[num] @ "_INIT_OS_THREAD_LIST" = {0}
 
-#define INIT_OS_THREAD_DEFINE(id_name, priority, stack_size, pEntryFn)                                                                     \
+#define INIT_OS_THREAD_DEFINE(id_name, priority, stack_size, pEntryFn, pArg)                                                               \
     STACK_STATIC_VALUE_DEFINE(id_name##_stack, stack_size);                                                                                \
     static __root thread_context_t _init_##id_name##_thread @ "_INIT_OS_THREAD_LIST" =                                                     \
         {.head = {.cs = CS_INITED, .pName = #id_name},                                                                                     \
@@ -197,7 +197,7 @@ extern void subscribe_notification(void *pLinker);
          .pEntryFunc = pEntryFn,                                                                                                           \
          .task = {.prior = priority, .psp = 0u}};                                                                                          \
     static __root thread_context_init_t _init_##id_name##_thread_init @ "_INIT_OS_THREAD_STATIC" =                                         \
-        {.pThread = &_init_##id_name##_thread};                                                                                            \
+        {.p_thread = &_init_##id_name##_thread, .p_arg = pArg};                                                                            \
     os_thread_id_t id_name = {.p_val = (void*)&_init_##id_name##_thread, .pName = #id_name}
 
 #define INIT_OS_TIMER_RUNTIME_NUM_DEFINE(num)                                                                                              \
