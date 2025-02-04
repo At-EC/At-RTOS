@@ -7,7 +7,6 @@
 #include "kernel.h"
 #include "postcode.h"
 #include "trace.h"
-#include "init.h"
 
 /**
  * Local unique postcode.

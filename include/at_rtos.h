@@ -12,9 +12,9 @@
 #include "configuration.h"
 #include "postcode.h"
 #include "trace.h"
-#include "init.h"
+#include "static_init.h"
 
-#if (OS_TYPEDEF_DEFAULT_ENABLED)
+#ifdef OS_TYPEDEF_ENABLED
 typedef _char_t char_t;
 typedef _uchar_t uchar_t;
 typedef _u8_t u8_t;
@@ -81,9 +81,17 @@ typedef struct evt_val os_evt_val_t;
 #define OS_SUBSCRIBE_INIT(id_name, pDataAddr, size)             INIT_OS_SUBSCRIBE_DEFINE(id_name, pDataAddr, size)
 #define OS_PUBLISH_INIT(id_name, pDataAddr, size)               INIT_OS_PUBLISH_DEFINE(id_name, pDataAddr, size)
 
-#define OS_ENTER_CRITICAL_SECTION() ENTER_CRITICAL_SECTION()
-#define OS_EXIT_CRITICAL_SECTION()  EXIT_CRITICAL_SECTION()
-#define OS_CRITICAL_SECTION()       CRITICAL_SECTION()
+extern _u32_t impl_kernel_irq_disable(void);
+extern void impl_kernel_irq_enable(_u32_t val);
+struct foreach_item {
+    u8_t i;
+    u32_t u32_val;
+};
+#define OS_CRITICAL_SECTION()                                                                                                              \
+    for (struct foreach_item __item = {.i = 0, .u32_val = impl_kernel_irq_disable()}; !__item.i;                                           \
+         impl_kernel_irq_enable(__item.u32_val), __item.i++)
+#define OS_ENTER_CRITICAL_SECTION() u32_t __val = impl_kernel_irq_disable()
+#define OS_EXIT_CRITICAL_SECTION()  impl_kernel_irq_enable(__val)
 
 /**
  * @brief Initialize a thread, and put it to pending list that are ready to run.
@@ -888,7 +896,7 @@ static inline void os_object_free_force(struct os_id id)
 }
 
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
-#if (OS_API_ENABLED)
+#ifdef OS_API_ENABLED
 typedef struct {
     os_thread_id_t (*thread_init)(u32_t *, u32_t, i16_t, pThread_entryFunc_t, const char_t *);
     i32p_t (*thread_sleep)(u32_t);
@@ -954,8 +962,8 @@ typedef struct {
 
     void (*object_free)(struct os_id);
 } at_rtos_api_t;
-#endif
 
 extern const at_rtos_api_t os;
+#endif
 
 #endif /* _AT_RTOS_H_ */

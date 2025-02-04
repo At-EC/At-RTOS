@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#ifndef _ATOS_CONFIGURATION_H_
-#define _ATOS_CONFIGURATION_H_
+#ifndef _OS_CONFIG_H_
+#define _OS_CONFIG_H_
 
 /**
  * If you are use ARM Cortex M seiral architecture, the Cortex-M Core must be specificed as the following list.
@@ -134,4 +134,4 @@
  **/
 #define THREAD_PSP_WITH_PRIVILEGED (10u)
 
-#endif /* _ATOS_CONFIGURATION_H_ */
+#endif /* _OS_CONFIG_H_ */

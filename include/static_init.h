@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#ifndef _INIT_H_
-#define _INIT_H_
+#ifndef _STATIC_INIT_H_
+#define _STATIC_INIT_H_
 
 #include "type_def.h"
 #include "kstruct.h"

@@ -10,7 +10,6 @@
 #include "ktype.h"
 #include "postcode.h"
 #include "trace.h"
-#include "init.h"
 #include "at_rtos.h"
 
 /**
@@ -545,6 +544,22 @@ void _impl_kernel_object_free(_u32_t ctx)
 {
     struct base_head *pHead = (struct base_head *)ctx;
     pHead->cs = 0u;
+}
+
+/**
+ * @brief Disable kernel hardware irq.
+ */
+_u32_t impl_kernel_irq_disable(void)
+{
+    return port_irq_disable();
+}
+
+/**
+ * @brief Enable kernel hardware irq.
+ */
+void impl_kernel_irq_enable(_u32_t val)
+{
+    port_irq_enable(val);
 }
 
 /**

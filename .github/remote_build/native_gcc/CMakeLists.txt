@@ -14,7 +14,7 @@ target_include_directories(atos_config
 
 target_sources(atos_config
 	PUBLIC
-    ${ATOS_CONFIG_FILE_PATH}/atos_configuration.h
+    ${ATOS_CONFIG_FILE_PATH}/os_config.h
 )
 
 include(${At_RTOS_PATH}/CMakeLists.txt)

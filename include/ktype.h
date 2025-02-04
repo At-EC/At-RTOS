@@ -74,7 +74,7 @@ struct evt_val {
 #pragma warning restore
 #endif
 
-struct foreach_item {
+struct _foreach_item {
     _u8_t i;
     _u32_t u32_val;
 };

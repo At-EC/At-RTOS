@@ -116,7 +116,7 @@ void PendSV_Handler(void)
 /**
  * @brief ARM core trigger the first thread to run.
  */
-void port_run_theFirstThread(u32_t sp)
+void port_run_theFirstThread(_u32_t sp)
 {
     /**
      * initialize R4-R11 from context frame using passed SP

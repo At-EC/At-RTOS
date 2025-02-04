@@ -8,7 +8,7 @@
 #include "configuration.h"
 #include "postcode.h"
 #include "linker.h"
-#include "init.h"
+#include "static_init.h"
 
 /**
  * Local trace postcode contrainer

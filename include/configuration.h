@@ -7,7 +7,7 @@
 #ifndef _CONFIGURATION_H_
 #define _CONFIGURATION_H_
 
-#include "atos_configuration.h"
+#include "os_config.h"
 #include "../build_version.h"
 
 #ifndef THREAD_RUNTIME_NUMBER_SUPPORTED
@@ -80,12 +80,12 @@
 
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
 #ifndef OS_API_DISABLED
-#define OS_API_ENABLED (1)
+#define OS_API_ENABLED
 #endif
 
 /* It defined the AtOS extern symbol typedef for convenience use, but it has extra memory consumption */
 #ifndef OS_TYPEDEF_DISABLED
-#define OS_TYPEDEF_DEFAULT_ENABLED (1)
+#define OS_TYPEDEF_ENABLED
 #endif
 
 /* Configuration of the Cortex-M Processor and Core Peripherals.

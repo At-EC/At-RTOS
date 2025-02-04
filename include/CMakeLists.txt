@@ -22,5 +22,5 @@ target_sources(kernel_include
     ${KERNEL_PATH}/include/trace.h
     ${KERNEL_PATH}/include/type_def.h
     ${KERNEL_PATH}/include/ktype.h
-	${KERNEL_PATH}/include/init.h
+	${KERNEL_PATH}/include/static_init.h
 )

@@ -7,7 +7,6 @@
 #include "ktype.h"
 #include "kernel.h"
 #include "timer.h"
-#include "init.h"
 #include "at_rtos.h"
 
 INIT_OS_THREAD_RUNTIME_NUM_DEFINE(THREAD_RUNTIME_NUMBER_SUPPORTED);
@@ -29,7 +28,7 @@ static pThread_entryFunc_t g_idle_thread_user_entry_fn = NULL;
 /**
  * Global At_RTOS application interface init.
  */
-#if (OS_API_ENABLED)
+#ifdef OS_API_ENABLED
 const at_rtos_api_t os = {
     .thread_init = os_thread_init,
     .thread_sleep = os_thread_sleep,

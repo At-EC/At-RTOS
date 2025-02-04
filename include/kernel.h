@@ -12,6 +12,7 @@
 #include "./clock/clock_tick.h"
 #include "kstruct.h"
 #include "ktype.h"
+#include "static_init.h"
 
 #ifndef KERNEL_THREAD_STACK_SIZE
 #define KERNEL_SCHEDULE_THREAD_STACK_SIZE (1024u)
@@ -25,10 +26,14 @@
 #define KERNEL_IDLE_THREAD_STACK_SIZE (IDLE_THREAD_STACK_SIZE)
 #endif
 
-#define ENTER_CRITICAL_SECTION() _u32_t __val = port_irq_disable()
-#define EXIT_CRITICAL_SECTION()  port_irq_enable(__val)
+_u32_t impl_kernel_irq_disable(void);
+void impl_kernel_irq_enable(_u32_t val);
+
+#define ENTER_CRITICAL_SECTION() _u32_t __val = impl_kernel_irq_disable()
+#define EXIT_CRITICAL_SECTION()  impl_kernel_irq_enable(__val)
 #define CRITICAL_SECTION()                                                                                                                 \
-    for (struct foreach_item __item = {.i = 0, .u32_val = port_irq_disable()}; !__item.i; port_irq_enable(__item.u32_val), __item.i++)
+    for (struct _foreach_item __item = {.i = 0, .u32_val = impl_kernel_irq_disable()}; !__item.i;                                          \
+         impl_kernel_irq_enable(__item.u32_val), __item.i++)
 
 thread_context_t *kernel_thread_runContextGet(void);
 list_t *kernel_member_list_get(_u8_t member_id, _u8_t list_id);
