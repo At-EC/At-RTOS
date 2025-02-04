@@ -80,29 +80,27 @@ The main compilers now supported by At-RTOS are:
 ```shell
 # At-RTOS important source code tree is shown as follows.
 At-RTOS
-├── arch
-│   └── arch32
-├── clock
-│   ├── clock_systick.c
-│   └── CMakeLists.txt
-├── port
-│   ├── port.c
-│   ├── port_keil_ac5.c
-│   ├── port_keil_ac6.c
-│   ├── port_iar.s
-│   └── CMakeLists.txt
 ├── include
-│   ├── kernel
-│   │   ├── at_rtos.h
-│   │   └── *.h
-│   ├── arch.h
-│   ├── port.h
-│   ├── clock_tick.h
+│   ├── port
+│   │   └── port.h
+│   ├── clock
+│   │   └── clock_tick.h
+│   ├── arch
+│   │   ├── arch.h
+│   │   └── arch<board>
+│   ├── *.h
 │   └── CMakeLists.txt
-├── kernel
-│   ├── kernel.c
+├── source
+│   ├── port
+│   │   ├── port_common.c
+│   │   ├── port_<complier>*.c
+│   │   └── CMakeLists.txt
+│   ├── clock
+│   │   ├── clock_<board>.c
+│   │   └── CMakeLists.txt
 │   ├── *.c
 │   └── CMakeLists.txt
+├── os_config.h
 ├── build_version.h
 └── CMakeLists.txt
 ```
@@ -129,7 +127,7 @@ At-RTOS was designed specifically to take advantage of the powerful hardware fea
 
 ## User configuration
 
-At-RTOS ported a template At-RTOS configuration header file [atos_configuration.h](./include/template/atos_configuration.h). Your board support package must provide the following variable symbols instead of this one.
+At-RTOS ported a template At-RTOS configuration header file [os_config.h](./include/template/os_config.h). Your board support package must provide the following variable symbols instead of this one.
 
 ```c
 /**
@@ -161,11 +159,11 @@ The symbols in the configuration header file look like `<kernel component>_RUNTI
 - POOL
 - ...
 
-The more details you can see the descriptions in the template file [atos_configuration.h](./include/template/atos_configuration.h).
+The more details you can see the descriptions in the template file [os_config.h](./include/template/os_config.h).
 
 ## User interface
 
-The [at_rtos.h](./include/kernel/at_rtos.h) is an interface of At-RTOS kernel. You can check the interface usage in this file to perform it in your embedded controller system.
+The [at_rtos.h](./include/at_rtos.h) is an interface of At-RTOS kernel. You can check the interface usage in this file to perform it in your embedded controller system.
 
 The following sample codes illustrate how to create your first thread:
 ```c
