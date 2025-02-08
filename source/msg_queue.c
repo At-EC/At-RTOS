@@ -56,8 +56,8 @@ static void _message_send(queue_context_t *pCurQueue, const _u8_t *pUserBuffer, 
     _u8_t *pInBuffer = NULL;
 
     pInBuffer = (_u8_t *)((_u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (_u32_t)pCurQueue->pQueueBufferAddress));
-    os_memset((_char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
-    os_memcpy((_char_t *)pInBuffer, (const _char_t *)pUserBuffer, userSize);
+    k_memset((_char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
+    k_memcpy((_char_t *)pInBuffer, (const _char_t *)pUserBuffer, userSize);
 
     // Calculate the next left position
     // Receive empty: right + 1 == left
@@ -85,8 +85,8 @@ static void _message_send_front(queue_context_t *pCurQueue, const _u8_t *pUserBu
     pCurQueue->cacheSize++;
 
     pInBuffer = (_u8_t *)((_u32_t)((pCurQueue->rightPosition * pCurQueue->elementLength) + (_u32_t)pCurQueue->pQueueBufferAddress));
-    os_memset((_char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
-    os_memcpy((_char_t *)pInBuffer, (const _char_t *)pUserBuffer, userSize);
+    k_memset((_char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
+    k_memcpy((_char_t *)pInBuffer, (const _char_t *)pUserBuffer, userSize);
 }
 
 /**
@@ -101,8 +101,8 @@ static void _message_receive(queue_context_t *pCurQueue, const _u8_t *pUserBuffe
     _u8_t *pOutBuffer = NULL;
 
     pOutBuffer = (_u8_t *)((pCurQueue->rightPosition * pCurQueue->elementLength) + (_u32_t)pCurQueue->pQueueBufferAddress);
-    os_memset((_char_t *)pUserBuffer, 0x0u, userSize);
-    os_memcpy((_char_t *)pUserBuffer, (const _char_t *)pOutBuffer, userSize);
+    k_memset((_char_t *)pUserBuffer, 0x0u, userSize);
+    k_memcpy((_char_t *)pUserBuffer, (const _char_t *)pOutBuffer, userSize);
 
     // Calculate the next right position
     // Receive empty: right + 1 == left
@@ -130,8 +130,8 @@ static void _message_receive_behind(queue_context_t *pCurQueue, const _u8_t *pUs
     pCurQueue->cacheSize--;
 
     pInBuffer = (_u8_t *)((_u32_t)((pCurQueue->leftPosition * pCurQueue->elementLength) + (_u32_t)pCurQueue->pQueueBufferAddress));
-    os_memset((_char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
-    os_memcpy((_char_t *)pInBuffer, (const _char_t *)pUserBuffer, userSize);
+    k_memset((_char_t *)pInBuffer, 0x0u, pCurQueue->elementLength);
+    k_memcpy((_char_t *)pInBuffer, (const _char_t *)pUserBuffer, userSize);
 }
 
 /**
@@ -194,7 +194,7 @@ static _u32_t _queue_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((_char_t *)pCurQueue, 0x0u, sizeof(queue_context_t));
+        k_memset((_char_t *)pCurQueue, 0x0u, sizeof(queue_context_t));
         pCurQueue->head.cs = CS_INITED;
         pCurQueue->head.pName = pName;
 

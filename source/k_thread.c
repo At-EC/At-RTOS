@@ -136,7 +136,7 @@ void _impl_kthread_idle_user_callback_register(const pThread_entryFunc_t fn)
 /**
  * @brief Get the idle thread id.
  */
-os_thread_id_t _impl_idle_thread_id_get(void)
+os_thread_id_t *_impl_idle_thread_id_get(void)
 {
-    return idle_th;
+    return &idle_th;
 }

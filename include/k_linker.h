@@ -92,9 +92,9 @@ _b_t list_iterator_next_condition(list_iterator_t *pIterator, list_node_t **ppOu
 list_node_t *list_iterator_next(list_iterator_t *pIterator);
 void linker_list_transaction_common(linker_t *pLinker, list_t *pToList, list_direction_t direction);
 void linker_list_transaction_specific(linker_t *pLinker, list_t *pToList, pLinkerSpecificConditionFunc_t pConditionFunc);
-void os_memcpy(void *dst, const void *src, _u32_t cnt);
-void os_memset(void *dst, _u8_t val, _u32_t cnt);
-_i32_t os_memcmp(const void *dst, const void *src, _u32_t cnt);
-_u32_t os_strlen(const _uchar_t *str);
+void k_memcpy(void *dst, const void *src, _u32_t cnt);
+void k_memset(void *dst, _u8_t val, _u32_t cnt);
+_i32_t k_memcmp(const void *dst, const void *src, _u32_t cnt);
+_u32_t k_strlen(const _uchar_t *str);
 
 #endif /* _K_LINKER_H_ */

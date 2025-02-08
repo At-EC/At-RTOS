@@ -62,7 +62,7 @@ static void *_mem_take(pool_context_t *pCurPool)
         }
 
         pMemTake = (void *)((_u32_t)((i * pCurPool->elementLength) + (_u32_t)pCurPool->pMemAddress));
-        os_memset((_char_t *)pMemTake, 0x0u, pCurPool->elementLength);
+        k_memset((_char_t *)pMemTake, 0x0u, pCurPool->elementLength);
         pCurPool->elementFreeBits &= ~B(i);
         break;
 
@@ -92,7 +92,7 @@ static bool _mem_release(pool_context_t *pCurPool, void *pUserMem)
 
         pMemTake = (void *)((_u32_t)((i * pCurPool->elementLength) + (_u32_t)pCurPool->pMemAddress));
         if (pMemTake == pUserMem) {
-            os_memset((_char_t *)pMemTake, 0x0u, pCurPool->elementLength);
+            k_memset((_char_t *)pMemTake, 0x0u, pCurPool->elementLength);
             pCurPool->elementFreeBits |= B(i);
             break;
         }
@@ -148,7 +148,7 @@ static _u32_t _pool_init_privilege_routine(arguments_t *pArgs)
         if (_pool_context_isInit(pCurPool)) {
             continue;
         }
-        os_memset((_char_t *)pCurPool, 0x0u, sizeof(pool_context_t));
+        k_memset((_char_t *)pCurPool, 0x0u, sizeof(pool_context_t));
         pCurPool->head.cs = CS_INITED;
         pCurPool->head.pName = pName;
 

@@ -70,16 +70,16 @@ typedef struct evt_val os_evt_val_t;
 #define OS_PRIORITY_PREEMPT_SET(p)     (p)
 #define OS_PRIORITY_COOPERATION_SET(c) (-(OS_PRIOTITY_COOPERATION_NUM - (c)))
 
-#define OS_STACK_INIT(name, size)                               STACK_STATIC_VALUE_DEFINE(name, size)
-#define OS_THREAD_INIT(id_name, priority, stack_size, pEntryFn) INIT_OS_THREAD_DEFINE(id_name, priority, stack_size, pEntryFn)
-#define OS_TIMER_INIT(id_name, pEntryFunc)                      INIT_OS_TIMER_DEFINE(id_name, pEntryFunc)
-#define OS_SEMAPHORE_INIT(id_name, remain, limit)               INIT_OS_SEMAPHORE_DEFINE(id_name, remain, limit)
-#define OS_MUTEX_INIT(id_name)                                  INIT_OS_MUTEX_DEFINE(id_name)
-#define OS_EVT_INIT(id_name, anyMask, modeMask, dirMask, init)  INIT_OS_EVT_DEFINE(id_name, anyMask, modeMask, dirMask, init)
-#define OS_MSGQ_INIT(id_name, pBufAddr, len, num)               INIT_OS_MSGQ_DEFINE(id_name, pBufAddr, len, num)
-#define OS_POOL_INIT(id_name, pMemAddr, len, num)               INIT_OS_POOL_DEFINE(id_name, pMemAddr, len, num)
-#define OS_SUBSCRIBE_INIT(id_name, pDataAddr, size)             INIT_OS_SUBSCRIBE_DEFINE(id_name, pDataAddr, size)
-#define OS_PUBLISH_INIT(id_name, pDataAddr, size)               INIT_OS_PUBLISH_DEFINE(id_name, pDataAddr, size)
+#define OS_STACK_INIT(name, size)                                     STACK_STATIC_VALUE_DEFINE(name, size)
+#define OS_THREAD_INIT(id_name, priority, stack_size, pEntryFn, pArg) INIT_OS_THREAD_DEFINE(id_name, priority, stack_size, pEntryFn, pArg)
+#define OS_TIMER_INIT(id_name, pEntryFunc)                            INIT_OS_TIMER_DEFINE(id_name, pEntryFunc)
+#define OS_SEMAPHORE_INIT(id_name, remain, limit)                     INIT_OS_SEMAPHORE_DEFINE(id_name, remain, limit)
+#define OS_MUTEX_INIT(id_name)                                        INIT_OS_MUTEX_DEFINE(id_name)
+#define OS_EVT_INIT(id_name, anyMask, modeMask, dirMask, init)        INIT_OS_EVT_DEFINE(id_name, anyMask, modeMask, dirMask, init)
+#define OS_MSGQ_INIT(id_name, pBufAddr, len, num)                     INIT_OS_MSGQ_DEFINE(id_name, pBufAddr, len, num)
+#define OS_POOL_INIT(id_name, pMemAddr, len, num)                     INIT_OS_POOL_DEFINE(id_name, pMemAddr, len, num)
+#define OS_SUBSCRIBE_INIT(id_name, pDataAddr, size)                   INIT_OS_SUBSCRIBE_DEFINE(id_name, pDataAddr, size)
+#define OS_PUBLISH_INIT(id_name, pDataAddr, size)                     INIT_OS_PUBLISH_DEFINE(id_name, pDataAddr, size)
 
 extern _u32_t impl_kernel_irq_disable(void);
 extern void impl_kernel_irq_enable(_u32_t val);
@@ -233,9 +233,9 @@ static inline void os_thread_idle_callback_register(const pThread_entryFunc_t lo
  *
  * @return The value of thread unique id.
  */
-static inline os_thread_id_t os_thread_idle_id_probe(void)
+static inline os_thread_id_t *os_thread_idle_id_probe(void)
 {
-    extern os_thread_id_t _impl_idle_thread_id_get(void);
+    extern os_thread_id_t *_impl_idle_thread_id_get(void);
     return _impl_idle_thread_id_get();
 }
 
@@ -909,7 +909,7 @@ typedef struct {
     i32p_t (*thread_user_data_set)(os_thread_id_t, void *);
     void *(*thread_user_data_get)(os_thread_id_t);
     void (*thread_idle_fn_register)(const pThread_entryFunc_t);
-    os_thread_id_t (*thread_idle_id_probe)(void);
+    os_thread_id_t *(*thread_idle_id_probe)(void);
     u32_t (*thread_stack_free_size_probe)(os_thread_id_t);
 
     os_timer_id_t (*timer_init)(pTimer_callbackFunc_t, void *, const char_t *);

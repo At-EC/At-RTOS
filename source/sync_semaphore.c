@@ -82,7 +82,7 @@ static _u32_t _semaphore_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((_char_t *)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
+        k_memset((_char_t *)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
         pCurSemaphore->head.cs = CS_INITED;
         pCurSemaphore->head.pName = pName;
         pCurSemaphore->remains = initialCount;

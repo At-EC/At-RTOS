@@ -121,7 +121,7 @@ static _u32_t _publish_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((_char_t *)pCurPublish, 0x0u, sizeof(publish_context_t));
+        k_memset((_char_t *)pCurPublish, 0x0u, sizeof(publish_context_t));
         pCurPublish->head.cs = CS_INITED;
         pCurPublish->head.pName = pName;
 
@@ -156,7 +156,7 @@ static _u32_t _publish_data_submit_privilege_routine(arguments_t *pArgs)
     list_iterator_init(&it, pList);
     while (list_iterator_next_condition(&it, (void *)&pNotify)) {
         pNotify->updated++;
-        os_memcpy((_u8_t *)pNotify->pData, (const _u8_t *)pPublishData, MINI_AB(publishSize, pNotify->len));
+        k_memcpy((_u8_t *)pNotify->pData, (const _u8_t *)pPublishData, MINI_AB(publishSize, pNotify->len));
         if ((!pNotify->muted) && (pNotify->fn)) {
             need = true;
             pNotify->fn((void *)&pNotify->linker.node);
@@ -206,7 +206,7 @@ static _u32_t _subscribe_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((_char_t *)pCurSubscribe, 0x0u, sizeof(subscribe_context_t));
+        k_memset((_char_t *)pCurSubscribe, 0x0u, sizeof(subscribe_context_t));
         pCurSubscribe->head.cs = CS_INITED;
         pCurSubscribe->head.pName = pName;
 
@@ -288,7 +288,7 @@ static _u32_t _subscribe_apply_data_privilege_routine(arguments_t *pArgs)
 
     if (pCurSub->accepted < pCurSub->notify.updated) {
         *pDataLen = MINI_AB(*pDataLen, pCurSub->notify.len);
-        os_memcpy(pDataBuffer, pCurSub->notify.pData, *pDataLen);
+        k_memcpy(pDataBuffer, pCurSub->notify.pData, *pDataLen);
         pCurSub->accepted = pCurSub->notify.updated;
 
         EXIT_CRITICAL_SECTION();

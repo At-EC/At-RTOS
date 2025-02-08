@@ -212,7 +212,7 @@ void timer_callback_fromTimeOut(void *pNode)
         _timeout_transfer_toIdleList((linker_t *)&pExpired->linker);
     } else if (pCurTimer->control == TIMER_CTRL_TEMPORARY_VAL) {
         _timeout_transfer_toNoInitList((linker_t *)&pExpired->linker);
-        os_memset((_u8_t *)pCurTimer, 0u, sizeof(timer_context_t));
+        k_memset((_u8_t *)pCurTimer, 0u, sizeof(timer_context_t));
     }
 
     list_t *pCallback_list = (list_t *)&g_timer_rsc.callback_list;
@@ -273,7 +273,7 @@ static _u32_t _timer_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((_char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
+        k_memset((_char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
         pCurTimer->head.cs = CS_INITED;
         pCurTimer->head.pName = pName;
         pCurTimer->call.pUserData = pUserData;
@@ -313,7 +313,7 @@ static _u32_t _timer_automatic_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((_char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
+        k_memset((_char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
         pCurTimer->head.cs = CS_INITED;
         pCurTimer->head.pName = pName;
         pCurTimer->control = TIMER_CTRL_TEMPORARY_VAL;
@@ -481,7 +481,7 @@ _u32_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, void *pUserData, co
     arguments_t arguments[] = {
         [0] = {.ptr_val = (const void *)pCallFun},
         [1] = {.pv_val = (void *)pUserData},
-        [1] = {.pch_val = (const void *)pName},
+        [2] = {.pch_val = (const void *)pName},
     };
 
     return kernel_privilege_invoke((const void *)_timer_automatic_privilege_routine, arguments);

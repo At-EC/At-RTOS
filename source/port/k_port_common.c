@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
+#include "type_def.h"
 #include "./port/k_port.h"
 #include "./clock/k_clock_tick.h"
 #include "k_linker.h"
@@ -94,7 +95,7 @@ _u32_t port_stack_frame_init(void (*pEntryFn)(void *), _u32_t *pAddress, _u32_t 
 {
     extern void _impl_thread_entry(void (*pEntryFn)(void *), void *pArg);
 
-    os_memset((_uchar_t *)pAddress, STACT_UNUSED_DATA, size);
+    k_memset((_uchar_t *)pAddress, STACT_UNUSED_DATA, size);
 
     _u32_t psp_frame = (_u32_t)pAddress + size - sizeof(stack_snapshot_t);
 
@@ -133,9 +134,9 @@ _u32_t port_stack_frame_init(void (*pEntryFn)(void *), _u32_t *pAddress, _u32_t 
 
 #if (__FPU_PRESENT)
 #if (THREAD_PSP_WITH_PRIVILEGED)
-    ((stack_snapshot_t *)psp_frame)->CONTROL = Bs(1); /* PSP with privileged */
+    ((stack_snapshot_t *)psp_frame)->CONTROL = B(1); /* PSP with privileged */
 #else
-    ((stack_snapshot_t *)psp_frame)->CONTROL = Bs(1) & Bs(0); /* PSP with Unprivileged */
+    ((stack_snapshot_t *)psp_frame)->CONTROL = Bs(0, 1); /* PSP with Unprivileged */
 #endif
 
     ((stack_snapshot_t *)psp_frame)->EXC_RETURN = 0xFFFFFFFDu; /* EXC_RETURN */

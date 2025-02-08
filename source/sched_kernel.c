@@ -162,11 +162,11 @@ static void _schedule_exit(_u32_t ms)
             thread_context_t *pDelThread = (thread_context_t *)CONTAINEROF(pCurTask, thread_context_t, task);
 
             _schedule_transfer_toNullList((linker_t *)&pCurTask->linker);
-            os_memset((_char_t *)pDelThread->pStackAddr, STACT_UNUSED_DATA, pDelThread->stackSize);
-            os_memset((_char_t *)pDelThread, 0x0u, sizeof(thread_context_t));
+            k_memset((_char_t *)pDelThread->pStackAddr, STACT_UNUSED_DATA, pDelThread->stackSize);
+            k_memset((_char_t *)pDelThread, 0x0u, sizeof(thread_context_t));
         }
 
-        os_memset(pExit, 0x0, sizeof(struct call_exit));
+        k_memset(pExit, 0x0, sizeof(struct call_exit));
         pCurTask->exec.entry.result = PC_EOR;
     }
 
@@ -582,7 +582,10 @@ void _impl_kernel_schedule_unlock(void)
         g_kernel_rsc.sch_lock_nest_cnt--;
         if (g_kernel_rsc.sch_lock_nest_cnt <= 0) {
             g_kernel_rsc.sch_lock_nest_cnt = 0;
-            kernel_thread_schedule_request();
+
+            if (g_kernel_rsc.run) {
+                kernel_thread_schedule_request();
+            }
         }
     }
 }

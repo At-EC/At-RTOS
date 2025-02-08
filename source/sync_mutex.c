@@ -65,7 +65,7 @@ static _u32_t _mutex_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((_char_t *)pCurMutex, 0x0u, sizeof(mutex_context_t));
+        k_memset((_char_t *)pCurMutex, 0x0u, sizeof(mutex_context_t));
         pCurMutex->head.cs = CS_INITED;
         pCurMutex->head.pName = pName;
 

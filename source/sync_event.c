@@ -127,7 +127,7 @@ static _u32_t _event_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((_char_t *)pCurEvent, 0x0u, sizeof(event_context_t));
+        k_memset((_char_t *)pCurEvent, 0x0u, sizeof(event_context_t));
         pCurEvent->head.cs = CS_INITED;
         pCurEvent->head.pName = pName;
 

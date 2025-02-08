@@ -70,7 +70,7 @@ static _u32_t _thread_init_privilege_routine(arguments_t *pArgs)
             continue;
         }
 
-        os_memset((_char_t *)pCurThread, 0x0u, sizeof(thread_context_t));
+        k_memset((_char_t *)pCurThread, 0x0u, sizeof(thread_context_t));
         pCurThread->head.cs = CS_INITED;
         pCurThread->head.pName = pName;
 

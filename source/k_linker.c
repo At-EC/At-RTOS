@@ -13,7 +13,7 @@
  * @param src The pointer of the source.
  * @param cnt The opereation specific length.
  */
-void os_memcpy(void *dst, const void *src, _u32_t cnt)
+void k_memcpy(void *dst, const void *src, _u32_t cnt)
 {
     _uchar_t *d = (_uchar_t *)dst;
     const _uchar_t *s = (const _uchar_t *)src;
@@ -29,7 +29,7 @@ void os_memcpy(void *dst, const void *src, _u32_t cnt)
  * @param val The character value.
  * @param cnt The opereation specific length.
  */
-void os_memset(void *dst, _u8_t val, _u32_t cnt)
+void k_memset(void *dst, _u8_t val, _u32_t cnt)
 {
     _uchar_t *d = (_uchar_t *)dst;
     while (cnt--) {
@@ -46,7 +46,7 @@ void os_memset(void *dst, _u8_t val, _u32_t cnt)
  *
  * @return The value 0 indicates the both strings are same, otherwise is different
  */
-_i32_t os_memcmp(const void *dst, const void *src, _u32_t cnt)
+_i32_t k_memcmp(const void *dst, const void *src, _u32_t cnt)
 {
     const _uchar_t *d = (const _uchar_t *)dst, *s = (const _uchar_t *)src;
     int r = 0;
@@ -62,7 +62,7 @@ _i32_t os_memcmp(const void *dst, const void *src, _u32_t cnt)
  *
  * @return The value of the string length
  */
-_u32_t os_strlen(const _uchar_t *str)
+_u32_t k_strlen(const _uchar_t *str)
 {
     _u32_t len = 0u;
     while (*str++ != '\0') {
@@ -354,7 +354,7 @@ _b_t list_iterator_init(list_iterator_t *pIterator, list_t *pList)
         return false;
     }
 
-    os_memset((_char_t *)pIterator, 0x0u, sizeof(list_iterator_t));
+    k_memset((_char_t *)pIterator, 0x0u, sizeof(list_iterator_t));
     if (!pList->pHead) {
         return false;
     }
