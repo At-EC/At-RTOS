@@ -81,6 +81,13 @@ typedef struct evt_val os_evt_val_t;
 #define OS_SUBSCRIBE_INIT(id_name, pDataAddr, size)                   INIT_OS_SUBSCRIBE_DEFINE(id_name, pDataAddr, size)
 #define OS_PUBLISH_INIT(id_name, pDataAddr, size)                     INIT_OS_PUBLISH_DEFINE(id_name, pDataAddr, size)
 
+#define OS_FUNC_PRIO_0              (INIT_LEVEL_0)
+#define OS_FUNC_PRIO_1              (INIT_LEVEL_1)
+#define OS_FUNC_PRIO_2              (INIT_LEVEL_2)
+#define OS_FUNC_PRIO_3              (INIT_LEVEL_3)
+#define OS_FUNC_PRIO_4              (INIT_LEVEL_4)
+#define OS_FUNC_INIT(init_fn, prio) INIT_FUNC_DEFINE(init_fn, prio)
+
 extern _u32_t impl_kernel_irq_disable(void);
 extern void impl_kernel_irq_enable(_u32_t val);
 struct foreach_item {
