@@ -8,7 +8,7 @@
 #define _STATIC_INIT_H_
 
 #include "type_def.h"
-#include "kstruct.h"
+#include "k_struct.h"
 
 #if (__ARMCC_VERSION)
 #define INIT_SECTION_FUNC _INIT_FUNC_LIST

@@ -7,11 +7,11 @@
 #ifndef _AT_RTOS_H_
 #define _AT_RTOS_H_
 
-#include "ktype.h"
-#include "kstruct.h"
-#include "configuration.h"
+#include "k_type.h"
+#include "k_struct.h"
+#include "k_config.h"
+#include "k_trace.h"
 #include "postcode.h"
-#include "trace.h"
 #include "static_init.h"
 
 #ifdef OS_TYPEDEF_ENABLED

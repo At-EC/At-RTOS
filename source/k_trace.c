@@ -4,10 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#include "trace.h"
-#include "configuration.h"
+#include "k_trace.h"
+#include "k_config.h"
+#include "k_linker.h"
 #include "postcode.h"
-#include "linker.h"
 #include "static_init.h"
 
 /**

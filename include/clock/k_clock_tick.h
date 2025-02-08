@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#ifndef _CLOCK_TICK_H_
-#define _CLOCK_TICK_H_
+#ifndef _K_CLOCK_TICK_H_
+#define _K_CLOCK_TICK_H_
 
 #include "type_def.h"
 
@@ -25,4 +25,4 @@ void clock_time_enable(void);
 void clock_time_disable(void);
 void clock_time_init(time_report_handler_t pTime_function);
 
-#endif /* _CLOCK_TICK_H_ */
+#endif /* _K_CLOCK_TICK_H_ */

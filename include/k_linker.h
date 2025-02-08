@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#ifndef _LINKER_H_
-#define _LINKER_H_
+#ifndef _K_LINKER_H_
+#define _K_LINKER_H_
 
 #include "type_def.h"
 
@@ -97,4 +97,4 @@ void os_memset(void *dst, _u8_t val, _u32_t cnt);
 _i32_t os_memcmp(const void *dst, const void *src, _u32_t cnt);
 _u32_t os_strlen(const _uchar_t *str);
 
-#endif /* _LINKER_H_ */
+#endif /* _K_LINKER_H_ */

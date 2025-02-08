@@ -4,14 +4,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#ifndef _SCHED_KERNEL_H_
+#define _SCHED_KERNEL_H_
 
-#include "./arch/arch.h"
-#include "./port/port.h"
-#include "./clock/clock_tick.h"
-#include "kstruct.h"
-#include "ktype.h"
+#include "./arch/k_arch.h"
+#include "./port/k_port.h"
+#include "./clock/k_clock_tick.h"
+#include "k_struct.h"
+#include "k_type.h"
 #include "static_init.h"
 
 #ifndef KERNEL_THREAD_STACK_SIZE
@@ -59,4 +59,4 @@ void kthread_message_notification(void);
 _i32p_t kthread_message_arrived(void);
 void kthread_message_idle_loop_fn(void);
 
-#endif /* _KERNEL_H_ */
+#endif /* _SCHED_KERNEL_H_ */

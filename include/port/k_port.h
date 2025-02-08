@@ -4,11 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#ifndef _PORT_H_
-#define _PORT_H_
+#ifndef _K_PORT_H_
+#define _K_PORT_H_
 
 #include "type_def.h"
-#include "./arch/arch.h"
+#include "./arch/k_arch.h"
 
 #define STACT_UNUSED_DATA       (0xDEu)
 #define STACT_UNUSED_FRAME_MARK (0xDEDEDEDEu)
@@ -315,4 +315,4 @@ void port_interrupt_init(void);
 _u32_t port_stack_frame_init(void (*pEntryFn)(void *), _u32_t *pAddress, _u32_t size, void *pArg);
 _u32_t port_stack_free_size_get(_u32_t stack_addr);
 
-#endif /* _PORT_H_ */
+#endif /* _K_PORT_H_ */

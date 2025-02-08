@@ -4,10 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#ifndef _TIMER_H_
-#define _TIMER_H_
+#ifndef _SCHED_TIMER_H_
+#define _SCHED_TIMER_H_
 
-#include "kstruct.h"
+#include "k_struct.h"
 
 void timeout_set(struct expired_time *pExpire, _u32_t timeout_ms, _b_t immediately);
 void timeout_remove(struct expired_time *pExpire, _b_t immediately);
@@ -18,4 +18,4 @@ void timer_reamining_elapsed_handler(void);
 void timeout_handler(_u32_t elapsed_us);
 void timeout_init(struct expired_time *pExpire, pTimeout_callbackFunc_t fun);
 
-#endif /* _TIMER_H_ */
+#endif /* _SCHED_TIMER_H_ */

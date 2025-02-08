@@ -1,17 +1,17 @@
 target_sources(atos_kernel
     PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/event.c
-    ${CMAKE_CURRENT_LIST_DIR}/kernel.c
-    ${CMAKE_CURRENT_LIST_DIR}/linker.c
-    ${CMAKE_CURRENT_LIST_DIR}/mutex.c
-    ${CMAKE_CURRENT_LIST_DIR}/queue.c
-    ${CMAKE_CURRENT_LIST_DIR}/semaphore.c
-    ${CMAKE_CURRENT_LIST_DIR}/thread.c
-    ${CMAKE_CURRENT_LIST_DIR}/timer.c   
-    ${CMAKE_CURRENT_LIST_DIR}/trace.c
-    ${CMAKE_CURRENT_LIST_DIR}/kthread.c
-    ${CMAKE_CURRENT_LIST_DIR}/pool.c
-    ${CMAKE_CURRENT_LIST_DIR}/subscribe.c
+    ${CMAKE_CURRENT_LIST_DIR}/sync_event.c
+    ${CMAKE_CURRENT_LIST_DIR}/sync_mutex.c
+    ${CMAKE_CURRENT_LIST_DIR}/sync_semaphore.c
+    ${CMAKE_CURRENT_LIST_DIR}/msg_queue.c
+    ${CMAKE_CURRENT_LIST_DIR}/msg_subscribe.c
+    ${CMAKE_CURRENT_LIST_DIR}/mem_pool.c
+    ${CMAKE_CURRENT_LIST_DIR}/sched_kernel.c
+    ${CMAKE_CURRENT_LIST_DIR}/sched_thread.c
+    ${CMAKE_CURRENT_LIST_DIR}/sched_timer.c
+    ${CMAKE_CURRENT_LIST_DIR}/k_linker.c
+    ${CMAKE_CURRENT_LIST_DIR}/k_trace.c
+    ${CMAKE_CURRENT_LIST_DIR}/k_thread.c
     ${CMAKE_CURRENT_LIST_DIR}/static_init.c
 )
 

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#include "./port/port.h"
+#include "./port/k_port.h"
 
 #if defined ( __FPU_PRESENT )
 #define FPU_ENABLED  __FPU_PRESENT

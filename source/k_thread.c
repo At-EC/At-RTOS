@@ -4,9 +4,9 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#include "ktype.h"
-#include "kernel.h"
-#include "timer.h"
+#include "k_type.h"
+#include "sched_kernel.h"
+#include "sched_timer.h"
 #include "at_rtos.h"
 
 INIT_OS_THREAD_RUNTIME_NUM_DEFINE(THREAD_RUNTIME_NUMBER_SUPPORTED);

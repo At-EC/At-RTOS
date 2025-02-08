@@ -4,13 +4,12 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#include "kernel.h"
-#include "timer.h"
-#include "compiler.h"
-#include "ktype.h"
-#include "postcode.h"
-#include "trace.h"
+#include "sched_kernel.h"
+#include "sched_timer.h"
+#include "k_type.h"
+#include "k_trace.h"
 #include "at_rtos.h"
+#include "postcode.h"
 
 /**
  * Local unique postcode.

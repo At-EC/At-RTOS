@@ -4,13 +4,13 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#ifndef _KSTRUCT_H_
-#define _KSTRUCT_H_
+#ifndef _K_STRUCT_H_
+#define _K_STRUCT_H_
 
 #include "type_def.h"
-#include "linker.h"
-#include "ktype.h"
-#include "configuration.h"
+#include "k_linker.h"
+#include "k_type.h"
+#include "k_config.h"
 
 /* Start of section using anonymous unions */
 #if defined(__CC_ARM)
@@ -290,4 +290,4 @@ typedef struct {
 #pragma warning restore
 #endif
 
-#endif /* _KSTRUCT_H_ */
+#endif /* _K_STRUCT_H_ */

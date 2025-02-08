@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  **/
 
-#ifndef _KTYPE_H_
-#define _KTYPE_H_
+#ifndef _K_TYPE_H_
+#define _K_TYPE_H_
 
 #include "type_def.h"
-#include "linker.h"
+#include "k_linker.h"
 
 #define CS_INITED                              (1u)
 #define STACK_STATIC_VALUE_DEFINE(stack, size) _u32_t stack[((_u32_t)(size) / sizeof(_u32_t))] = {0};
@@ -92,4 +92,4 @@ static inline _b_t kernel_os_id_is_invalid(struct os_id id)
     return false;
 }
 
-#endif /* _KTYPE_H_ */
+#endif /* _K_TYPE_H_ */

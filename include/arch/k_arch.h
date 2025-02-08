@@ -5,14 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  **/
 
-#ifndef _ARCH_H_
-#define _ARCH_H_
+#ifndef _K_ARCH_H_
+#define _K_ARCH_H_
 
-#include "configuration.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "k_config.h"
 
 typedef enum IRQn {
     /******  Cortex-Mx Processor Exceptions Numbers
@@ -116,8 +112,8 @@ typedef enum IRQn {
 #error "No ARM Arch is defined in head of this file"
 #endif
 
-#ifdef __cplusplus
-}
+#if !defined(ARCH_NATIVE_GCC)
+#include "./arch/arch32/arm/cmsis/include/cmsis_compiler.h"
 #endif
 
-#endif /* _ARCH_H_ */
+#endif /* _K_ARCH_H_ */

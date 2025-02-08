@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#ifndef _CONFIGURATION_H_
-#define _CONFIGURATION_H_
+#ifndef _K_CONFIG_H_
+#define _K_CONFIG_H_
 
 #include "os_config.h"
 #include "../build_version.h"
@@ -119,4 +119,4 @@
 #warning Not supported compiler type
 #endif
 
-#endif /* _CONFIGURATION_H_ */
+#endif /* _K_CONFIG_H_ */

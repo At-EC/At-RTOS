@@ -4,11 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  **/
-#include "./arch/arch.h"
-#include "./port/port.h"
-#include "./clock/clock_tick.h"
-#include "configuration.h"
-#include "ktype.h"
+#include "./arch/k_arch.h"
+#include "./port/k_port.h"
+#include "./clock/k_clock_tick.h"
+#include "k_config.h"
+#include "k_type.h"
 
 /* Convert the microsecond to clock count */
 #define _CONVERT_MICROSENCOND_TO_COUNT(us) ((_u32_t)(us) * (PORTAL_SYSTEM_CORE_CLOCK_MHZ)-1u)
