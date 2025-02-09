@@ -36,6 +36,8 @@ const at_rtos_api_t os = {
     .thread_suspend = os_thread_suspend,
     .thread_yield = os_thread_yield,
     .thread_delete = os_thread_delete,
+    .thread_delete_self = os_thread_delete_self,
+    .thread_id_self = os_thread_id_self,
     .thread_idle_fn_register = os_thread_idle_callback_register,
     .thread_user_data_set = os_thread_user_data_set,
     .thread_user_data_get = os_thread_user_data_get,
@@ -84,7 +86,6 @@ const at_rtos_api_t os = {
     .schedule_is_running = os_kernel_is_running,
     .schedule_lock = os_kernel_lock,
     .schedule_unlock = os_kernel_unlock,
-    .current_thread = os_thread_self_probe,
 
     .trace_versison = os_trace_firmware_version,
     .trace_postcode_fn_register = os_trace_postcode_callback_register,

@@ -224,6 +224,36 @@ static inline i32p_t os_thread_delete(os_thread_id_t id)
 }
 
 /**
+ * @brief Delete current running thread.
+ *
+ * @return The result of thread delete operation.
+ */
+static inline _i32p_t os_thread_delete_self(void)
+{
+    extern i32p_t _impl_thread_delete(u32_t ctx);
+    extern thread_context_t *kernel_thread_runContextGet(void);
+
+    return (i32p_t)_impl_thread_delete((u32_t)kernel_thread_runContextGet());
+}
+
+/**
+ * @brief Get the current running thread id.
+ *
+ * @return The running thread context.
+ */
+static inline os_thread_id_t os_thread_id_self(void)
+{
+    extern thread_context_t *kernel_thread_runContextGet(void);
+    extern const _char_t *_impl_thread_name_get(_u32_t ctx);
+
+    os_thread_id_t id = {0u};
+    id.u32_val = (u32_t)kernel_thread_runContextGet();
+    id.pName = _impl_thread_name_get(id.u32_val);
+
+    return id;
+}
+
+/**
  * @brief Idle thread callback function register.
  *
  * @param fn The invoke function.
@@ -788,17 +818,6 @@ static inline b_t os_id_is_invalid(struct os_id id)
 }
 
 /**
- * @brief Get the current running thread context.
- *
- * @return The running thread context.
- */
-static inline thread_context_t *os_thread_self_probe(void)
-{
-    extern thread_context_t *kernel_thread_runContextGet(void);
-    return kernel_thread_runContextGet();
-}
-
-/**
  * @brief The kernel OS start to run.
  */
 static inline i32p_t os_kernel_run(void)
@@ -913,6 +932,8 @@ typedef struct {
     i32p_t (*thread_suspend)(os_thread_id_t);
     i32p_t (*thread_yield)(void);
     i32p_t (*thread_delete)(os_thread_id_t);
+    i32p_t (*thread_delete_self)(void);
+    os_thread_id_t (*thread_id_self)(void);
     i32p_t (*thread_user_data_set)(os_thread_id_t, void *);
     void *(*thread_user_data_get)(os_thread_id_t);
     void (*thread_idle_fn_register)(const pThread_entryFunc_t);
@@ -957,7 +978,6 @@ typedef struct {
     b_t (*subscribe_data_is_ready)(os_subscribe_id_t);
 
     b_t (*id_isInvalid)(struct os_id);
-    thread_context_t *(*current_thread)(void);
     i32p_t (*schedule_run)(void);
     b_t (*schedule_is_running)(void);
     void (*schedule_lock)(void);
