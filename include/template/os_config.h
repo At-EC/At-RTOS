@@ -134,4 +134,12 @@
  **/
 #define THREAD_PSP_WITH_PRIVILEGED (10u)
 
+/**
+ * This symbol defined your thread running mode, if the thread runs at the
+ *privileged mode. The defaule value is set to 4. Your application will
+ *certainly need a different value so set this correctly. This is very often,
+ *but not always, according to the security level that you want.
+ **/
+#define MALLOC_HEAP_SIZE_SUPPORTED (0x1000)
+
 #endif /* _OS_CONFIG_H_ */

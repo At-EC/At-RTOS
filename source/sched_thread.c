@@ -533,4 +533,3 @@ void _impl_thread_entry(pThread_entryFunc_t pEntryFn, void *pArg)
     _impl_thread_delete((_u32_t)kernel_thread_runContextGet());
     RUN_UNREACHABLE();
 }
-

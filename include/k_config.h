@@ -10,6 +10,10 @@
 #include "os_config.h"
 #include "../build_version.h"
 
+#ifndef MALLOC_HEAP_SIZE_SUPPORTED
+#define MALLOC_HEAP_SIZE_SUPPORTED (4)
+#endif
+
 #ifndef THREAD_RUNTIME_NUMBER_SUPPORTED
 #define THREAD_RUNTIME_NUMBER_SUPPORTED (1u)
 #endif

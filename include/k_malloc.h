@@ -8,11 +8,11 @@
 #define _K_MALLOC_H_
 
 #include "type_def.h"
-#include  "k_linker.h"
+#include "k_linker.h"
 #include "k_config.h"
 
 #ifndef K_MALLOC_HEAP_SIZE_CONFIG
-#define K_MALLOC_HEAP_SIZE_CONFIG (0x4)
+#define K_MALLOC_HEAP_SIZE_CONFIG (MALLOC_HEAP_SIZE_SUPPORTED)
 #endif
 
 void *k_malloc(unsigned int size);
