@@ -9,6 +9,7 @@
 #include "k_type.h"
 #include "k_trace.h"
 #include "at_rtos.h"
+#include "k_malloc.h"
 #include "postcode.h"
 
 /**
@@ -162,7 +163,11 @@ static void _schedule_exit(_u32_t ms)
             thread_context_t *pDelThread = (thread_context_t *)CONTAINEROF(pCurTask, thread_context_t, task);
 
             _schedule_transfer_toNullList((linker_t *)&pCurTask->linker);
-            k_memset((_char_t *)pDelThread->pStackAddr, STACT_UNUSED_DATA, pDelThread->stackSize);
+            if (k_allocated(pDelThread->pStackAddr)) {
+                k_free(pDelThread->pStackAddr);
+            } else {
+                k_memset((_char_t *)pDelThread->pStackAddr, STACT_UNUSED_DATA, pDelThread->stackSize);
+            }
             k_memset((_char_t *)pDelThread, 0x0u, sizeof(thread_context_t));
         }
 
@@ -532,17 +537,6 @@ _i32p_t _impl_kernel_at_rtos_run(void)
     }
 
     return kernel_privilege_invoke((const void *)_kernel_start_privilege_routine, NULL);
-}
-
-/**
- * @brief Force kernel object free.
- *
- * @param id The kernel object unique id.
- */
-void _impl_kernel_object_free(_u32_t ctx)
-{
-    struct base_head *pHead = (struct base_head *)ctx;
-    pHead->cs = 0u;
 }
 
 /**

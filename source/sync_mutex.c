@@ -152,6 +152,37 @@ static _i32p_t _mutex_unlock_privilege_routine(arguments_t *pArgs)
 }
 
 /**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static _i32p_t _mutex_delete_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    mutex_context_t *pCurMutex = (mutex_context_t *)pArgs[0].u32_val;
+    _i32p_t postcode = 0;
+
+    list_iterator_t it = {0u};
+    list_t *plist = (list_t *)&pCurMutex->q_list;
+    list_iterator_init(&it, plist);
+    struct schedule_task *pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    while (pCurTask) {
+        postcode = schedule_entry_trigger(pCurTask, NULL, 0);
+        if (PC_IER(postcode)) {
+            break;
+        }
+        pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    }
+    k_memset((_char_t *)pCurMutex, 0x0u, sizeof(mutex_context_t));
+
+    EXIT_CRITICAL_SECTION();
+    return postcode;
+}
+
+/**
  * @brief Initialize a new mutex.
  *
  * @param pName The mutex name.
@@ -219,4 +250,29 @@ _i32p_t _impl_mutex_unlock(_u32_t ctx)
     };
 
     return kernel_privilege_invoke((const void *)_mutex_unlock_privilege_routine, arguments);
+}
+
+/**
+ * @brief Mutex delete.
+ *
+ * @param id The mutex unique id.
+ *
+ * @return The result of the operation.
+ */
+_i32p_t _impl_mutex_delete(_u32_t ctx)
+{
+    mutex_context_t *pCtx = (mutex_context_t *)ctx;
+    if (_mutex_context_isInvalid(pCtx)) {
+        return PC_EOR;
+    }
+
+    if (!_mutex_context_isInit(pCtx)) {
+        return PC_EOR;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (_u32_t)ctx},
+    };
+
+    return kernel_privilege_invoke((const void *)_mutex_delete_privilege_routine, arguments);
 }

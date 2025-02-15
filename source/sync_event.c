@@ -12,7 +12,8 @@
 /**
  * Local unique postcode.
  */
-#define PC_EOR PC_IER(PC_OS_CMPT_EVENT_7)
+#define PC_EOR         PC_IER(PC_OS_CMPT_EVENT_7)
+#define _EVENT_DELETED (12u)
 
 /**
  * @brief Check if the event unique id if is's invalid.
@@ -52,6 +53,11 @@ static void _event_schedule(void *pTask)
     struct schedule_task *pCurTask = (struct schedule_task *)pTask;
 
     timeout_remove(&pCurTask->expire, true);
+
+    if (pCurTask->exec.entry.result = _EVENT_DELETED) {
+        pCurTask->exec.entry.result = PC_OS_WAIT_NODATA;
+        return;
+    }
 
     _u32_t changed, any, edge, level, trigger = 0u;
     event_context_t *pCurEvent = (event_context_t *)pCurTask->pPendCtx;
@@ -325,6 +331,37 @@ static _i32p_t _event_wait_privilege_routine(arguments_t *pArgs)
 }
 
 /**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static _i32p_t _event_delete_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    event_context_t *pCurEvent = (event_context_t *)pArgs[0].u32_val;
+    _i32p_t postcode = 0;
+
+    list_iterator_t it = {0u};
+    list_t *plist = (list_t *)&pCurEvent->q_list;
+    list_iterator_init(&it, plist);
+    struct schedule_task *pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    while (pCurTask) {
+        postcode = schedule_entry_trigger(pCurTask, _event_schedule, _EVENT_DELETED);
+        if (PC_IER(postcode)) {
+            break;
+        }
+        pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    }
+    k_memset((_char_t *)pCurEvent, 0x0u, sizeof(event_context_t));
+
+    EXIT_CRITICAL_SECTION();
+    return postcode;
+}
+
+/**
  * @brief Initialize a new event.
  *
  * @param anyMask: Changed bits always trigger = 1. otherwise, see dirMask below = 0.
@@ -453,14 +490,31 @@ _i32p_t _impl_event_wait(_u32_t ctx, struct evt_val *pEvtData, _u32_t listen_mas
     if (postcode == PC_OS_WAIT_UNAVAILABLE) {
         postcode = kernel_schedule_result_take();
     }
-
-    PC_IF(postcode, PC_PASS_INFO)
-    {
-        if (postcode != PC_OS_WAIT_TIMEOUT) {
-            postcode = 0;
-        }
-    }
-
     EXIT_CRITICAL_SECTION();
     return postcode;
+}
+
+/**
+ * @brief Event delete.
+ *
+ * @param id: Event unique id.
+ *
+ * @return The result of the operation.
+ */
+_i32p_t _impl_event_delete(_u32_t ctx)
+{
+    event_context_t *pCtx = (event_context_t *)ctx;
+    if (_event_context_isInvalid(pCtx)) {
+        return PC_EOR;
+    }
+
+    if (!_event_context_isInit(pCtx)) {
+        return PC_EOR;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (_u32_t)ctx},
+    };
+
+    return kernel_privilege_invoke((const void *)_event_delete_privilege_routine, arguments);
 }

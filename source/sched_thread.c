@@ -7,6 +7,7 @@
 #include "sched_kernel.h"
 #include "sched_timer.h"
 #include "k_trace.h"
+#include "k_malloc.h"
 #include "postcode.h"
 
 /**
@@ -75,6 +76,13 @@ static _u32_t _thread_init_privilege_routine(arguments_t *pArgs)
         pCurThread->head.pName = pName;
 
         pCurThread->pEntryFunc = pEntryFun;
+        if (!pAddress) {
+            pAddress = (_u32_t *)k_malloc(size);
+            if (!pAddress) {
+                EXIT_CRITICAL_SECTION();
+                return 0u;
+            }
+        }
         pCurThread->pStackAddr = pAddress;
         pCurThread->stackSize = size;
 
@@ -290,12 +298,6 @@ void _impl_thread_static_init(thread_context_t *pCurThread, void *p_arg)
     EXIT_CRITICAL_SECTION();
 }
 
-void _impl_thread_entry(pThread_entryFunc_t pEntryFn, void *pArg)
-{
-    pEntryFn(pArg);
-    RUN_UNREACHABLE();
-}
-
 /**
  * @brief Initialize a new thread.
  *
@@ -310,10 +312,6 @@ void _impl_thread_entry(pThread_entryFunc_t pEntryFn, void *pArg)
 _u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, _u32_t *pAddress, _u32_t size, _i16_t priority, void *pArg, const _char_t *pName)
 {
     if (!pEntryFun) {
-        return OS_INVALID_ID_VAL;
-    }
-
-    if (!pAddress) {
         return OS_INVALID_ID_VAL;
     }
 
@@ -527,3 +525,12 @@ _i32p_t _impl_thread_sleep(_u32_t timeout_ms)
 
     return kernel_privilege_invoke((const void *)_thread_sleep_privilege_routine, arguments);
 }
+
+void _impl_thread_entry(pThread_entryFunc_t pEntryFn, void *pArg)
+{
+    pEntryFn(pArg);
+
+    _impl_thread_delete((_u32_t)kernel_thread_runContextGet());
+    RUN_UNREACHABLE();
+}
+

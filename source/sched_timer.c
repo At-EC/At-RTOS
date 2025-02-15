@@ -377,6 +377,28 @@ static _u32_t _timer_stop_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
+static _i32p_t _timer_delete_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    ENTER_CRITICAL_SECTION();
+
+    timer_context_t *pCurTimer = (timer_context_t *)pArgs[0].u32_val;
+    timeout_remove(&pCurTimer->expire, true);
+    _timeout_transfer_toNoInitList((linker_t *)&pCurTimer->expire.linker);
+    k_memset((_char_t *)pCurTimer, 0x0u, sizeof(timer_context_t));
+
+    EXIT_CRITICAL_SECTION();
+    return 0;
+}
+
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
 static _u32_t _timer_total_system_ms_get_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
@@ -574,6 +596,31 @@ _b_t _impl_timer_busy(_u32_t ctx)
 
     EXIT_CRITICAL_SECTION();
     return isBusy;
+}
+
+/**
+ * @brief timer delete.
+ *
+ * @param ctx The timer unique id.
+ *
+ * @return The result of timer stop operation.
+ */
+_i32p_t _impl_timer_delete(_u32_t ctx)
+{
+    timer_context_t *pCtx = (timer_context_t *)ctx;
+    if (_timer_context_isInvalid(pCtx)) {
+        return PC_EOR;
+    }
+
+    if (!_timer_context_isInit(pCtx)) {
+        return PC_EOR;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (_u32_t)ctx},
+    };
+
+    return kernel_privilege_invoke((const void *)_timer_delete_privilege_routine, arguments);
 }
 
 /**

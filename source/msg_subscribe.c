@@ -213,6 +213,13 @@ static _u32_t _subscribe_init_privilege_routine(arguments_t *pArgs)
         pCurSubscribe->pPublisher = NULL;
         pCurSubscribe->accepted = 0u;
 
+        if (!pData) {
+            pData = (_u32_t *)k_malloc(len);
+            if (!pData) {
+                EXIT_CRITICAL_SECTION();
+                return 0u;
+            }
+        }
         pCurSubscribe->notify.pData = pData;
         pCurSubscribe->notify.len = size;
         pCurSubscribe->notify.muted = false;
@@ -326,10 +333,6 @@ _u32_t _impl_publish_init(const _char_t *pName)
  */
 _u32_t _impl_subscribe_init(void *pDataAddr, _u16_t size, const _char_t *pName)
 {
-    if (!pDataAddr) {
-        return OS_INVALID_ID_VAL;
-    }
-
     if (!size) {
         return OS_INVALID_ID_VAL;
     }

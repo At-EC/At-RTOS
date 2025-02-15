@@ -137,7 +137,7 @@ typedef struct {
 typedef struct {
     struct base_head head;
 
-    const void *pQueueBufferAddress;
+    void *pQueueBufferAddress;
 
     _u16_t elementLength;
 

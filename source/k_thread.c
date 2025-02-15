@@ -49,6 +49,7 @@ const at_rtos_api_t os = {
     .timer_start = os_timer_start,
     .timer_stop = os_timer_stop,
     .timer_busy = os_timer_busy,
+    .timer_delete = os_timer_delete,
     .timer_system_total_ms = os_timer_system_total_ms,
     .timer_system_busy_wait = os_timer_system_busy_wait,
 
@@ -56,23 +57,28 @@ const at_rtos_api_t os = {
     .sem_take = os_sem_take,
     .sem_give = os_sem_give,
     .sem_flush = os_sem_flush,
+    .sem_delete = os_sem_delete,
 
     .mutex_init = os_mutex_init,
     .mutex_lock = os_mutex_lock,
     .mutex_unlock = os_mutex_unlock,
+    .mutex_delete = os_mutex_delete,
 
     .evt_init = os_evt_init,
     .evt_set = os_evt_set,
     .evt_wait = os_evt_wait,
+    .evt_delete = os_evt_delete,
 
     .msgq_init = os_msgq_init,
     .msgq_put = os_msgq_put,
     .msgq_get = os_msgq_get,
     .msgq_num_probe = os_msgq_num_probe,
+    .msgq_delete = os_msgq_delete,
 
     .pool_init = os_pool_init,
     .pool_take = os_pool_take,
     .pool_release = os_pool_release,
+    .pool_delete = os_pool_delete,
 
     .publish_init = os_publish_init,
     .publish_data_submit = os_publish_data_submit,
@@ -92,8 +98,6 @@ const at_rtos_api_t os = {
     .trace_postcode = os_trace_failed_postcode,
     .trace_thread = os_trace_foreach_thread,
     .trace_time = os_trace_analyze,
-
-    .object_free = os_object_free_force,
 };
 #endif
 

@@ -12,6 +12,7 @@
 #include "./clock/k_clock_tick.h"
 #include "k_struct.h"
 #include "k_type.h"
+#include "k_malloc.h"
 #include "static_init.h"
 
 #ifndef KERNEL_THREAD_STACK_SIZE

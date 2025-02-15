@@ -12,7 +12,8 @@
 /**
  * Local unique postcode.
  */
-#define PC_EOR PC_IER(PC_OS_CMPT_SEMAPHORE_4)
+#define PC_EOR             PC_IER(PC_OS_CMPT_SEMAPHORE_4)
+#define _SEMAPHORE_DELETED (12u)
 
 /**
  * @brief Check if the semaphore unique id if is's invalid.
@@ -50,11 +51,18 @@ static _b_t _semaphore_context_isInit(semaphore_context_t *pCurSemaphore)
 static void _semaphore_schedule(void *pTask)
 {
     struct schedule_task *pCurTask = (struct schedule_task *)pTask;
+    struct call_entry *pEntry = &pCurTask->exec.entry;
+
     timeout_remove(&pCurTask->expire, true);
-    semaphore_context_t *pCurSemaphore = (semaphore_context_t *)pCurTask->pPendCtx;
-    /* If the PC arrive, the semaphore will be available and can be acquired */
-    pCurSemaphore->remains--; // The semaphore has available count
-    pCurTask->exec.entry.result = 0;
+
+    if (pEntry->result == _SEMAPHORE_DELETED) {
+        pEntry->result = PC_OS_WAIT_NODATA;
+    } else {
+        semaphore_context_t *pCurSemaphore = (semaphore_context_t *)pCurTask->pPendCtx;
+        /* If the PC arrive, the semaphore will be available and can be acquired */
+        pCurSemaphore->remains--; // The semaphore has available count
+        pCurTask->exec.entry.result = 0;
+    }
 }
 
 /**
@@ -110,7 +118,7 @@ static _i32p_t _semaphore_take_privilege_routine(arguments_t *pArgs)
     semaphore_context_t *pCurSemaphore = (semaphore_context_t *)pArgs[0].u32_val;
     _u32_t timeout_ms = (_u32_t)pArgs[1].u32_val;
     thread_context_t *pCurThread = NULL;
-    _i32p_t postcode = PC_OS_WAIT_AVAILABLE;
+    _i32p_t postcode = 0;
 
     pCurThread = kernel_thread_runContextGet();
     if (!pCurSemaphore->remains) {
@@ -191,6 +199,37 @@ static _i32p_t _semaphore_flush_privilege_routine(arguments_t *pArgs)
 }
 
 /**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static _i32p_t _semaphore_delete_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    semaphore_context_t *pCurSemaphore = (semaphore_context_t *)pArgs[0].u32_val;
+    _i32p_t postcode = 0;
+
+    list_iterator_t it = {0u};
+    list_t *plist = (list_t *)&pCurSemaphore->q_list;
+    list_iterator_init(&it, plist);
+    struct schedule_task *pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    while (pCurTask) {
+        postcode = schedule_entry_trigger(pCurTask, _semaphore_schedule, _SEMAPHORE_DELETED);
+        if (PC_IER(postcode)) {
+            break;
+        }
+        pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    }
+    k_memset((_char_t *)pCurSemaphore, 0x0u, sizeof(semaphore_context_t));
+
+    EXIT_CRITICAL_SECTION();
+    return postcode;
+}
+
+/**
  * @brief Initialize a new semaphore.
  *
  * @param remainCount The initial count that allows the system take.
@@ -257,13 +296,6 @@ _i32p_t _impl_semaphore_take(_u32_t ctx, _u32_t timeout_ms)
         postcode = kernel_schedule_result_take();
     }
 
-    PC_IF(postcode, PC_PASS_INFO)
-    {
-        if (postcode != PC_OS_WAIT_TIMEOUT) {
-            postcode = 0;
-        }
-    }
-
     EXIT_CRITICAL_SECTION();
     return postcode;
 }
@@ -316,4 +348,29 @@ _i32p_t _impl_semaphore_flush(_u32_t ctx)
     };
 
     return kernel_privilege_invoke((const void *)_semaphore_flush_privilege_routine, arguments);
+}
+
+/**
+ * @brief Semaphore delete.
+ *
+ * @param id The semaphore unique id.
+ *
+ * @return The result of the operation.
+ */
+_i32p_t _impl_semaphore_delete(_u32_t ctx)
+{
+    semaphore_context_t *pCtx = (semaphore_context_t *)ctx;
+    if (_semaphore_context_isInvalid(pCtx)) {
+        return PC_EOR;
+    }
+
+    if (!_semaphore_context_isInit(pCtx)) {
+        return PC_EOR;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (_u32_t)ctx},
+    };
+
+    return kernel_privilege_invoke((const void *)_semaphore_delete_privilege_routine, arguments);
 }

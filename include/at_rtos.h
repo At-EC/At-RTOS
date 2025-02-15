@@ -104,7 +104,8 @@ struct foreach_item {
  * @brief Initialize a thread, and put it to pending list that are ready to run.
  *
  * @param pEntryFun The pointer of the thread entry function. Thread function must be designed to never return.
- * @param pStackAddr The pointer of the thread stack address. The stack memory must be predefined and allocated in your system.
+ * @param pStackAddr The pointer of the thread stack address. The stack memory must be predefined and allocated in your system or kernel
+ * will allocate it internally.
  * @param stackSize The size of the the stack is base on your specified variable.
  * @param priority The thread priority specified the thread's priority when the AtOS do kernel schedule.
  * @param pArg The thread entry function argument.
@@ -115,8 +116,8 @@ struct foreach_item {
 static inline os_thread_id_t os_thread_init(u32_t *pStackAddr, u32_t size, i16_t priority, pThread_entryFunc_t pEntryFun, void *pArg,
                                             const char_t *pName)
 {
-    extern _u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, _u32_t * pAddress, _u32_t size, _i16_t priority, void *pArg,
-                                    const _char_t *pName);
+    extern u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t * pAddress, u32_t size, _i16_t priority, void *pArg,
+                                   const _char_t *pName);
 
     os_thread_id_t id = {0u};
     id.u32_val = _impl_thread_init(pEntryFun, pStackAddr, size, priority, pArg, pName);
@@ -228,7 +229,7 @@ static inline i32p_t os_thread_delete(os_thread_id_t id)
  *
  * @return The result of thread delete operation.
  */
-static inline _i32p_t os_thread_delete_self(void)
+static inline i32p_t os_thread_delete_self(void)
 {
     extern i32p_t _impl_thread_delete(u32_t ctx);
     extern thread_context_t *kernel_thread_runContextGet(void);
@@ -244,7 +245,7 @@ static inline _i32p_t os_thread_delete_self(void)
 static inline os_thread_id_t os_thread_id_self(void)
 {
     extern thread_context_t *kernel_thread_runContextGet(void);
-    extern const _char_t *_impl_thread_name_get(_u32_t ctx);
+    extern const _char_t *_impl_thread_name_get(u32_t ctx);
 
     os_thread_id_t id = {0u};
     id.u32_val = (u32_t)kernel_thread_runContextGet();
@@ -376,6 +377,20 @@ static inline i32p_t os_timer_busy(os_timer_id_t id)
 }
 
 /**
+ * @brief Check the timer to confirm if it's already scheduled in the waiting list.
+ *
+ * @param id The timer unique id.
+ *
+ * @return The true result indicates time busy, otherwise is free status.
+ */
+static inline i32p_t os_timer_delete(os_timer_id_t id)
+{
+    extern i32p_t _impl_timer_delete(u32_t ctx);
+
+    return (i32p_t)_impl_timer_delete(id.u32_val);
+}
+
+/**
  * @brief Get the kernel RTOS system time (ms).
  *
  * @return The value of the total system time (ms).
@@ -462,6 +477,20 @@ static inline i32p_t os_sem_flush(os_sem_id_t id)
 }
 
 /**
+ * @brief Semaphore delete.
+ *
+ * @param id The semaphore unique id.
+ *
+ * @return The result of the operation.
+ */
+static inline i32p_t os_sem_delete(os_sem_id_t id)
+{
+    extern i32p_t _impl_semaphore_delete(u32_t ctx);
+
+    return (i32p_t)_impl_semaphore_delete(id.u32_val);
+}
+
+/**
  * @brief Initialize a new mutex.
  *
  * @param pName The mutex name.
@@ -505,6 +534,20 @@ static inline i32p_t os_mutex_unlock(os_mutex_id_t id)
     extern i32p_t _impl_mutex_unlock(u32_t ctx);
 
     return (i32p_t)_impl_mutex_unlock(id.u32_val);
+}
+
+/**
+ * @brief Mutex delete.
+ *
+ * @param id The mutex unique id.
+ *
+ * @return The result of the operation.
+ */
+static inline i32p_t os_mutex_delete(os_mutex_id_t id)
+{
+    extern i32p_t _impl_mutex_delete(u32_t ctx);
+
+    return (i32p_t)_impl_mutex_delete(id.u32_val);
 }
 
 /**
@@ -580,10 +623,25 @@ static inline i32p_t os_evt_wait(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t l
 }
 
 /**
+ * @brief Event delete.
+ *
+ * @param id The event unique id.
+ *
+ * @return The result of the operation.
+ */
+static inline i32p_t os_evt_delete(os_evt_id_t id)
+{
+    extern i32p_t _impl_event_delete(u32_t ctx);
+
+    return (i32p_t)_impl_event_delete(id.u32_val);
+}
+
+/**
  * @brief Initialize a new queue.
  *
  * @param pName The queue name.
- * @param pBufferAddr The pointer of the queue buffer.
+ * @param pStackAddr The pointer of the queue buffer address. The queue buffer must be predefined and allocated in your system or kernel
+ * will allocate it internally.
  * @param len The element size.
  * @param num The element number.
  *
@@ -637,6 +695,20 @@ static inline i32p_t os_msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t
 }
 
 /**
+ * @brief Delete a message queue.
+ *
+ * @param ctx The queue unique id.
+ *
+ * @return The result of the operation.
+ */
+static inline i32p_t os_msgq_delete(os_msgq_id_t id)
+{
+    extern i32p_t _impl_queue_delete(u32_t ctx);
+
+    return (i32p_t)_impl_queue_delete(id.u32_val);
+}
+
+/**
  * @brief Get the received message number.
  *
  * @param ctx The queue unique id.
@@ -654,7 +726,8 @@ static inline u32_t os_msgq_num_probe(os_msgq_id_t id)
  * @brief Initialize a new pool.
  *
  * @param pName The pool name.
- * @param pMemAddr The pointer of the pool buffer.
+ * @param pMemAddr The pointer of the pool buffer address. The pool memory must be predefined and allocated in your system or kernel
+ * will allocate it internally.
  * @param size The element size.
  * @param num The element number.
  *
@@ -701,6 +774,20 @@ static inline i32p_t os_pool_release(os_pool_id_t id, void **ppUserMem)
     extern i32p_t _impl_pool_release(u32_t ctx, void **ppUserBuffer);
 
     return (i32p_t)_impl_pool_release(id.u32_val, ppUserMem);
+}
+
+/**
+ * @brief Delete memory pool.
+ *
+ * @param id The pool unique id.
+ *
+ * @return The result of the operation.
+ */
+static inline i32p_t os_pool_delete(os_pool_id_t id)
+{
+    extern i32p_t _impl_pool_delete(u32_t ctx);
+
+    return (i32p_t)_impl_pool_delete(id.u32_val);
 }
 
 /**
@@ -911,18 +998,6 @@ static inline void os_trace_analyze(const pTrace_analyzeFunc_t fn)
     _impl_trace_analyze(fn);
 }
 
-/**
- * @brief Force kernel object free, must to confirm no thread blocking in this object
- *
- * @param id The kernel object unique id.
- */
-static inline void os_object_free_force(struct os_id id)
-{
-    extern void _impl_kernel_object_free(u32_t ctx);
-
-    _impl_kernel_object_free(id.u32_val);
-}
-
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
 #ifdef OS_API_ENABLED
 typedef struct {
@@ -945,6 +1020,7 @@ typedef struct {
     i32p_t (*timer_start)(os_timer_id_t, os_timer_ctrl_t, os_timeout_t);
     i32p_t (*timer_stop)(os_timer_id_t);
     i32p_t (*timer_busy)(os_timer_id_t);
+    i32p_t (*timer_delete)(os_timer_id_t);
     u32_t (*timer_system_total_ms)(void);
     u32_t (*timer_system_busy_wait)(u32_t);
 
@@ -952,23 +1028,28 @@ typedef struct {
     i32p_t (*sem_take)(os_sem_id_t, os_timeout_t);
     i32p_t (*sem_give)(os_sem_id_t);
     i32p_t (*sem_flush)(os_sem_id_t);
+    i32p_t (*sem_delete)(os_sem_id_t);
 
     os_mutex_id_t (*mutex_init)(const char_t *);
     i32p_t (*mutex_lock)(os_mutex_id_t);
     i32p_t (*mutex_unlock)(os_mutex_id_t);
+    i32p_t (*mutex_delete)(os_mutex_id_t);
 
     os_evt_id_t (*evt_init)(u32_t, u32_t, u32_t, u32_t, const char_t *);
     i32p_t (*evt_set)(os_evt_id_t, u32_t, u32_t, u32_t);
     i32p_t (*evt_wait)(os_evt_id_t, os_evt_val_t *, u32_t, os_timeout_t);
+    i32p_t (*evt_delete)(os_evt_id_t);
 
     os_msgq_id_t (*msgq_init)(const void *, u16_t, u16_t, const char_t *);
     i32p_t (*msgq_put)(os_msgq_id_t, const u8_t *, u16_t, b_t, os_timeout_t);
     i32p_t (*msgq_get)(os_msgq_id_t, const u8_t *, u16_t, b_t, os_timeout_t);
+    i32p_t (*msgq_delete)(os_msgq_id_t);
     u32_t (*msgq_num_probe)(os_msgq_id_t);
 
     os_pool_id_t (*pool_init)(const void *, u16_t, u16_t, const char_t *);
     i32p_t (*pool_take)(os_pool_id_t, void **, u16_t, os_timeout_t);
     i32p_t (*pool_release)(os_pool_id_t, void **);
+    i32p_t (*pool_delete)(os_pool_id_t);
 
     os_publish_id_t (*publish_init)(const char_t *);
     i32p_t (*publish_data_submit)(os_publish_id_t, const void *, u16_t);
@@ -988,8 +1069,6 @@ typedef struct {
     b_t (*trace_postcode)(const pTrace_postcodeFunc_t);
     void (*trace_thread)(const pTrace_threadFunc_t);
     void (*trace_time)(const pTrace_analyzeFunc_t);
-
-    void (*object_free)(struct os_id);
 } at_rtos_api_t;
 
 extern const at_rtos_api_t os;

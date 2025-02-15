@@ -15,6 +15,7 @@
 #define PC_EOR                 PC_IER(PC_OS_CMPT_QUEUE_6)
 #define _QUEUE_WAKEUP_SENDER   (10u)
 #define _QUEUE_WAKEUP_RECEIVER (11u)
+#define _QUEUE_DELETED         (12u)
 
 /**
  * @brief Check if the queue unique id if is's invalid.
@@ -165,6 +166,8 @@ static void _queue_schedule(void *pTask)
             _message_send((queue_context_t *)pCurQueue, pQue_sche->pUsrBuf, pQue_sche->size);
         }
         pEntry->result = 0;
+    } else if (pEntry->result == _QUEUE_DELETED) {
+        pEntry->result = PC_OS_WAIT_NODATA;
     }
 }
 
@@ -179,7 +182,7 @@ static _u32_t _queue_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    const void *pQueueBufferAddr = (const void *)(pArgs[0].ptr_val);
+    void *pQueueBufferAddr = (void *)(pArgs[0].pv_val);
     _u16_t elementLen = (_u16_t)(pArgs[1].u16_val);
     _u16_t elementNum = (_u16_t)(pArgs[2].u16_val);
     const _char_t *pName = (const _char_t *)(pArgs[3].pch_val);
@@ -198,6 +201,13 @@ static _u32_t _queue_init_privilege_routine(arguments_t *pArgs)
         pCurQueue->head.cs = CS_INITED;
         pCurQueue->head.pName = pName;
 
+        if (!pQueueBufferAddr) {
+            pQueueBufferAddr = (_u32_t *)k_malloc(elementLen * elementNum);
+            if (!pQueueBufferAddr) {
+                EXIT_CRITICAL_SECTION();
+                return 0u;
+            }
+        }
         pCurQueue->pQueueBufferAddress = pQueueBufferAddr;
         pCurQueue->elementLength = elementLen;
         pCurQueue->elementNumber = elementNum;
@@ -334,6 +344,54 @@ static _i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
 }
 
 /**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static _i32p_t _queue_delete_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    queue_context_t *pCurQueue = (queue_context_t *)pArgs[0].u32_val;
+    _i32p_t postcode = 0;
+
+    list_iterator_t it = {0u};
+    list_t *plist = (list_t *)&pCurQueue->in_QList;
+    list_iterator_init(&it, plist);
+    struct schedule_task *pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    while (pCurTask) {
+        postcode = schedule_entry_trigger(pCurTask, _queue_schedule, _QUEUE_DELETED);
+        if (PC_IER(postcode)) {
+            break;
+        }
+        pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    }
+
+    plist = (list_t *)&pCurQueue->out_QList;
+    list_iterator_init(&it, plist);
+    pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    while (pCurTask) {
+        postcode = schedule_entry_trigger(pCurTask, _queue_schedule, _QUEUE_DELETED);
+        if (PC_IER(postcode)) {
+            break;
+        }
+        pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    }
+
+    if (k_allocated(pCurQueue->pQueueBufferAddress)) {
+        k_free(pCurQueue->pQueueBufferAddress);
+    } else {
+        k_memset((_char_t *)pCurQueue->pQueueBufferAddress, 0, pCurQueue->elementLength * pCurQueue->elementNumber);
+    }
+    k_memset((_char_t *)pCurQueue, 0x0u, sizeof(queue_context_t));
+
+    EXIT_CRITICAL_SECTION();
+    return postcode;
+}
+
+/**
  * @brief Initialize a new queue.
  *
  * @param pName The queue name.
@@ -345,10 +403,6 @@ static _i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
  */
 _u32_t _impl_queue_init(const void *pQueueBufferAddr, _u16_t elementLen, _u16_t elementNum, const _char_t *pName)
 {
-    if (!pQueueBufferAddr) {
-        return OS_INVALID_ID_VAL;
-    }
-
     if (!elementLen) {
         return OS_INVALID_ID_VAL;
     }
@@ -432,13 +486,6 @@ _i32p_t _impl_queue_send(_u32_t ctx, const _u8_t *pUserBuffer, _u16_t bufferSize
         postcode = kernel_schedule_result_take();
     }
 
-    PC_IF(postcode, PC_PASS_INFO)
-    {
-        if (postcode != PC_OS_WAIT_TIMEOUT) {
-            postcode = 0;
-        }
-    }
-
     EXIT_CRITICAL_SECTION();
     return postcode;
 }
@@ -485,13 +532,30 @@ _i32p_t _impl_queue_receive(_u32_t ctx, const _u8_t *pUserBuffer, _u16_t bufferS
         postcode = kernel_schedule_result_take();
     }
 
-    PC_IF(postcode, PC_PASS_INFO)
-    {
-        if (postcode != PC_OS_WAIT_TIMEOUT) {
-            postcode = 0;
-        }
-    }
-
     EXIT_CRITICAL_SECTION();
     return postcode;
+}
+
+/**
+ * @brief Delete a queue.
+ *
+ * @param ctx The queue unique id.
+ *
+ * @return The result of the operation.
+ */
+_i32p_t _impl_queue_delete(_u32_t ctx)
+{
+    queue_context_t *pCtx = (queue_context_t *)ctx;
+    if (_queue_context_isInvalid(pCtx)) {
+        return 0u;
+    }
+
+    if (!_queue_context_isInit(pCtx)) {
+        return 0u;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (_u32_t)ctx},
+    };
+    return kernel_privilege_invoke((const void *)_queue_delete_privilege_routine, arguments);
 }

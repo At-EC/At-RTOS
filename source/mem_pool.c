@@ -12,7 +12,8 @@
 /**
  * Local unique postcode.
  */
-#define PC_EOR PC_IER(PC_OS_CMPT_POOL_9)
+#define PC_EOR        PC_IER(PC_OS_CMPT_POOL_9)
+#define _POOL_DELETED (12u)
 
 /**
  * @brief Check if the pool unique id if is's invalid.
@@ -109,7 +110,14 @@ static bool _mem_release(pool_context_t *pCurPool, void *pUserMem)
 static void _pool_schedule(void *pTask)
 {
     struct schedule_task *pCurTask = (struct schedule_task *)pTask;
+
     timeout_remove(&pCurTask->expire, true);
+
+    if (pCurTask->exec.entry.result == _POOL_DELETED) {
+        pCurTask->exec.entry.result = PC_OS_WAIT_NODATA;
+        return;
+    }
+
     pool_context_t *pCurPool = (pool_context_t *)pCurTask->pPendCtx;
     void **ppUserMemAddress = (void **)pCurTask->pPendData;
     if (!*ppUserMemAddress) {
@@ -151,7 +159,13 @@ static _u32_t _pool_init_privilege_routine(arguments_t *pArgs)
         k_memset((_char_t *)pCurPool, 0x0u, sizeof(pool_context_t));
         pCurPool->head.cs = CS_INITED;
         pCurPool->head.pName = pName;
-
+        if (!pMemAddr) {
+            pMemAddr = (_u32_t *)k_malloc(elementLen * elementNum);
+            if (!pMemAddr) {
+                EXIT_CRITICAL_SECTION();
+                return 0u;
+            }
+        }
         pCurPool->pMemAddress = pMemAddr;
         pCurPool->elementLength = elementLen;
         pCurPool->elementNumber = elementNum;
@@ -246,6 +260,43 @@ static _i32p_t _pool_release_privilege_routine(arguments_t *pArgs)
 }
 
 /**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
+static _i32p_t _pool_delete_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    pool_context_t *pCurPool = (pool_context_t *)pArgs[0].u32_val;
+    _i32p_t postcode = 0;
+
+    list_iterator_t it = {0u};
+    list_t *plist = (list_t *)&pCurPool->q_list;
+    list_iterator_init(&it, plist);
+    struct schedule_task *pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    while (pCurTask) {
+        postcode = schedule_entry_trigger(pCurTask, _pool_schedule, _QUEUE_DELETED);
+        if (PC_IER(postcode)) {
+            break;
+        }
+        pCurTask = (struct schedule_task *)list_iterator_next(&it);
+    }
+
+    if (k_allocated(pCurPool->pMemAddress)) {
+        k_free(pCurPool->pMemAddress);
+    } else {
+        k_memset((_char_t *)pCurPool->pMemAddress, 0, pCurPool->elementLength * pCurPool->elementNumber);
+    }
+    k_memset((_char_t *)pCurPool, 0x0u, sizeof(pool_context_t));
+
+    EXIT_CRITICAL_SECTION();
+    return postcode;
+}
+
+/**
  * @brief Initialize a new pool.
  *
  * @param pName The pool name.
@@ -257,10 +308,6 @@ static _i32p_t _pool_release_privilege_routine(arguments_t *pArgs)
  */
 _u32_t _impl_pool_init(const void *pMemAddr, _u16_t elementLen, _u16_t elementNum, const _char_t *pName)
 {
-    if (!pMemAddr) {
-        return OS_INVALID_ID_VAL;
-    }
-
     if (!elementLen) {
         return OS_INVALID_ID_VAL;
     }
@@ -323,14 +370,6 @@ _i32p_t _impl_pool_take(_u32_t ctx, void **ppUserBuffer, _u16_t bufferSize, _u32
     if (postcode == PC_OS_WAIT_UNAVAILABLE) {
         postcode = kernel_schedule_result_take();
     }
-
-    PC_IF(postcode, PC_PASS_INFO)
-    {
-        if (postcode != PC_OS_WAIT_TIMEOUT) {
-            postcode = 0;
-        }
-    }
-
     EXIT_CRITICAL_SECTION();
     return postcode;
 }
@@ -364,4 +403,29 @@ _i32p_t _impl_pool_release(_u32_t ctx, void **ppUserBuffer)
     };
 
     return kernel_privilege_invoke((const void *)_pool_release_privilege_routine, arguments);
+}
+
+/**
+ * @brief Release memory pool.
+ *
+ * @param id The pool unique id.
+ *
+ * @return The result of the operation.
+ */
+_i32p_t _impl_pool_delete(_u32_t ctx)
+{
+    pool_context_t *pCtx = (pool_context_t *)ctx;
+    if (_pool_context_isInvalid(pCtx)) {
+        return PC_EOR;
+    }
+
+    if (!_pool_context_isInit(pCtx)) {
+        return PC_EOR;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.u32_val = (_u32_t)ctx},
+    };
+
+    return kernel_privilege_invoke((const void *)_pool_delete_privilege_routine, arguments);
 }
