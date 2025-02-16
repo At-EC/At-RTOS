@@ -157,7 +157,7 @@ typedef struct {
 typedef struct {
     struct base_head head;
 
-    const void *pMemAddress;
+    void *pMemAddress;
 
     _u16_t elementLength;
 

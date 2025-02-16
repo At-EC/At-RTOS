@@ -254,6 +254,11 @@ static _i32p_t _queue_send_privilege_routine(arguments_t *pArgs)
     _i32p_t postcode = 0;
 
     thread_context_t *pCurThread = kernel_thread_runContextGet();
+
+    if (pQue_sch->size == 0) {
+        pQue_sch->size = pCurQueue->elementLength;
+    }
+
     if (pQue_sch->size > pCurQueue->elementLength) {
         EXIT_CRITICAL_SECTION();
         return PC_EOR;
@@ -307,6 +312,11 @@ static _i32p_t _queue_receive_privilege_routine(arguments_t *pArgs)
     _i32p_t postcode = 0;
 
     thread_context_t *pCurThread = (thread_context_t *)kernel_thread_runContextGet();
+
+    if (pQue_sch->size == 0) {
+        pQue_sch->size = pCurQueue->elementLength;
+    }
+
     if (pQue_sch->size > pCurQueue->elementLength) {
         EXIT_CRITICAL_SECTION();
         return PC_EOR;

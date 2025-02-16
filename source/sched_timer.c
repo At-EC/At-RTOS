@@ -381,8 +381,6 @@ static _i32p_t _timer_delete_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    ENTER_CRITICAL_SECTION();
-
     timer_context_t *pCurTimer = (timer_context_t *)pArgs[0].u32_val;
     timeout_remove(&pCurTimer->expire, true);
     _timeout_transfer_toNoInitList((linker_t *)&pCurTimer->expire.linker);

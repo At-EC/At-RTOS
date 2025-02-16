@@ -142,7 +142,7 @@ static _u32_t _pool_init_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
 
-    const void *pMemAddr = (const void *)(pArgs[0].ptr_val);
+    void *pMemAddr = (void *)(pArgs[0].pv_val);
     _u16_t elementLen = (_u16_t)(pArgs[1].u16_val);
     _u16_t elementNum = (_u16_t)(pArgs[2].u16_val);
     const _char_t *pName = (const _char_t *)(pArgs[3].pch_val);
@@ -278,7 +278,7 @@ static _i32p_t _pool_delete_privilege_routine(arguments_t *pArgs)
     list_iterator_init(&it, plist);
     struct schedule_task *pCurTask = (struct schedule_task *)list_iterator_next(&it);
     while (pCurTask) {
-        postcode = schedule_entry_trigger(pCurTask, _pool_schedule, _QUEUE_DELETED);
+        postcode = schedule_entry_trigger(pCurTask, _pool_schedule, _POOL_DELETED);
         if (PC_IER(postcode)) {
             break;
         }

@@ -663,7 +663,7 @@ static inline os_msgq_id_t os_msgq_init(const void *pBufferAddr, u16_t len, u16_
  *
  * @param id The queue unique id.
  * @param pUserBuffer The pointer of the message buffer address.
- * @param size The queue buffer size.
+ * @param size The queue buffer size, the default 0 means that it use the init item size.
  * @param isToFront The direction of the message operation.
  * @param timeout_ms The queue send timeout option.
  *
@@ -681,7 +681,7 @@ static inline i32p_t os_msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t
  *
  * @param id The queue unique id.
  * @param pUserBuffer The pointer of the message buffer address.
- * @param size The queue buffer size.
+ * @param size The queue buffer size, the default 0 means that it use the init item size.
  * @param isFromBack The direction of the message operation.
  * @param timeout_ms The queue send timeout option.
  *

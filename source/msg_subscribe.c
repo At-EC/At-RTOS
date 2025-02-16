@@ -214,7 +214,7 @@ static _u32_t _subscribe_init_privilege_routine(arguments_t *pArgs)
         pCurSubscribe->accepted = 0u;
 
         if (!pData) {
-            pData = (_u32_t *)k_malloc(len);
+            pData = (_u32_t *)k_malloc(size);
             if (!pData) {
                 EXIT_CRITICAL_SECTION();
                 return 0u;

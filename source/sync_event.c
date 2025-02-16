@@ -54,7 +54,7 @@ static void _event_schedule(void *pTask)
 
     timeout_remove(&pCurTask->expire, true);
 
-    if (pCurTask->exec.entry.result = _EVENT_DELETED) {
+    if (pCurTask->exec.entry.result == _EVENT_DELETED) {
         pCurTask->exec.entry.result = PC_OS_WAIT_NODATA;
         return;
     }
