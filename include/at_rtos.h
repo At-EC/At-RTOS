@@ -221,7 +221,10 @@ static inline i32p_t os_thread_delete(os_thread_id_t id)
 {
     extern i32p_t _impl_thread_delete(u32_t ctx);
 
-    return (i32p_t)_impl_thread_delete(id.u32_val);
+    i32p_t pc =_impl_thread_delete(id.u32_val);
+    id.p_val = NULL;
+
+    return pc;
 }
 
 /**
@@ -387,7 +390,10 @@ static inline i32p_t os_timer_delete(os_timer_id_t id)
 {
     extern i32p_t _impl_timer_delete(u32_t ctx);
 
-    return (i32p_t)_impl_timer_delete(id.u32_val);
+    i32p_t pc = _impl_timer_delete(id.u32_val);
+    id.p_val = NULL;
+
+    return pc;
 }
 
 /**
@@ -487,7 +493,10 @@ static inline i32p_t os_sem_delete(os_sem_id_t id)
 {
     extern i32p_t _impl_semaphore_delete(u32_t ctx);
 
-    return (i32p_t)_impl_semaphore_delete(id.u32_val);
+    i32p_t pc = _impl_semaphore_delete(id.u32_val);
+    id.p_val = NULL;
+
+    return pc;
 }
 
 /**
@@ -547,7 +556,10 @@ static inline i32p_t os_mutex_delete(os_mutex_id_t id)
 {
     extern i32p_t _impl_mutex_delete(u32_t ctx);
 
-    return (i32p_t)_impl_mutex_delete(id.u32_val);
+    i32p_t pc = _impl_mutex_delete(id.u32_val);
+    id.p_val = NULL;
+
+    return pc;
 }
 
 /**
@@ -633,7 +645,10 @@ static inline i32p_t os_evt_delete(os_evt_id_t id)
 {
     extern i32p_t _impl_event_delete(u32_t ctx);
 
-    return (i32p_t)_impl_event_delete(id.u32_val);
+    i32p_t pc = _impl_event_delete(id.u32_val);
+    id.p_val = NULL;
+
+    return pc;
 }
 
 /**
@@ -705,7 +720,10 @@ static inline i32p_t os_msgq_delete(os_msgq_id_t id)
 {
     extern i32p_t _impl_queue_delete(u32_t ctx);
 
-    return (i32p_t)_impl_queue_delete(id.u32_val);
+    i32p_t pc = _impl_queue_delete(id.u32_val);
+    id.p_val = NULL;
+
+    return pc;
 }
 
 /**
@@ -787,7 +805,10 @@ static inline i32p_t os_pool_delete(os_pool_id_t id)
 {
     extern i32p_t _impl_pool_delete(u32_t ctx);
 
-    return (i32p_t)_impl_pool_delete(id.u32_val);
+    i32p_t pc = _impl_pool_delete(id.u32_val);
+    id.p_val = NULL;
+
+    return pc;
 }
 
 /**
@@ -902,6 +923,16 @@ static inline i32p_t os_subscribe_data_apply(os_subscribe_id_t subscribe_id, voi
 static inline b_t os_id_is_invalid(struct os_id id)
 {
     return (b_t)kernel_os_id_is_invalid(id);
+}
+
+/**
+ * @brief Set the unique id to invalid.
+ *
+ * @param id The provided unique id.
+ */
+static inline void os_id_set_invalid(struct os_id id)
+{
+    return kernel_os_id_set_invalid(id);
 }
 
 /**
@@ -1059,6 +1090,7 @@ typedef struct {
     b_t (*subscribe_data_is_ready)(os_subscribe_id_t);
 
     b_t (*id_isInvalid)(struct os_id);
+    void (*id_setInvalid)(struct os_id);
     i32p_t (*schedule_run)(void);
     b_t (*schedule_is_running)(void);
     void (*schedule_lock)(void);

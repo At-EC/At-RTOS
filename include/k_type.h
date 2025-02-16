@@ -92,4 +92,9 @@ static inline _b_t kernel_os_id_is_invalid(struct os_id id)
     return false;
 }
 
+static inline void kernel_os_id_set_invalid(struct os_id id)
+{
+    id.p_val = NULL;
+}
+
 #endif /* _K_TYPE_H_ */
