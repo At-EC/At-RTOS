@@ -84,12 +84,16 @@
 
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
 #ifndef OS_API_DISABLED
-#define OS_API_ENABLED
+#define OS_API_ENABLED (1)
 #endif
 
 /* It defined the AtOS extern symbol typedef for convenience use, but it has extra memory consumption */
 #ifndef OS_TYPEDEF_DISABLED
-#define OS_TYPEDEF_ENABLED
+#define OS_TYPEDEF_ENABLED (1)
+#endif
+
+#ifndef OS_ID_ENHANCEMENT_DISABLED
+#define OS_ID_ENHANCEMENT_ENABLED (1)
 #endif
 
 /* Configuration of the Cortex-M Processor and Core Peripherals.

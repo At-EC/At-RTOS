@@ -14,7 +14,7 @@
 #include "postcode.h"
 #include "static_init.h"
 
-#ifdef OS_TYPEDEF_ENABLED
+#if (OS_TYPEDEF_ENABLED)
 typedef _char_t char_t;
 typedef _uchar_t uchar_t;
 typedef _u8_t u8_t;
@@ -49,6 +49,23 @@ typedef enum {
     OS_TIMER_CTRL_TEMPORARY = (TIMER_CTRL_TEMPORARY_VAL),
 } os_timer_ctrl_t;
 
+#if (OS_ID_ENHANCEMENT_ENABLED)
+#define OS_ID_NODATA (0)
+#else
+#define OS_ID_NODATA (1)
+#endif
+
+#if (OS_ID_NODATA)
+typedef void *os_thread_id_t;
+typedef void *os_timer_id_t;
+typedef void *os_sem_id_t;
+typedef void *os_mutex_id_t;
+typedef void *os_evt_id_t;
+typedef void *os_msgq_id_t;
+typedef void *os_pool_id_t;
+typedef void *os_publish_id_t;
+typedef void *os_subscribe_id_t;
+#else
 typedef struct os_id os_thread_id_t;
 typedef struct os_id os_timer_id_t;
 typedef struct os_id os_sem_id_t;
@@ -58,6 +75,7 @@ typedef struct os_id os_msgq_id_t;
 typedef struct os_id os_pool_id_t;
 typedef struct os_id os_publish_id_t;
 typedef struct os_id os_subscribe_id_t;
+#endif
 
 typedef struct evt_val os_evt_val_t;
 
@@ -119,11 +137,14 @@ static inline os_thread_id_t os_thread_init(u32_t *pStackAddr, u32_t size, i16_t
     extern u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, u32_t * pAddress, u32_t size, _i16_t priority, void *pArg,
                                    const _char_t *pName);
 
+#if (OS_ID_NODATA)
+    return (os_thread_id_t)_impl_thread_init(pEntryFun, pStackAddr, size, priority, pArg, pName);
+#else
     os_thread_id_t id = {0u};
     id.u32_val = _impl_thread_init(pEntryFun, pStackAddr, size, priority, pArg, pName);
     id.pName = pName;
-
     return id;
+#endif
 }
 
 /**
@@ -137,7 +158,11 @@ static inline i32p_t os_thread_user_data_set(os_thread_id_t id, void *pUserData)
 {
     extern i32p_t _impl_thread_user_data_register(u32_t ctx, void *pUserData);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_thread_user_data_register((u32_t)id, pUserData);
+#else
     return (i32p_t)_impl_thread_user_data_register(id.u32_val, pUserData);
+#endif
 }
 
 /**
@@ -151,7 +176,11 @@ static inline void *os_thread_user_data_get(os_thread_id_t id)
 {
     extern void *_impl_thread_user_data_get(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (void *)_impl_thread_user_data_get((u32_t)id);
+#else
     return (void *)_impl_thread_user_data_get(id.u32_val);
+#endif
 }
 
 /**
@@ -179,7 +208,11 @@ static inline i32p_t os_thread_resume(os_thread_id_t id)
 {
     extern i32p_t _impl_thread_resume(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_thread_resume((u32_t)id);
+#else
     return (i32p_t)_impl_thread_resume(id.u32_val);
+#endif
 }
 
 /**
@@ -193,7 +226,11 @@ static inline i32p_t os_thread_suspend(os_thread_id_t id)
 {
     extern i32p_t _impl_thread_suspend(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_thread_suspend((u32_t)id);
+#else
     return (i32p_t)_impl_thread_suspend(id.u32_val);
+#endif
 }
 
 /**
@@ -221,9 +258,14 @@ static inline i32p_t os_thread_delete(os_thread_id_t id)
 {
     extern i32p_t _impl_thread_delete(u32_t ctx);
 
-    i32p_t pc =_impl_thread_delete(id.u32_val);
+    i32p_t pc = 0;
+#if (OS_ID_NODATA)
+    pc = _impl_thread_delete((u32_t)id);
+    id = NULL;
+#else
+    pc = _impl_thread_delete(id.u32_val);
     id.p_val = NULL;
-
+#endif
     return pc;
 }
 
@@ -250,11 +292,14 @@ static inline os_thread_id_t os_thread_id_self(void)
     extern thread_context_t *kernel_thread_runContextGet(void);
     extern const _char_t *_impl_thread_name_get(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (os_thread_id_t)kernel_thread_runContextGet();
+#else
     os_thread_id_t id = {0u};
     id.u32_val = (u32_t)kernel_thread_runContextGet();
     id.pName = _impl_thread_name_get(id.u32_val);
-
     return id;
+#endif
 }
 
 /**
@@ -291,7 +336,11 @@ static inline u32_t os_thread_stack_free_size_probe(os_thread_id_t id)
 {
     extern u32_t _impl_thread_stack_free_size_get(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (u32_t)_impl_thread_stack_free_size_get((u32_t)id);
+#else
     return (u32_t)_impl_thread_stack_free_size_get(id.u32_val);
+#endif
 }
 
 /**
@@ -307,11 +356,14 @@ static inline os_timer_id_t os_timer_init(pTimer_callbackFunc_t pEntryFun, void 
 {
     extern u32_t _impl_timer_init(pTimer_callbackFunc_t pCallFun, void *pUserData, const char_t *pName);
 
+#if (OS_ID_NODATA)
+    return (os_timer_id_t)_impl_timer_init(pEntryFun, pUserData, pName);
+#else
     os_timer_id_t id = {0u};
     id.u32_val = _impl_timer_init(pEntryFun, pUserData, pName);
     id.pName = pName;
-
     return id;
+#endif
 }
 
 /**
@@ -327,11 +379,14 @@ static inline os_timer_id_t os_timer_automatic(pTimer_callbackFunc_t pEntryFun, 
 {
     extern u32_t _impl_timer_automatic(pTimer_callbackFunc_t pCallFun, void *pUserData, const char_t *pName);
 
+#if (OS_ID_NODATA)
+    return (os_timer_id_t)_impl_timer_automatic(pEntryFun, pUserData, pName);
+#else
     os_timer_id_t id = {0u};
     id.u32_val = _impl_timer_automatic(pEntryFun, pUserData, pName);
     id.pName = pName;
-
     return id;
+#endif
 }
 
 /**
@@ -348,7 +403,11 @@ static inline i32p_t os_timer_start(os_timer_id_t id, os_timer_ctrl_t control, o
 {
     extern i32p_t _impl_timer_start(u32_t ctx, u8_t control, u32_t timeout_ms);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_timer_start((u32_t)id, (u8_t)control, (u32_t)timeout_ms);
+#else
     return (i32p_t)_impl_timer_start(id.u32_val, (u8_t)control, (u32_t)timeout_ms);
+#endif
 }
 
 /**
@@ -362,7 +421,11 @@ static inline i32p_t os_timer_stop(os_timer_id_t id)
 {
     extern i32p_t _impl_timer_stop(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_timer_stop((u32_t)id);
+#else
     return (i32p_t)_impl_timer_stop(id.u32_val);
+#endif
 }
 
 /**
@@ -376,7 +439,11 @@ static inline i32p_t os_timer_busy(os_timer_id_t id)
 {
     extern b_t _impl_timer_busy(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_timer_busy((u32_t)id);
+#else
     return (i32p_t)_impl_timer_busy(id.u32_val);
+#endif
 }
 
 /**
@@ -390,8 +457,14 @@ static inline i32p_t os_timer_delete(os_timer_id_t id)
 {
     extern i32p_t _impl_timer_delete(u32_t ctx);
 
-    i32p_t pc = _impl_timer_delete(id.u32_val);
+    i32p_t pc = 0;
+#if (OS_ID_NODATA)
+    pc = _impl_timer_delete((u32_t)id);
+    id = NULL;
+#else
+    pc = _impl_timer_delete(id.u32_val);
     id.p_val = NULL;
+#endif
 
     return pc;
 }
@@ -433,11 +506,15 @@ static inline os_sem_id_t os_sem_init(u8_t remain, u8_t limit, const char_t *pNa
 {
     extern u32_t _impl_semaphore_init(u8_t remainCount, u8_t limitCount, const char_t *pName);
 
+#if (OS_ID_NODATA)
+    return (os_sem_id_t)_impl_semaphore_init(remain, limit, pName);
+#else
     os_sem_id_t id = {0u};
     id.u32_val = _impl_semaphore_init(remain, limit, pName);
     id.pName = pName;
 
     return id;
+#endif
 }
 
 /**
@@ -451,7 +528,11 @@ static inline i32p_t os_sem_take(os_sem_id_t id, u32_t timeout_ms)
 {
     extern i32p_t _impl_semaphore_take(u32_t ctx, u32_t timeout_ms);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_semaphore_take((u32_t)id, timeout_ms);
+#else
     return (i32p_t)_impl_semaphore_take(id.u32_val, timeout_ms);
+#endif
 }
 
 /**
@@ -465,7 +546,11 @@ static inline i32p_t os_sem_give(os_sem_id_t id)
 {
     extern i32p_t _impl_semaphore_give(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_semaphore_give((u32_t)id);
+#else
     return (i32p_t)_impl_semaphore_give(id.u32_val);
+#endif
 }
 
 /**
@@ -479,7 +564,11 @@ static inline i32p_t os_sem_flush(os_sem_id_t id)
 {
     extern i32p_t _impl_semaphore_flush(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_semaphore_flush((u32_t)id);
+#else
     return (i32p_t)_impl_semaphore_flush(id.u32_val);
+#endif
 }
 
 /**
@@ -493,9 +582,14 @@ static inline i32p_t os_sem_delete(os_sem_id_t id)
 {
     extern i32p_t _impl_semaphore_delete(u32_t ctx);
 
-    i32p_t pc = _impl_semaphore_delete(id.u32_val);
+    i32p_t pc = 0;
+#if (OS_ID_NODATA)
+    pc = _impl_semaphore_delete((u32_t)id);
+    id = NULL;
+#else
+    pc = _impl_semaphore_delete(id.u32_val);
     id.p_val = NULL;
-
+#endif
     return pc;
 }
 
@@ -510,11 +604,15 @@ static inline os_mutex_id_t os_mutex_init(const char_t *pName)
 {
     extern u32_t _impl_mutex_init(const char_t *pName);
 
+#if (OS_ID_NODATA)
+    return (os_mutex_id_t)_impl_mutex_init(pName);
+#else
     os_mutex_id_t id = {0u};
     id.u32_val = _impl_mutex_init(pName);
     id.pName = pName;
 
     return id;
+#endif
 }
 
 /**
@@ -528,7 +626,11 @@ static inline i32p_t os_mutex_lock(os_mutex_id_t id)
 {
     extern i32p_t _impl_mutex_lock(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_mutex_lock((u32_t)id);
+#else
     return (i32p_t)_impl_mutex_lock(id.u32_val);
+#endif
 }
 
 /**
@@ -542,7 +644,11 @@ static inline i32p_t os_mutex_unlock(os_mutex_id_t id)
 {
     extern i32p_t _impl_mutex_unlock(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_mutex_unlock((u32_t)id);
+#else
     return (i32p_t)_impl_mutex_unlock(id.u32_val);
+#endif
 }
 
 /**
@@ -556,9 +662,14 @@ static inline i32p_t os_mutex_delete(os_mutex_id_t id)
 {
     extern i32p_t _impl_mutex_delete(u32_t ctx);
 
-    i32p_t pc = _impl_mutex_delete(id.u32_val);
+    i32p_t pc = 0;
+#if (OS_ID_NODATA)
+    pc = _impl_mutex_delete((u32_t)id);
+    id = NULL;
+#else
+    pc = _impl_mutex_delete(id.u32_val);
     id.p_val = NULL;
-
+#endif
     return pc;
 }
 
@@ -578,11 +689,15 @@ static inline os_evt_id_t os_evt_init(u32_t anyMask, u32_t modeMask, u32_t dirMa
 {
     extern u32_t _impl_event_init(u32_t anyMask, u32_t modeMask, u32_t dirMask, u32_t init, const char_t *pName);
 
-    os_msgq_id_t id = {0u};
+#if (OS_ID_NODATA)
+    return (os_evt_id_t)_impl_event_init(anyMask, modeMask, dirMask, init, pName);
+#else
+    os_evt_id_t id = {0u};
     id.u32_val = _impl_event_init(anyMask, modeMask, dirMask, init, pName);
     id.pName = pName;
 
     return id;
+#endif
 }
 
 /**
@@ -597,7 +712,11 @@ static inline i32p_t os_evt_value_get(os_evt_id_t id, u32_t *pValue)
 {
     extern i32p_t _impl_event_value_get(u32_t ctx, u32_t * pValue);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_event_value_get((u32_t)id, pValue);
+#else
     return (i32p_t)_impl_event_value_get(id.u32_val, pValue);
+#endif
 }
 
 /**
@@ -614,7 +733,11 @@ static inline i32p_t os_evt_set(os_evt_id_t id, u32_t set, u32_t clear, u32_t to
 {
     extern i32p_t _impl_event_set(u32_t ctx, u32_t set, u32_t clear, u32_t toggle);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_event_set((u32_t)id, set, clear, toggle);
+#else
     return (i32p_t)_impl_event_set(id.u32_val, set, clear, toggle);
+#endif
 }
 
 /**
@@ -631,7 +754,11 @@ static inline i32p_t os_evt_wait(os_evt_id_t id, os_evt_val_t *pEvtData, u32_t l
 {
     extern i32p_t _impl_event_wait(u32_t ctx, struct evt_val * pEvtData, u32_t listen_mask, u32_t timeout_ms);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_event_wait((u32_t)id, pEvtData, listen_mask, (u32_t)timeout_ms);
+#else
     return (i32p_t)_impl_event_wait(id.u32_val, pEvtData, listen_mask, (u32_t)timeout_ms);
+#endif
 }
 
 /**
@@ -645,9 +772,14 @@ static inline i32p_t os_evt_delete(os_evt_id_t id)
 {
     extern i32p_t _impl_event_delete(u32_t ctx);
 
-    i32p_t pc = _impl_event_delete(id.u32_val);
+    i32p_t pc = 0;
+#if (OS_ID_NODATA)
+    pc = _impl_event_delete((u32_t)id);
+    id = NULL;
+#else
+    pc = _impl_event_delete(id.u32_val);
     id.p_val = NULL;
-
+#endif
     return pc;
 }
 
@@ -666,11 +798,15 @@ static inline os_msgq_id_t os_msgq_init(const void *pBufferAddr, u16_t len, u16_
 {
     extern u32_t _impl_queue_init(const void *pQueueBufferAddr, u16_t elementLen, u16_t elementNum, const char_t *pName);
 
+#if (OS_ID_NODATA)
+    return (os_msgq_id_t)_impl_queue_init(pBufferAddr, len, num, pName);
+#else
     os_msgq_id_t id = {0u};
     id.u32_val = _impl_queue_init(pBufferAddr, len, num, pName);
     id.pName = pName;
 
     return id;
+#endif
 }
 
 /**
@@ -688,7 +824,11 @@ static inline i32p_t os_msgq_put(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t
 {
     extern i32p_t _impl_queue_send(u32_t ctx, const u8_t *pUserBuffer, u16_t bufferSize, b_t isToFront, u32_t timeout_ms);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_queue_send((u32_t)id, pUserBuffer, size, isToFront, (u32_t)timeout_ms);
+#else
     return (i32p_t)_impl_queue_send(id.u32_val, pUserBuffer, size, isToFront, (u32_t)timeout_ms);
+#endif
 }
 
 /**
@@ -706,7 +846,11 @@ static inline i32p_t os_msgq_get(os_msgq_id_t id, const u8_t *pUserBuffer, u16_t
 {
     extern i32p_t _impl_queue_receive(u32_t ctx, const u8_t *pUserBuffer, u16_t bufferSize, b_t isFromBack, u32_t timeout_ms);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_queue_receive((u32_t)id, pUserBuffer, size, isFromBack, (u32_t)timeout_ms);
+#else
     return (i32p_t)_impl_queue_receive(id.u32_val, pUserBuffer, size, isFromBack, (u32_t)timeout_ms);
+#endif
 }
 
 /**
@@ -720,9 +864,14 @@ static inline i32p_t os_msgq_delete(os_msgq_id_t id)
 {
     extern i32p_t _impl_queue_delete(u32_t ctx);
 
-    i32p_t pc = _impl_queue_delete(id.u32_val);
+    i32p_t pc = 0;
+#if (OS_ID_NODATA)
+    pc = _impl_queue_delete((u32_t)id);
+    id = NULL;
+#else
+    pc = _impl_queue_delete(id.u32_val);
     id.p_val = NULL;
-
+#endif
     return pc;
 }
 
@@ -737,7 +886,11 @@ static inline u32_t os_msgq_num_probe(os_msgq_id_t id)
 {
     extern u32_t _impl_queue_num_probe(u32_t ctx);
 
+#if (OS_ID_NODATA)
+    return (u32_t)_impl_queue_num_probe((u32_t)id);
+#else
     return (u32_t)_impl_queue_num_probe(id.u32_val);
+#endif
 }
 
 /**
@@ -755,11 +908,15 @@ static inline os_pool_id_t os_pool_init(const void *pMemAddr, u16_t size, u16_t 
 {
     extern u32_t _impl_pool_init(const void *pMemAddr, u16_t elementLen, u16_t elementNum, const char_t *pName);
 
+#if (OS_ID_NODATA)
+    return (os_pool_id_t)_impl_pool_init(pMemAddr, size, num, pName);
+#else
     os_pool_id_t id = {0u};
     id.u32_val = _impl_pool_init(pMemAddr, size, num, pName);
     id.pName = pName;
 
     return id;
+#endif
 }
 
 /**
@@ -776,7 +933,11 @@ static inline i32p_t os_pool_take(os_pool_id_t id, void **ppUserMem, u16_t size,
 {
     extern i32p_t _impl_pool_take(u32_t ctx, void **ppUserBuffer, u16_t bufferSize, u32_t timeout_ms);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_pool_take((u32_t)id, ppUserMem, size, (u32_t)timeout_ms);
+#else
     return (i32p_t)_impl_pool_take(id.u32_val, ppUserMem, size, (u32_t)timeout_ms);
+#endif
 }
 
 /**
@@ -791,7 +952,11 @@ static inline i32p_t os_pool_release(os_pool_id_t id, void **ppUserMem)
 {
     extern i32p_t _impl_pool_release(u32_t ctx, void **ppUserBuffer);
 
+#if (OS_ID_NODATA)
+    return (i32p_t)_impl_pool_release((u32_t)id, ppUserMem);
+#else
     return (i32p_t)_impl_pool_release(id.u32_val, ppUserMem);
+#endif
 }
 
 /**
@@ -805,9 +970,14 @@ static inline i32p_t os_pool_delete(os_pool_id_t id)
 {
     extern i32p_t _impl_pool_delete(u32_t ctx);
 
-    i32p_t pc = _impl_pool_delete(id.u32_val);
+    i32p_t pc = 0;
+#if (OS_ID_NODATA)
+    pc = _impl_pool_delete((u32_t)id);
+    id = NULL;
+#else
+    pc = _impl_pool_delete(id.u32_val);
     id.p_val = NULL;
-
+#endif
     return pc;
 }
 
@@ -822,11 +992,15 @@ static inline os_publish_id_t os_publish_init(const char_t *pName)
 {
     extern u32_t _impl_publish_init(const char_t *pName);
 
+#if (OS_ID_NODATA)
+    return (os_publish_id_t)_impl_publish_init(pName);
+#else
     os_publish_id_t id = {0u};
     id.u32_val = _impl_publish_init(pName);
     id.pName = pName;
 
     return id;
+#endif
 }
 
 /**
@@ -842,7 +1016,11 @@ static inline i32p_t os_publish_data_submit(os_publish_id_t id, const void *pDat
 {
     extern i32p_t _impl_publish_data_submit(u32_t pub_ctx, const void *pPublishData, u16_t publishSize);
 
+#if (OS_ID_NODATA)
+    return _impl_publish_data_submit((u32_t)id, pData, size);
+#else
     return _impl_publish_data_submit(id.u32_val, pData, size);
+#endif
 }
 
 /**
@@ -858,11 +1036,15 @@ static inline os_subscribe_id_t os_subscribe_init(void *pDataAddr, u16_t size, c
 {
     extern u32_t _impl_subscribe_init(void *pDataAddr, u16_t dataSize, const char_t *pName);
 
+#if (OS_ID_NODATA)
+    return (os_subscribe_id_t)_impl_subscribe_init(pDataAddr, size, pName);
+#else
     os_subscribe_id_t id = {0u};
     id.u32_val = _impl_subscribe_init(pDataAddr, size, pName);
     id.pName = pName;
 
     return id;
+#endif
 }
 
 /**
@@ -876,7 +1058,11 @@ static inline b_t os_subscribe_data_is_ready(os_subscribe_id_t id)
 {
     extern b_t _impl_subscribe_data_is_ready(u32_t sub_ctx);
 
+#if (OS_ID_NODATA)
+    return _impl_subscribe_data_is_ready((u32_t)id);
+#else
     return _impl_subscribe_data_is_ready(id.u32_val);
+#endif
 }
 
 /**
@@ -894,7 +1080,11 @@ static inline i32p_t os_subscribe_register(os_subscribe_id_t subscribe_id, os_pu
 {
     extern i32p_t _impl_subscribe_register(u32_t sub_ctx, u32_t pub_ctx, b_t isMute, pSubscribe_callbackFunc_t pNotificationHandler);
 
+#if (OS_ID_NODATA)
+    return _impl_subscribe_register((u32_t)subscribe_id, (u32_t)publish_id, isMute, pNotificationHandler);
+#else
     return _impl_subscribe_register(subscribe_id.u32_val, publish_id.u32_val, isMute, pNotificationHandler);
+#endif
 }
 
 /**
@@ -910,7 +1100,11 @@ static inline i32p_t os_subscribe_data_apply(os_subscribe_id_t subscribe_id, voi
 {
     extern i32p_t _impl_subscribe_data_apply(u32_t sub_ctx, void *pDataBuffer, u16_t *pDataLen);
 
+#if (OS_ID_NODATA)
+    return _impl_subscribe_data_apply((u32_t)subscribe_id, pData, pDataLen);
+#else
     return _impl_subscribe_data_apply(subscribe_id.u32_val, pData, pDataLen);
+#endif
 }
 
 /**
@@ -920,20 +1114,34 @@ static inline i32p_t os_subscribe_data_apply(os_subscribe_id_t subscribe_id, voi
  *
  * @return The value of true is invalid, otherwise is valid.
  */
+#if (OS_ID_NODATA)
+static inline b_t os_id_is_invalid(void *id)
+{
+    return (id == NULL) ? true : false;
+}
+#else
 static inline b_t os_id_is_invalid(struct os_id id)
 {
     return (b_t)kernel_os_id_is_invalid(id);
 }
+#endif
 
 /**
  * @brief Set the unique id to invalid.
  *
  * @param id The provided unique id.
  */
+#if (OS_ID_NODATA)
+static inline void os_id_set_invalid(void *id)
+{
+    id = NULL;
+}
+#else
 static inline void os_id_set_invalid(struct os_id id)
 {
-    return kernel_os_id_set_invalid(id);
+    kernel_os_id_set_invalid(id);
 }
+#endif
 
 /**
  * @brief The kernel OS start to run.
@@ -1030,7 +1238,7 @@ static inline void os_trace_analyze(const pTrace_analyzeFunc_t fn)
 }
 
 /* It defined the AtOS extern symbol for convenience use, but it has extra memory consumption */
-#ifdef OS_API_ENABLED
+#if (OS_API_ENABLED)
 typedef struct {
     os_thread_id_t (*thread_init)(u32_t *, u32_t, i16_t, pThread_entryFunc_t, void *, const char_t *);
     i32p_t (*thread_sleep)(u32_t);
@@ -1089,8 +1297,13 @@ typedef struct {
     i32p_t (*subscribe_data_apply)(os_subscribe_id_t, void *, u16_t *);
     b_t (*subscribe_data_is_ready)(os_subscribe_id_t);
 
+#if (OS_ID_NODATA)
+    b_t (*id_isInvalid)(void *);
+    void (*id_setInvalid)(void *);
+#else
     b_t (*id_isInvalid)(struct os_id);
     void (*id_setInvalid)(struct os_id);
+#endif
     i32p_t (*schedule_run)(void);
     b_t (*schedule_is_running)(void);
     void (*schedule_lock)(void);

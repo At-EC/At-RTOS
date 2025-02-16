@@ -9,6 +9,7 @@
 
 #include "type_def.h"
 #include "k_struct.h"
+#include "k_config.h"
 
 #if (__ARMCC_VERSION)
 #define INIT_SECTION_FUNC _INIT_FUNC_LIST
@@ -61,6 +62,28 @@
 #error "not supported compiler"
 #endif
 
+#if (OS_ID_ENHANCEMENT_ENABLED)
+#define INIT_OS_THREAD_ID(x) struct os_id x = {.p_val = (void*)&_init_##x##_thread, .pName = #x}
+#define INIT_OS_TIMER_ID(x)  struct os_id x = {.p_val = (void*)&_init_##x##_timer, .pName = #x}
+#define INIT_OS_SEM_ID(x)    struct os_id x = {.p_val = (void*)&_init_##x##_sem, .pName = #x}
+#define INIT_OS_MUTEX_ID(x)  struct os_id x = {.p_val = (void*)&_init_##x##_mutex, .pName = #x}
+#define INIT_OS_EVT_ID(x)    struct os_id x = {.p_val = (void*)&_init_##x##_evt, .pName = #x}
+#define INIT_OS_MSGQ_ID(x)   struct os_id x = {.p_val = (void*)&_init_##x##_msgq, .pName = #x}
+#define INIT_OS_POOL_ID(x)   struct os_id x = {.p_val = (void*)&_init_##x##_pool, .pName = #x}
+#define INIT_OS_SUB_ID(x)    struct os_id x = {.p_val = (void*)&_init_##x##_subscribe, .pName = #x}
+#define INIT_OS_PUB_ID(x)    struct os_id x = {.p_val = (void*)&_init_##x##_publish, .pName = #x}
+#else
+#define INIT_OS_THREAD_ID(x) void* x = (void*)&_init_##x##_thread
+#define INIT_OS_TIMER_ID(x)  void* x = (void*)&_init_##x##_timer
+#define INIT_OS_SEM_ID(x)    void* x = (void*)&_init_##x##_sem
+#define INIT_OS_MUTEX_ID(x)  void* x = (void*)&_init_##x##_mutex
+#define INIT_OS_EVT_ID(x)    void* x = (void*)&_init_##x##_evt
+#define INIT_OS_MSGQ_ID(x)   void* x = (void*)&_init_##x##_msgq
+#define INIT_OS_POOL_ID(x)   void* x = (void*)&_init_##x##_pool
+#define INIT_OS_SUB_ID(x)    void* x = (void*)&_init_##x##_subscribe
+#define INIT_OS_PUB_ID(x)    void* x = (void*)&_init_##x##_publish
+#endif
+
 #if (__ARMCC_VERSION)
 #define INIT_SECTION_BEGIN(name) name##$$Base
 #define INIT_SECTION_END(name)   name##$$Limit
@@ -83,7 +106,7 @@
          .task = {.prior = priority, .psp = 0u}};                                                                                          \
     INIT_USED thread_context_init_t _init_##id_name##_thread_init INIT_SECTION(_INIT_OS_THREAD_STATIC) =                                   \
         {.p_thread = &_init_##id_name##_thread, .p_arg = pArg};                                                                            \
-    os_thread_id_t id_name = {.p_val = (void*)&_init_##id_name##_thread, .pName = #id_name}
+    INIT_OS_THREAD_ID(id_name)
 
 #define INIT_OS_TIMER_RUNTIME_NUM_DEFINE(num)                                                                                              \
     INIT_USED timer_context_t _init_runtime_timer[num] INIT_SECTION(_INIT_OS_TIMER_LIST) = {0}
@@ -94,7 +117,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
         {.head = {.cs = CS_INITED, .pName = #id_name},                                                                                     \
          .expire = {.fn = timer_callback_fromTimeOut},                                                                                     \
          .call = {.pTimerCallEntry = pEntryFunc}};                                                                                         \
-    os_timer_id_t id_name = {.p_val = (void*)&_init_##id_name##_timer, .pName = #id_name}
+    INIT_OS_TIMER_ID(id_name)
 
 #define INIT_OS_SEM_RUNTIME_NUM_DEFINE(num)                                                                                                \
     INIT_USED semaphore_context_t _init_runtime_sem[num] INIT_SECTION(_INIT_OS_SEMAPHORE_LIST) = {0}
@@ -104,7 +127,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
         {.head = {.cs = CS_INITED, .pName = #id_name},                                                                                     \
          .remains = remain,                                                                                                                \
          .limits = limit};                                                                                                                 \
-    os_sem_id_t id_name = {.p_val = (void*)&_init_##id_name##_sem, .pName = #id_name}
+    INIT_OS_SEM_ID(id_name)
 
 #define INIT_OS_MUTEX_RUNTIME_NUM_DEFINE(num)                                                                                              \
     INIT_USED mutex_context_t _init_runtime_mutex[num] INIT_SECTION(_INIT_OS_MUTEX_LIST) = {0}
@@ -115,7 +138,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
          .locked = false,                                                                                                                  \
          .pHoldTask = NULL,                                                                                                                \
          .originalPriority = OS_PRIOTITY_INVALID_LEVEL};                                                                                   \
-    os_mutex_id_t id_name = {.p_val = (void*)&_init_##id_name##_mutex, .pName = #id_name}
+    INIT_OS_MUTEX_ID(id_name)
 
 #define INIT_OS_EVT_RUNTIME_NUM_DEFINE(num)                                                                                                \
     INIT_USED event_context_t _init_runtime_evt[num] INIT_SECTION(_INIT_OS_EVENT_LIST) = {0}
@@ -128,7 +151,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
          .anyMask = anyMask,                                                                                                               \
          .modeMask = modeMask,                                                                                                             \
          .dirMask = dirMask};                                                                                                              \
-    os_evt_id_t id_name = {.p_val = (void*)&_init_##id_name##_evt, .pName = #id_name}
+    INIT_OS_EVT_ID(id_name)
 
 #define INIT_OS_MSGQ_RUNTIME_NUM_DEFINE(num)                                                                                               \
     INIT_USED queue_context_t _init_runtime_msgq[num] INIT_SECTION(_INIT_OS_QUEUE_LIST) = {0}
@@ -142,7 +165,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
          .leftPosition = 0u,                                                                                                               \
          .rightPosition = 0u,                                                                                                              \
          .cacheSize = 0u};                                                                                                                 \
-    os_msgq_id_t id_name = {.p_val = (void*)&_init_##id_name##_msgq, .pName = #id_name}
+    INIT_OS_MSGQ_ID(id_name)
 
 #define INIT_OS_POOL_RUNTIME_NUM_DEFINE(num)                                                                                               \
     INIT_USED pool_context_t _init_runtime_pool[num] INIT_SECTION(_INIT_OS_POOL_LIST) = {0}
@@ -154,7 +177,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
          .elementLength = len,                                                                                                             \
          .elementNumber = num,                                                                                                             \
          .elementFreeBits = Bs(0u, (num - 1u))};                                                                                           \
-    os_pool_id_t id_name = {.p_val = (void*)&_init_##id_name##_pool, .pName = #id_name}
+    INIT_OS_POOL_ID(id_name)
 
 #define INIT_OS_SUBSCRIBE_RUNTIME_NUM_DEFINE(num)                                                                                          \
     INIT_USED subscribe_context_t _init_runtime_subscribe[num] INIT_SECTION(_INIT_OS_SUBSCRIBE_LIST) = {0}
@@ -166,7 +189,7 @@ extern void subscribe_notification(void *pLinker);
          .pPublisher = NULL,                                                                                                               \
          .accepted = 0u,                                                                                                                   \
          .notify = {.pData = pData, .len = size, muted = false, .fn = subscribe_notification}};                                            \
-    os_subscribe_id_t id_name = {.p_val = (void*)&_init_##id_name##_subscribe, .pName = #id_name}
+    INIT_OS_SUB_ID(id_name)
 
 #define INIT_OS_PUBLISH_RUNTIME_NUM_DEFINE(num)                                                                                            \
     INIT_USED publish_context_t _init_runtime_publish[num] INIT_SECTION(_INIT_OS_PUBLISH_LIST) = {0}
@@ -174,7 +197,7 @@ extern void subscribe_notification(void *pLinker);
 #define INIT_OS_PUBLISH_DEFINE(id_name, pDataAddr, size)                                                                                   \
     INIT_USED publish_context_t _init_##id_name##_publish INIT_SECTION(_INIT_OS_PUBLISH_LIST) =                                            \
         {.head = {.cs = CS_INITED, .pName = #id_name}};                                                                                    \
-    os_publish_id_t id_name = {.p_val = (void*)&_init_##id_name##_publish, .pName = #id_name}
+    INIT_OS_PUB_ID(id_name)
 
 #elif defined(__ICCARM__)
 #pragma diag_suppress = Pm086
@@ -198,7 +221,7 @@ extern void subscribe_notification(void *pLinker);
          .task = {.prior = priority, .psp = 0u}};                                                                                          \
     static __root thread_context_init_t _init_##id_name##_thread_init @ "_INIT_OS_THREAD_STATIC" =                                         \
         {.p_thread = &_init_##id_name##_thread, .p_arg = pArg};                                                                            \
-    os_thread_id_t id_name = {.p_val = (void*)&_init_##id_name##_thread, .pName = #id_name}
+    INIT_OS_THREAD_ID(id_name)
 
 #define INIT_OS_TIMER_RUNTIME_NUM_DEFINE(num)                                                                                              \
     static __root timer_context_t _init_runtime_timer[num] @ "_INIT_OS_TIMER_LIST" = {0}
@@ -209,7 +232,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
         {.head = {.cs = CS_INITED, .pName = #id_name},                                                                                     \
          .expire = {.fn = timer_callback_fromTimeOut},                                                                                     \
          .call = {.pTimerCallEntry = pEntryFunc}};                                                                                         \
-    os_timer_id_t id_name = {.p_val = (void*)&_init_##id_name##_timer, .pName = #id_name}
+    INIT_OS_TIMER_ID(id_name)
 
 #define INIT_OS_SEM_RUNTIME_NUM_DEFINE(num)                                                                                                \
     static __root semaphore_context_t _init_runtime_sem[num] @ "_INIT_OS_SEMAPHORE_LIST" = {0}
@@ -219,7 +242,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
         {.head = {.cs = CS_INITED, .pName = #id_name},                                                                                     \
          .remains = remain,                                                                                                                \
          .limits = limit};                                                                                                                 \
-    os_sem_id_t id_name = {.p_val = (void*)&_init_##id_name##_sem, .pName = #id_name}
+    INIT_OS_SEM_ID(id_name)
 
 #define INIT_OS_MUTEX_RUNTIME_NUM_DEFINE(num)                                                                                              \
     static __root mutex_context_t _init_runtime_mutex[num] @ "_INIT_OS_MUTEX_LIST" = {0}
@@ -230,7 +253,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
          .locked = false,                                                                                                                  \
          .pHoldTask = NULL,                                                                                                                \
          .originalPriority = OS_PRIOTITY_INVALID_LEVEL};                                                                                   \
-    os_mutex_id_t id_name = {.p_val = (void*)&_init_##id_name##_mutex, .pName = #id_name}
+    INIT_OS_MUTEX_ID(id_name)
 
 #define INIT_OS_EVT_RUNTIME_NUM_DEFINE(num)                                                                                                \
     static __root event_context_t _init_runtime_evt[num] @ "_INIT_OS_EVENT_LIST" = {0}
@@ -243,7 +266,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
          .anyMask = anyMask,                                                                                                               \
          .modeMask = modeMask,                                                                                                             \
          .dirMask = dirMask};                                                                                                              \
-    os_evt_id_t id_name = {.p_val = (void*)&_init_##id_name##_evt, .pName = #id_name}
+    INIT_OS_EVT_ID(id_name)
 
 #define INIT_OS_MSGQ_RUNTIME_NUM_DEFINE(num)                                                                                               \
     static __root queue_context_t _init_runtime_msgq[num] @ "_INIT_OS_QUEUE_LIST" = {0}
@@ -257,7 +280,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
          .leftPosition = 0u,                                                                                                               \
          .rightPosition = 0u,                                                                                                              \
          .cacheSize = 0u};                                                                                                                 \
-    os_msgq_id_t id_name = {.p_val = (void*)&_init_##id_name##_msgq, .pName = #id_name}
+    INIT_OS_MSGQ_ID(id_name)
 
 #define INIT_OS_POOL_RUNTIME_NUM_DEFINE(num)                                                                                               \
     static __root pool_context_t _init_runtime_pool[num] @ "_INIT_OS_POOL_LIST" = {0}
@@ -269,7 +292,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
          .elementLength = len,                                                                                                             \
          .elementNumber = num,                                                                                                             \
          .elementFreeBits = Bs(0u, (num - 1u))};                                                                                           \
-    os_pool_id_t id_name = {.p_val = (void*)&_init_##id_name##_pool, .pName = #id_name}
+    INIT_OS_POOL_ID(id_name)
 
 #define INIT_OS_SUBSCRIBE_RUNTIME_NUM_DEFINE(num)                                                                                          \
     static __root subscribe_context_t _init_runtime_subscribe[num] @ "_INIT_OS_SUBSCRIBE_LIST" = {0}
@@ -281,7 +304,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
          .pPublisher = NULL,                                                                                                               \
          .accepted = 0u,                                                                                                                   \
          .notify = {.pData = pData, .len = size, muted = false, .fn = subscribe_notification}};                                            \
-    os_subscribe_id_t id_name = {.p_val = (void*)&_init_##id_name##_subscribe, .pName = #id_name}
+    INIT_OS_SUB_ID(id_name)
 
 #define INIT_OS_PUBLISH_RUNTIME_NUM_DEFINE(num)                                                                                            \
     static __root publish_context_t _init_runtime_publish[num] @ "_INIT_OS_PUBLISH_LIST" = {0}
@@ -289,7 +312,7 @@ extern void timer_callback_fromTimeOut(void *pNode);
 #define INIT_OS_PUBLISH_DEFINE(id_name, pDataAddr, size)                                                                                   \
     static __root publish_context_t _init_##id_name##_publish @ "_INIT_OS_PUBLISH_LIST" =                                                  \
         {.head = {.cs = CS_INITED, .pName = #id_name}};                                                                                    \
-    os_publish_id_t id_name = {.p_val = (void*)&_init_##id_name##_publish, .pName = #id_name}
+    INIT_OS_PUB_ID(id_name)
 
 #pragma diag_default = Pm086
 #elif defined(__GNUC__)

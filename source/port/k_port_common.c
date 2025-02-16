@@ -20,10 +20,10 @@ void SysTick_Handler(void)
 /**
  * @brief ARM core fault interrupt handle function.
  */
-void HardFault_Handler(void)
-{
-    while (1) {};
-}
+// void HardFault_Handler(void)
+// {
+//    while (1) {};
+// }
 
 /**
  * @brief To check if it's in interrupt content.
