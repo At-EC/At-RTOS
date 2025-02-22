@@ -208,7 +208,13 @@ _i32p_t schedule_exit_trigger(struct schedule_task *pTask, void *pHoldCtx, void 
 
     if (immediately) {
         timeout_set(&pTask->expire, timeout_ms, true);
-        _schedule_transfer_toTargetList((linker_t *)&pTask->linker, pToList);
+        if (pToList) {
+            _schedule_transfer_toTargetList((linker_t *)&pTask->linker, pToList);
+        } else {
+            pTask->exec.exit.pToList = pToList;
+            pTask->exec.exit.timeout_ms = timeout_ms;
+            _schedule_transfer_toExitList((linker_t *)&pTask->linker);
+        }
     } else {
         pTask->exec.exit.pToList = pToList;
         pTask->exec.exit.timeout_ms = timeout_ms;
@@ -237,7 +243,7 @@ _b_t schedule_hasTwoPendingItem(void)
         return false;
     }
 
-    if (!g_kernel_rsc.sch_pend_list.pHead->pNext) {
+    if (g_kernel_rsc.sch_pend_list.pHead->pNext) {
         return true;
     }
 

@@ -1127,23 +1127,6 @@ static inline b_t os_id_is_invalid(struct os_id id)
 #endif
 
 /**
- * @brief Set the unique id to invalid.
- *
- * @param id The provided unique id.
- */
-#if (OS_ID_NODATA)
-static inline void os_id_set_invalid(void *id)
-{
-    id = NULL;
-}
-#else
-static inline void os_id_set_invalid(struct os_id id)
-{
-    kernel_os_id_set_invalid(id);
-}
-#endif
-
-/**
  * @brief The kernel OS start to run.
  */
 static inline i32p_t os_kernel_run(void)
@@ -1299,10 +1282,8 @@ typedef struct {
 
 #if (OS_ID_NODATA)
     b_t (*id_isInvalid)(void *);
-    void (*id_setInvalid)(void *);
 #else
     b_t (*id_isInvalid)(struct os_id);
-    void (*id_setInvalid)(struct os_id);
 #endif
     i32p_t (*schedule_run)(void);
     b_t (*schedule_is_running)(void);

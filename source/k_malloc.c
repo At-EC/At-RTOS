@@ -113,7 +113,7 @@ void k_free(void *p_addr)
         return;
     }
 
-    if ((_u32_t)p_addr >= (_u32_t)(void *)&g_os_heap_mem[sizeof(g_os_heap_mem)]) {
+    if ((_u32_t)p_addr > (_u32_t)(void *)&g_os_heap_mem[sizeof(g_os_heap_mem) / sizeof(_u32_t) - 1]) {
         return;
     }
 
@@ -193,7 +193,7 @@ _b_t k_allocated(void *p_addr)
         return false;
     }
 
-    if ((_u32_t)p_addr >= (_u32_t)(void *)&g_os_heap_mem[sizeof(g_os_heap_mem)]) {
+    if ((_u32_t)p_addr > (_u32_t)(void *)&g_os_heap_mem[sizeof(g_os_heap_mem) / sizeof(_u32_t) - 1]) {
         return false;
     }
 

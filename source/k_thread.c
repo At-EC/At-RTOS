@@ -88,7 +88,6 @@ const at_rtos_api_t os = {
     .subscribe_data_is_ready = os_subscribe_data_is_ready,
 
     .id_isInvalid = os_id_is_invalid,
-    .id_setInvalid = os_id_set_invalid,
     .schedule_run = os_kernel_run,
     .schedule_is_running = os_kernel_is_running,
     .schedule_lock = os_kernel_lock,
