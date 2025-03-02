@@ -106,6 +106,39 @@ static _u32_t _thread_init_privilege_routine(arguments_t *pArgs)
  *
  * @return The result of privilege routine.
  */
+static _u32_t _thread_name_toId_privilege_routine(arguments_t *pArgs)
+{
+    ENTER_CRITICAL_SECTION();
+
+    const _char_t *pName = (const _char_t *)pArgs[0].pch_val;
+
+    INIT_SECTION_FOREACH(INIT_SECTION_OS_THREAD_LIST, thread_context_t, pCurThread)
+    {
+        if (_thread_context_isInvalid(pCurThread)) {
+            break;
+        }
+
+        if (!_thread_context_isInit(pCurThread)) {
+            continue;
+        }
+
+        if (k_memcmp(pCurThread->head.pName, pName, sizeof(pCurThread->head.pName))) {
+            EXIT_CRITICAL_SECTION();
+            return (_u32_t)pCurThread;
+        }
+    }
+
+    EXIT_CRITICAL_SECTION();
+    return 0u;
+}
+
+/**
+ * @brief It's sub-routine running at privilege mode.
+ *
+ * @param pArgs The function argument packages.
+ *
+ * @return The result of privilege routine.
+ */
 static _u32_t _thread_stack_free_get_privilege_routine(arguments_t *pArgs)
 {
     ENTER_CRITICAL_SECTION();
@@ -333,6 +366,26 @@ _u32_t _impl_thread_init(pThread_entryFunc_t pEntryFun, _u32_t *pAddress, _u32_t
     };
 
     return kernel_privilege_invoke((const void *)_thread_init_privilege_routine, arguments);
+}
+
+/**
+ * @brief Initialize a new thread.
+ *
+ * @param pName The thread name.
+ *
+ * @return The value of thread unique id.
+ */
+_u32_t _impl_thread_name_toId(const _char_t *pName)
+{
+    if (!pName) {
+        return OS_INVALID_ID_VAL;
+    }
+
+    arguments_t arguments[] = {
+        [0] = {.pch_val = (const void *)pName},
+    };
+
+    return kernel_privilege_invoke((const void *)_thread_name_toId_privilege_routine, arguments);
 }
 
 /**

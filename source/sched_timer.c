@@ -454,6 +454,10 @@ static _u32_t _system_busy_wait_privilege_routine(arguments_t *pArgs)
 
     _u32_t wait_us = (_u32_t)pArgs[0].u32_val;
 
+    _b_t disabled = clock_time_isDisabled();
+    if (disabled) {
+        clock_time_enable();
+    }
     _u32_t start = _system_us_get();
     while (wait_us) {
         _u32_t current = _system_us_get();
@@ -461,6 +465,9 @@ static _u32_t _system_busy_wait_privilege_routine(arguments_t *pArgs)
         if ((current - start) >= wait_us) {
             break;
         }
+    }
+    if (disabled) {
+        _timeout_schedule();
     }
 
     EXIT_CRITICAL_SECTION();

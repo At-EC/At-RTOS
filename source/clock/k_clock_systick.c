@@ -220,11 +220,19 @@ _u32_t clock_time_get(void)
 }
 
 /**
+ * @brief If the clock time was disabled.
+ */
+_b_t clock_time_isDisabled(void)
+{
+    return !g_clock_resource.ctrl_enabled;
+}
+
+/**
  * @brief Enable the time clock.
  */
 void clock_time_enable(void)
 {
-    if (!g_clock_resource.ctrl_enabled) {
+    if (clock_time_isDisabled()) {
         g_clock_resource.ctrl_enabled = true;
         SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
     }

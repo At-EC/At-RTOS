@@ -134,9 +134,9 @@ _u32_t port_stack_frame_init(void (*pEntryFn)(void *), _u32_t *pAddress, _u32_t 
 
 #if (__FPU_PRESENT)
 #if (THREAD_PSP_WITH_PRIVILEGED)
-    ((stack_snapshot_t *)psp_frame)->CONTROL = B(1); /* PSP with privileged */
+    ((stack_snapshot_t *)psp_frame)->CONTROL = 0x2; /* PSP with privileged */
 #else
-    ((stack_snapshot_t *)psp_frame)->CONTROL = Bs(0, 1); /* PSP with Unprivileged */
+    ((stack_snapshot_t *)psp_frame)->CONTROL = 0x3; /* PSP with Unprivileged */
 #endif
 
     ((stack_snapshot_t *)psp_frame)->EXC_RETURN = 0xFFFFFFFDu; /* EXC_RETURN */

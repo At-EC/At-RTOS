@@ -21,6 +21,7 @@ void clock_isr(void);
 void clock_time_interval_set(_u32_t interval_us);
 _u32_t clock_time_elapsed_get(void);
 _u32_t clock_time_get(void);
+_b_t clock_time_isDisabled(void);
 void clock_time_enable(void);
 void clock_time_disable(void);
 void clock_time_init(time_report_handler_t pTime_function);

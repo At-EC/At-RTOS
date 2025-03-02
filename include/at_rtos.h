@@ -148,6 +148,26 @@ static inline os_thread_id_t os_thread_init(u32_t *pStackAddr, u32_t size, i16_t
 }
 
 /**
+ * @brief Give a thread name to find a inited thread id.
+ *
+ * @param pName The thread name.
+ *
+ * @return The value of thread unique id.
+ */
+static inline os_thread_id_t os_thread_name_toId(const char_t *pName)
+{
+    extern _u32_t _impl_thread_name_toId(const _char_t *pName);
+
+#if (OS_ID_NODATA)
+    return (os_thread_id_t)_impl_thread_name_toId(pName);
+#else
+    os_thread_id_t id = {0u};
+    id.u32_val = _impl_thread_name_toId(pName);
+    return id;
+#endif
+}
+
+/**
  * @brief Add a user thread data.
  *
  * @param id The thread unique id.
@@ -1224,6 +1244,7 @@ static inline void os_trace_analyze(const pTrace_analyzeFunc_t fn)
 #if (OS_API_ENABLED)
 typedef struct {
     os_thread_id_t (*thread_init)(u32_t *, u32_t, i16_t, pThread_entryFunc_t, void *, const char_t *);
+    os_thread_id_t (*thread_name_toId)(const char_t *);
     i32p_t (*thread_sleep)(u32_t);
     i32p_t (*thread_resume)(os_thread_id_t);
     i32p_t (*thread_suspend)(os_thread_id_t);

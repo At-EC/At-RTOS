@@ -31,6 +31,7 @@ static pThread_entryFunc_t g_idle_thread_user_entry_fn = NULL;
 #ifdef OS_API_ENABLED
 const at_rtos_api_t os = {
     .thread_init = os_thread_init,
+    .thread_name_toId = os_thread_name_toId,
     .thread_sleep = os_thread_sleep,
     .thread_resume = os_thread_resume,
     .thread_suspend = os_thread_suspend,
