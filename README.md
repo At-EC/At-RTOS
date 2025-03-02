@@ -175,7 +175,7 @@ The following sample codes illustrate how to create your first thread:
 OS_STACK_INIT(stack, STACK_SIZE);
 
 /* Thread entry function. */
-static void entry_function(void)
+static void entry_function(void* p_arg)
 {
     while(1) {
         os.thread_sleep(1000u);
@@ -186,19 +186,18 @@ static void entry_function(void)
 int main(void)
 {
     /* Initialize a runtime preempt thread. */
-    os_thread_id_t runtime_id = os.thread_init(stack, STACK_SIZE, OS_PRIORITY_PREEMPT_SET(1), entry_function, "runtime_thread");
+    os_thread_id_t runtime_id = os.thread_init(stack, STACK_SIZE, OS_PRIORITY_PREEMPT_SET(1), entry_function, NULL, "runtime_thread");
     if (os.id_isInvalid(runtime_id)) {
         printf("Thread %s init failed\n", runtime_id.pName);
     }
 	
     /* The At-RTOS kernel schedule starts to run. */
     os.schedule_run();
-	
 	RUN_UNREACHABLE();
 }
 
 /* Initialize a static cooperation thread. */
-OS_THREAD_INIT(static_id, OS_PRIORITY_COOPERATION_SET(2), STACK_SIZE, entry_function);
+OS_THREAD_INIT(static_id, OS_PRIORITY_COOPERATION_SET(2), STACK_SIZE, entry_function, NULL);
 ```
 
 ## Contribution
